@@ -10,14 +10,23 @@ model BookCopy{
     circulationId String @unique
     circulation Circulation   @relation("BookCopy",fields: [circulationId], references: [id])
     reservation Reservation? @relation("Reservation")
+    interLibrary InterLibrary? @relation("InterLibrarybookCopy")
     @@map("BookCopys")
 }
 
 enum BookCopyStatus {
   AVAILABLE
-  ISSUED
-  BOUGHT
-  RESERVED
+  DONATED
+  REQUESTED
+  CHECKEDOUT
+  INTRANSIT
+  ONHOLD
+  REFERENCEONLY
+  INARCHIVES
+  RESTRICTEDACCESS
+  ONDISPLAY
+  MISSING
+  PROCESSING
 }
 
 enum Condition {

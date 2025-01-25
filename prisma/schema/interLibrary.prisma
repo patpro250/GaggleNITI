@@ -1,0 +1,20 @@
+model InterLibrary {
+    id String @id @default(uuid())
+    lenderId String 
+    borrowerId String
+    bookId String @unique
+    borrowDate DateTime @default(now())
+    returnDate DateTime
+    status interLibraryStatus
+    lender Institution @relation("InterLibraryLender", fields: [lenderId], references: [id])
+    borrower Institution @relation("InterLibraryBorrowerId", fields: [borrowerId], references: [id])
+    book BookCopy @relation("InterLibrarybookCopy", fields: [bookId], references: [id])
+
+}
+
+enum interLibraryStatus {
+    PENDING
+    APPROVED
+    REJECTED
+    RETURNED
+}

@@ -17,7 +17,8 @@ model Institution {
   library Library[] @relation("institution")
   book Book[] @relation("Book")
   aquisition Aquisition[] @relation("aquisition")
-
+  lender InterLibrary[] @relation("InterLibraryLender")
+  borrower InterLibrary[] @relation("InterLibraryBorrowerId")
   @@map("institutions") // Maps to the "institutions" table
 }
 

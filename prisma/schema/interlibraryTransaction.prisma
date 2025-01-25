@@ -1,0 +1,7 @@
+// model InterLibraryInsititution {
+//   institutionId String
+//   interLibraryId String
+  
+//   lender Institution @relation("lender", fields: [lenderId], references: [id])
+//   borrower Institution @relation("borrower", fields: [borrowerId], references: [id])
+// }
