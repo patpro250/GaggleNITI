@@ -6,15 +6,16 @@ model Book{
     published DateTime
     firstAquistion DateTime
     latestAquistion DateTime
-    isbn String
+    isbn String?
     language String
     edition String
     numberOfPages Int
     shelfLocation String
-    callNo String
-    barCode String
+    callNo String?
+    barCode String?
     ddcCode String?
-    genre Genre?
+    genreId Int?
+    genre Genre? @relation("Genres", fields: [genreId], references: [id])
     institutionId String
 
     institution Institution @relation("Book",fields: [institutionId], references: [id])
