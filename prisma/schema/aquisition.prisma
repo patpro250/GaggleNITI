@@ -1,0 +1,38 @@
+model Aquisition{
+    id String @id @default(uuid())
+    bookId String
+    quantity Int
+    librarianId String
+    doneOn DateTime
+    insititutionId String
+    supplierId String
+
+    insititution Institution @relation("aquisition", fields:[insititutionId], references: [id])
+    librarian Librarian @relation("librarian", fields: [librarianId], references: [librarianId])
+    supplier Supplier @relation("Aquisition", fields:[supplierId], references: [id])
+    book Book @relation("Aquisition", fields: [bookId], references: [id], onDelete: Cascade)
+
+    @@map("Aquisitions")
+}
+
+model Supplier{
+    id String @id @default(uuid())
+    name String
+    email String @unique
+    phone String
+    website String
+    address Json
+
+    status SupplierStatus @default(ACTIVE)
+    aquisition Aquisition[] @relation("Aquisition") 
+
+    @@map("Suppliers")
+}
+
+enum SupplierStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+  VERIFIED
+  PREFFERED
+}

@@ -1,0 +1,26 @@
+model Book{
+    id String @id @default(uuid())
+    title String
+    author String
+    publisher String
+    published DateTime
+    firstAquistion DateTime
+    latestAquistion DateTime
+    isbn String
+    language String
+    edition String
+    numberOfPages Int
+    shelfLocation String
+    callNo String
+    barCode String
+    ddcCode String?
+    genre Genre?
+    institutionId String
+
+    institution Institution @relation("Book",fields: [institutionId], references: [id])
+    aquisition Aquisition[] @relation("Aquisition") 
+    bookCopy BookCopy[] @relation("BookCopy")
+
+    @@map("books")
+
+}

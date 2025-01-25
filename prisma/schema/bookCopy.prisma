@@ -1,0 +1,27 @@
+model BookCopy{
+    id String @id @unique @default(uuid())
+    bookId String
+    book Book @relation("BookCopy",fields: [bookId], references: [id])
+    status BookCopyStatus @default(AVAILABLE)
+    libraryId String
+    bookR Library @relation("BookCopy",fields: [libraryId], references: [id])
+    condition Condition @default(NEW)
+    dateOfAquisition DateTime
+    circulationId String @unique
+    circulation Circulation   @relation("BookCopy",fields: [circulationId], references: [id])
+    reservation Reservation? @relation("Reservation")
+    @@map("BookCopys")
+}
+
+enum BookCopyStatus {
+  AVAILABLE
+  ISSUED
+  BOUGHT
+  RESERVED
+}
+
+enum Condition {
+  NEW
+  GOOD
+  DAMAGED
+}

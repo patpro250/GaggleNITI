@@ -1,0 +1,18 @@
+model Librarian {
+  librarianId   String           @id @default(uuid())
+  institutionId String? // Foreign key to Institution
+  firstName     String        
+  lastName      String        
+  email         String        @unique 
+  phoneNumber   String        
+  password      String        @db.VarChar(2055)
+  isAdmin       Boolean       @default(false)
+  joined        DateTime      @default(now())
+
+  aquisition Aquisition[]  @relation("librarian")
+  institution   Institution?  @relation("InstitutionLibrarians", fields: [institutionId], references: [id], onDelete: Restrict, onUpdate: Cascade) // Relation for the institution where they work
+  manages       Institution[] @relation("InstitutionManager")
+  library Library[] @relation("librarian")
+
+  @@map("librarians") // Maps to the "librarians" table
+}

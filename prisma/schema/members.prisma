@@ -1,0 +1,30 @@
+model Member {
+    id String @id @default(uuid())
+    firstName String
+    lastName String
+    email String @unique
+    phone String
+    address Json
+    memberShipType memberShipType
+    status memberShipStatus
+    classRoom String?
+    cardNo String?
+    joinedAt DateTime
+    password String
+    reservation Reservation[] @relation("Reservation")
+    @@map("members")
+    @@index([email])
+    @@index([cardNo])
+    @@index([firstName,lastName])
+
+}
+
+enum memberShipType {
+  STUDENT
+  REGULAR
+}
+
+enum memberShipStatus {
+  ACTIVE
+  INACTIVE
+}

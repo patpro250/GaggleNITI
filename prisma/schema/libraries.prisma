@@ -1,0 +1,14 @@
+model Library{
+    id String @id @unique @default(uuid())
+    name String
+    managerId String
+    createdAt DateTime @default(now())
+    institutionId String 
+    shelvesNo Int
+
+    institution Institution @relation("institution",fields: [institutionId], references: [id])
+    librarian Librarian @relation("librarian",fields: [managerId],references: [librarianId])
+    bookCopy BookCopy[] @relation("BookCopy")
+    
+    @@map("libraries")
+}

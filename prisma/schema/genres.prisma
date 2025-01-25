@@ -1,0 +1,8 @@
+model Genre{
+   id Int @id @default(autoincrement())
+   name String
+   bookId String @unique
+   bookR Book @relation(fields: [bookId], references: [id])
+
+   @@map("genres")
+}
