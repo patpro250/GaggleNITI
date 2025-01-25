@@ -1,0 +1,14 @@
+model LibraryType {
+    id String @id @default(uuid())
+    typeName String
+    description String
+    targetAudeince String
+    primaryPurpose String
+    collectionFocus String
+    service String
+    accessibleLevel String
+    fundingSource String
+    library Library? @relation("libraryType")
+    // nameOfLibrary String
+
+}

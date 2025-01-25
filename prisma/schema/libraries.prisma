@@ -5,7 +5,9 @@ model Library{
     createdAt DateTime @default(now())
     institutionId String 
     shelvesNo Int
+    typeId String @unique
 
+    type LibraryType @relation("libraryType",fields: [typeId], references: [id])
     institution Institution @relation("institution",fields: [institutionId], references: [id])
     librarian Librarian @relation("librarian",fields: [managerId],references: [librarianId])
     bookCopy BookCopy[] @relation("BookCopy")
