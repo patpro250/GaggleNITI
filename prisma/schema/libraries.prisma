@@ -1,16 +1,15 @@
-model Library{
-    id String @id @unique @default(uuid())
-    name String
-    managerId String
-    createdAt DateTime @default(now())
-    institutionId String 
-    shelvesNo Int
-    typeId String @unique
+model Library {
+  id            String      @id @unique @default(uuid())
+  name          String
+  managerId     String
+  createdAt     DateTime    @default(now())
+  institutionId String
+  shelvesNo     Int
+  typeId        String      @unique
+  bookCopy      BookCopy[]  @relation("BookCopy")
+  institution   Institution @relation("institution", fields: [institutionId], references: [id])
+  librarian     Librarian   @relation("librarian", fields: [managerId], references: [librarianId])
+  type          LibraryType @relation("libraryType", fields: [typeId], references: [id])
 
-    type LibraryType @relation("libraryType",fields: [typeId], references: [id])
-    institution Institution @relation("institution",fields: [institutionId], references: [id])
-    librarian Librarian @relation("librarian",fields: [managerId],references: [librarianId])
-    bookCopy BookCopy[] @relation("BookCopy")
-    
-    @@map("libraries")
+  @@map("libraries")
 }

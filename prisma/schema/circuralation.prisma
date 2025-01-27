@@ -1,12 +1,11 @@
 model Circulation {
-  id String @id @default(uuid())
-  copyId String
-  bookCopy BookCopy? @relation("BookCopy")
-  userId String
+  id           String    @id @default(uuid())
+  copyId       String @unique
+  userId       String
   insitutionId String
-  librarianId String
-  returnDate DateTime
-  lendDate DateTime @default(now())
-  isActive Boolean @default(true)
-
+  librarianId  String
+  returnDate   DateTime
+  lendDate     DateTime  @default(now())
+  isActive     Boolean   @default(true)
+  bookCopy     BookCopy @relation("BookCopy", fields: [copyId], references: [id])
 }

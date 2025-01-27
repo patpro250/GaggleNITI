@@ -1,32 +1,30 @@
-model Aquisition{
-    id String @id @default(uuid())
-    bookId String
-    quantity Int
-    librarianId String
-    doneOn DateTime
-    insititutionId String
-    supplierId String
+model Aquisition {
+  id             String      @id @default(uuid())
+  bookId         String
+  quantity       Int
+  librarianId    String
+  doneOn         DateTime
+  insititutionId String
+  supplierId     String
+  book           Book        @relation("Aquisition", fields: [bookId], references: [id], onDelete: Cascade)
+  insititution   Institution @relation("aquisition", fields: [insititutionId], references: [id])
+  librarian      Librarian   @relation("librarian", fields: [librarianId], references: [librarianId])
+  supplier       Supplier    @relation("Aquisition", fields: [supplierId], references: [id])
 
-    insititution Institution @relation("aquisition", fields:[insititutionId], references: [id])
-    librarian Librarian @relation("librarian", fields: [librarianId], references: [librarianId])
-    supplier Supplier @relation("Aquisition", fields:[supplierId], references: [id])
-    book Book @relation("Aquisition", fields: [bookId], references: [id], onDelete: Cascade)
-
-    @@map("Aquisitions")
+  @@map("Aquisitions")
 }
 
-model Supplier{
-    id String @id @default(uuid())
-    name String
-    email String @unique
-    phone String
-    website String
-    address Json
+model Supplier {
+  id         String         @id @default(uuid())
+  name       String
+  email      String         @unique
+  phone      String
+  website    String
+  address    Json
+  status     SupplierStatus @default(ACTIVE)
+  aquisition Aquisition[]   @relation("Aquisition")
 
-    status SupplierStatus @default(ACTIVE)
-    aquisition Aquisition[] @relation("Aquisition") 
-
-    @@map("Suppliers")
+  @@map("Suppliers")
 }
 
 enum SupplierStatus {

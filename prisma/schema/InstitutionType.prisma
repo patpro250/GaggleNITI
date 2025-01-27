@@ -1,10 +1,7 @@
 model InstitutionType {
-  id           String          @id @default(uuid())
-  name         String          @unique 
-  institutions Institution[] // Relation to Institution
+  id           String       @id @default(uuid())
+  name         String       @unique
+  // institutions Institution?
 
-  @@map("institutionsTypes") // Maps to the "institutionsTypes" table
+  @@map("institutionsTypes")
 }
-
-// InstitutionType Table
-

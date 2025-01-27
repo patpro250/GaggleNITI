@@ -6,7 +6,6 @@ CREATE TABLE "books" (
     "publisher" TEXT NOT NULL,
     "published" TIMESTAMP(3) NULL,
     "firstAquistion" TIMESTAMP(3)  NULL,
-    "latestAquistion" TIMESTAMP(3) NULL,
     "isbn" TEXT  NULL,
     "language" TEXT  NULL,
     "edition" TEXT  NULL,
@@ -15,8 +14,8 @@ CREATE TABLE "books" (
     "callNo" TEXT NULL,
     "barCode" TEXT NULL,
     "ddcCode" TEXT,
-    "placeOfPublication" TEXT NULL,
-    "institutionId" TEXT NOT NULL,
+    -- "placeOfPublication" TEXT NULL,
+    "institutionId" TEXT NULL,
 
     CONSTRAINT "books_pkey" PRIMARY KEY ("id")
 );

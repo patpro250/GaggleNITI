@@ -1,22 +1,22 @@
 model Member {
-    id String @id @default(uuid())
-    firstName String
-    lastName String
-    email String @unique
-    phone String
-    address Json
-    memberShipType memberShipType
-    status memberShipStatus
-    classRoom String?
-    cardNo String?
-    joinedAt DateTime
-    password String
-    reservation Reservation[] @relation("Reservation")
-    @@map("members")
-    @@index([email])
-    @@index([cardNo])
-    @@index([firstName,lastName])
+  id             String           @id @default(uuid())
+  firstName      String
+  lastName       String
+  email          String           @unique
+  phone          String
+  address        Json
+  memberShipType memberShipType
+  status         memberShipStatus
+  classRoom      String?
+  cardNo         String?
+  joinedAt       DateTime
+  password       String
+  reservation    Reservation[]    @relation("Reservation")
 
+  @@index([email])
+  @@index([cardNo])
+  @@index([firstName, lastName])
+  @@map("members")
 }
 
 enum memberShipType {

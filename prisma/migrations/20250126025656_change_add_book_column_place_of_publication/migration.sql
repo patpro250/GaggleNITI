@@ -5,4 +5,4 @@
 
 */
 -- AlterTable
-ALTER TABLE "books" DROP COLUMN "placeOfPublication";
+-- ALTER TABLE "books" DROP COLUMN "placeOfPublication";

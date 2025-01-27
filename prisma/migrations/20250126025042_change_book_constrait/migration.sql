@@ -14,7 +14,7 @@
 ALTER TABLE "books" ADD COLUMN     "genreId" INTEGER,
 ALTER COLUMN "published" SET NOT NULL,
 ALTER COLUMN "firstAquistion" SET NOT NULL,
-ALTER COLUMN "latestAquistion" SET NOT NULL,
+-- ALTER COLUMN "latestAquistion" SET NOT NULL,
 ALTER COLUMN "language" SET NOT NULL,
 ALTER COLUMN "edition" SET NOT NULL,
 ALTER COLUMN "numberOfPages" SET NOT NULL,

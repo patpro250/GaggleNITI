@@ -1,17 +1,18 @@
-model BookCopy{
-    id String @id @unique @default(uuid())
-    bookId String
-    book Book @relation("BookCopy",fields: [bookId], references: [id])
-    status BookCopyStatus @default(AVAILABLE)
-    libraryId String
-    bookR Library @relation("BookCopy",fields: [libraryId], references: [id])
-    condition Condition @default(NEW)
-    dateOfAquisition DateTime
-    circulationId String @unique
-    circulation Circulation   @relation("BookCopy",fields: [circulationId], references: [id])
-    reservation Reservation? @relation("Reservation")
-    interLibrary InterLibrary? @relation("InterLibrarybookCopy")
-    @@map("BookCopys")
+model BookCopy {
+  id               String         @id @unique @default(uuid())
+  bookId           String     
+  status           BookCopyStatus @default(AVAILABLE)
+  libraryId        String
+  condition        Condition      @default(NEW)
+  dateOfAquisition DateTime
+  code             String?  
+  book             Book           @relation("BookCopy", fields: [bookId], references: [id])
+  circulation      Circulation?    @relation("BookCopy")
+  bookR            Library        @relation("BookCopy", fields: [libraryId], references: [id])
+  interLibrary     InterLibrary?  @relation("InterLibrarybookCopy")
+  reservation      Reservation?   @relation("Reservation")
+
+  @@map("BookCopys")
 }
 
 enum BookCopyStatus {

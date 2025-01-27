@@ -1,25 +1,25 @@
 model Institution {
-  id           String           @id @default(uuid())
-  name         String           
-  address      String           
-  phone        String           
-  openingHours String?          
-  email        String           @unique 
-  managerId    String? // Foreign key for the manager
-  status       Status          @default(ACTIVE)
-  established  DateTime         @default(now())
-  rating       Float            @default(0.0) // Constraint can be added via raw SQL
-  institutionTypeId String? @unique
-  
-  institutionType  InstitutionType? @relation(fields: [institutionTypeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  manager      Librarian?       @relation("InstitutionManager", fields: [managerId], references: [librarianId], onDelete: Restrict, onUpdate: Cascade) // Relation for the manager
-  librarians   Librarian[]      @relation("InstitutionLibrarians") // Relation for all librarians
-  library Library[] @relation("institution")
-  book Book[] @relation("Book")
-  aquisition Aquisition[] @relation("aquisition")
-  lender InterLibrary[] @relation("InterLibraryLender")
-  borrower InterLibrary[] @relation("InterLibraryBorrowerId")
-  @@map("institutions") // Maps to the "institutions" table
+  id                String           @id @default(uuid())
+  name              String
+  address           String
+  phone             String
+  openingHours      String?
+  email             String           @unique
+  managerId         String?
+  status            Status           @default(ACTIVE)
+  established       DateTime         @default(now())
+  rating            Float            @default(0.0)
+  institutionTypeId String?
+  aquisition        Aquisition[]     @relation("aquisition")
+  borrower          InterLibrary[]   @relation("InterLibraryBorrowerId")
+  lender            InterLibrary[]   @relation("InterLibraryLender")
+  book              Book[]           @relation("Book")
+  // institutionType   InstitutionType? @relation(fields: [institutionTypeId], references: [id], onDelete: Restrict)
+  manager           Librarian?       @relation("InstitutionManager", fields: [managerId], references: [librarianId], onDelete: Restrict)
+  librarians        Librarian[]      @relation("InstitutionLibrarians")
+  library           Library[]        @relation("institution")
+
+  @@map("institutions")
 }
 
 enum Status {
