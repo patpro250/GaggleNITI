@@ -15,36 +15,38 @@ router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const exists = await prisma.book.findFirst({where: {title: req.body.title}});
+  const exists = await prisma.book.findFirst({ where: { title: req.body.title } });
   if (exists) return res.status(400).send(`'${req.body.title}' already exists`);
 
-  const institution = await prisma.institution.findUnique({where: {
-    id: req.body.institutionId
-  }});
+  const institution = await prisma.institution.findUnique({
+    where: {
+      id: req.body.institutionId
+    }
+  });
 
   if (!institution) return res.status(404).send("Institution not found");
-  await prisma.book.create({data: req.body});
+  await prisma.book.create({ data: req.body });
 
   res.status(201).send("New book is created");
 });
 
 router.put("/:id", async (req, res) => {
-  const {error} = validate(req.body);
+  const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const book = await prisma.book.findUnique({where: {id: req.params.id}});
+  const book = await prisma.book.findUnique({ where: { id: req.params.id } });
   if (!book) return res.status(404).send(`Book with ID: ${req.params.id} doen't exist`);
 
-  book = await prisma.book.update({where: {id: req.params.id}, data: req.body});
+  book = await prisma.book.update({ where: { id: req.params.id }, data: req.body });
   res.status(200).send("Book successfully updated!");
 });
 
 router.delete("/:id", async (req, res) => {
-    const book = await prisma.book.findUnique({where: {id: req.params.id}});
-    if (!book) return res.status(404).send(`Book with ID: ${req.params.id} not found`);
+  const book = await prisma.book.findUnique({ where: { id: req.params.id } });
+  if (!book) return res.status(404).send(`Book with ID: ${req.params.id} not found`);
 
-    book = await prisma.book.delete({where: {id: req.params.id}});
-    res.status(200).send("Book deleted successfully!");
+  book = await prisma.book.delete({ where: { id: req.params.id } });
+  res.status(200).send("Book deleted successfully!");
 });
 
 function validate(book) {
