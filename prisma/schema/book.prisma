@@ -1,25 +1,25 @@
 model Book {
-  id             String       @id @default(uuid())
-  title          String
-  author         String
-  publisher      String
-  published      DateTime
-  firstAquisition DateTime
-  isbn           String?
-  language       String
-  edition        String?
-  numberOfPages  Int
-  shelfLocation  String
-  callNo         String?
-  barCode        String?
-  ddcCode        String?
-  institutionId  String
-  genreId        Int?
+  id                 String       @id @default(uuid())
+  title              String
+  author             String
+  publisher          String
+  published          DateTime
+  firstAquisition    DateTime
+  isbn               String?
+  language           String
+  edition            String?
+  numberOfPages      Int
+  shelfLocation      String
+  callNo             String?
+  barCode            String?
+  ddcCode            String?
+  institutionId      String
+  genreId            Int?
   placeOfPublication String?
-  aquisition     Aquisition[] @relation("Aquisition")
-  bookCopy       BookCopy[]   @relation("BookCopy")
-  genre          Genre?       @relation("Genres", fields: [genreId], references: [id])
-  institution    Institution?  @relation("Book", fields: [institutionId], references: [id])
+  aquisition         Aquisition[] @relation("Aquisition")
+  bookCopy           BookCopy[]   @relation("BookCopy")
+  genre              Genre?       @relation("Genres", fields: [genreId], references: [id])
+  institution        Institution? @relation("Book", fields: [institutionId], references: [id])
 
   @@map("books")
 }
