@@ -45,7 +45,7 @@ router.put("/:id", async(req, res) => {
   const institution = await prisma.institution.findUnique({where: {id: req.params.id}});
   if (!institution) return res.status(404).send(`Institution with ID: ${req.params.id} not found`);
 
-  institution = await prisma.institution.update({ where: { id: req.params.id }, data: req.body });
+  await prisma.institution.update({ where: { id: req.params.id }, data: req.body });
   res.status(200).send(`${req.body.name} successfully updated!`);
 });
 
