@@ -4,7 +4,9 @@
     "@prisma/client": "^6.3.0",
     "bcrypt": "^5.1.1",
     "express": "^4.21.2",
-    "joi": "^17.13.3"
+    "joi": "^17.13.3",
+    "joi-password-complexity": "^5.2.0",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "prisma": "^6.3.0"

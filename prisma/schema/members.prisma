@@ -9,7 +9,7 @@ model Member {
   status         memberShipStatus
   classRoom      String?
   cardNo         String?
-  joinedAt       DateTime
+  joinedAt       DateTime        @default(now())
   password       String
   reservation    Reservation[]    @relation("Reservation")
 
