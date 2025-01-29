@@ -5,20 +5,25 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
+router.get("/", async (req, res) => {
+  const bookcopies = await prisma.BookCopy.findMany();
+  if (bookcopies.length > 0) return res.status(200).send(bookcopies);
+  res.status(404).send("No BookCopy Found");
+});
+
+router.get('/:id', async (req, res) => {
+  const bookCopy = await prisma.bookCopy.findUnique({where: {id: req.params.id}})
+  if (!bookCopy) return res.status(404).send("BookCopy not found");
+  res.status(200).send(bookCopy);
+})
+
 router.post("/", async (req, res) => {
-   
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   const library = await prisma.library.findUnique({
     where: { id: req.body.libraryId },
   });
-
-  // const code = await prisma.library.findFirst({
-  //   where: { code: req.body.code },
-  // });
-
-  // if (code) return res.status(400).send("Book code already exists");
 
   if (!library) return res.status(404).send("Library not found");
 
@@ -29,17 +34,10 @@ router.post("/", async (req, res) => {
   res.status(201).send(`${req.body.bookId} bookCopy Is Created`);
 });
 
-router.get('/', async (req, res) => {
- const bookcopies = await prisma.BookCopy.findMany();
- if (bookcopies.length>0) return res.status(200).send(bookcopies);
-  res.status(404).send("No BookCopy Found");
-});
-
-router.delete('/:id', async (req, res) => {
+router.delete("/:id", async (req, res) => {
   const bookcopy = await prisma.bookCopy.findUnique({
     where: { id: req.params.id },
   });
-
 
   if (!bookcopy) return res.status(404).send("BookCopy not found");
 
@@ -48,7 +46,6 @@ router.delete('/:id', async (req, res) => {
   });
 
   res.status(200).send("BookCopy Deleted");
-
 });
 
 function validate(bookcopy) {
@@ -59,7 +56,6 @@ function validate(bookcopy) {
     condition: Joi.string(),
     dateOfAquisition: Joi.date(),
     code: Joi.string().required(),
-   
   });
 
   return schema.validate(bookcopy);
