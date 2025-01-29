@@ -19,7 +19,7 @@ model Book {
   aquisition         Aquisition[] @relation("Aquisition")
   bookCopy           BookCopy[]   @relation("BookCopy")
   genre              Genre?       @relation("Genres", fields: [genreId], references: [id])
-  institution        Institution? @relation("Book", fields: [institutionId], references: [id])
+  institution        Institution? @relation("Book", fields: [institutionId], references: [id], onDelete: Cascade)
 
   @@map("books")
 }

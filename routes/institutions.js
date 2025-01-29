@@ -10,6 +10,12 @@ router.get("/", async (req, res) => {
   res.status(200).send(institutions);
 });
 
+router.get("/:id", async (req, res) => {
+  const institution = await prisma.institution.findUnique({ where: { id: req.params.id } });
+  if (!institution) return res.status(404).send(`Institution with ID: ${req.params.id} not found`);
+  res.status(200).send(institution);
+});
+
 router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -49,7 +55,7 @@ router.delete("/:id", async (req, res) => {
 
   institution = await prisma.institution.delete({ where: { id: req.params.id } });
   res.status(200).send("Institution deleted successfully!");
-})
+});
 
 function validate(institution) {
   const schema = Joi.object({
