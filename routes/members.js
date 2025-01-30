@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const Joi = require("joi");
 const { PrismaClient } = require("@prisma/client");
 const _ = require("lodash");
 const bcrypt = require("bcrypt");
