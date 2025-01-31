@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Joi = require("joi");
 const _ = require("lodash");
+const trimmer = require("../middleware/trimmer");
 
 const { PrismaClient } = require("@prisma/client");
 
@@ -9,42 +10,24 @@ const prisma = new PrismaClient();
 
 router.get("/", async (req, res) => {
   const suppliers = await prisma.supplier.findMany();
-  if (!suppliers) return res.status(500).send("Internal Server error");
-  res.send(suppliers);
+  res.status(200).send(suppliers);
 });
 
 router.get("/:id", async (req, res) => {
-  const oneSupplier = await prisma.supplier.findUnique({
-    where: { id: req.params.id },
-    include:{
-      
-    }
-  });
-
-  if (!oneSupplier)
-    return res.status(404).send(`Supplier ${req.params.id} not found`);
-
-  res.send(oneSupplier);
+  const supplier = await prisma.supplier.findUnique({where: {id: req.params.id}});
+  if (!supplier) return res.status(404).send(`Supplier not found!`);
+  res.status(200).send(supplier);
 });
 
 router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const existingSupplier = await prisma.supplier.findUnique({
-    where: { email: req.body.email },
-  });
-
-  if (existingSupplier)
-    return res.status(400).send(`${req.body.email} already exists`);
-
-  const suppliers = await prisma.supplier.create({
-    data: req.body,
-  });
-
-  if (!suppliers) return res.status(500).send("Internal Server error");
-
-  res.send(`Supplier ${suppliers.email} inserted success`);
+  let supplier = await prisma.supplier.findUnique({where: {email: req.body.email}});
+  if (supplier) return res.status(400).send(`Supplier with email: ${req.body.email} already exists!`);
+  
+  await prisma.supplier.create({  data: req.body });
+  res.send(`${req.body.name} inserted successfully`);
 });
 
 router.delete("/:id", async (req, res) => {
@@ -87,12 +70,11 @@ router.put("/:id", async (req, res) => {
 function validate(supplier) {
   const schema = Joi.object({
     name: Joi.string().required(),
-    email: Joi.string().lowercase().required(),
+    email: Joi.string().email().required(),
     phone: Joi.string().min(10).required(),
-     website: Joi.string().uri().optional().custom((value) => value.toLowerCase()),
+    website: Joi.string().uri().optional().custom((value) => value.toLowerCase()),
     address: Joi.object().required(),
     status: Joi.optional(),
-    aquisition: Joi.optional(),
   });
 
   return schema.validate(supplier);
