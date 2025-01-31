@@ -3,7 +3,7 @@ const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 const _ = require("lodash");
 const bcrypt = require("bcrypt");
-const validate = require("../routes/lib/member");
+const {validate, validatePassword} = require("../routes/lib/member");
 
 const prisma = new PrismaClient();
 
@@ -32,6 +32,25 @@ router.post("/", async (req, res) => {
     res.status(201).send("Member created successfully");
 });
 
+router.post("/change-password/:id", async (req, res) => {
+    const { error } = validatePassword(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    let member = await prisma.member.findUnique({where: {id: req.params.id}});
+    if (!member) return res.status(404).send("Member not found!");
+
+    const isSame = await bcrypt.compare(req.body.oldPassword, member.password);
+    if (!isSame) return res.status(400).send("Passwords doesn't match!");
+
+    const salt = await bcrypt.genSalt(10);
+    req.body.newPassword = await bcrypt.hash(req.body.newPassword, salt);
+    await prisma.member.update({where: {id: req.params.id}, data: {
+        password: req.body.newPassword
+    }});
+
+    res.status(200).send("Password Changed successfully!");
+});
+
 router.put("/:id", async(req, res) => {
     const { error } = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
@@ -44,6 +63,5 @@ router.put("/:id", async(req, res) => {
     await prisma.member.update({where: {id: req.params.id}, data: member});
     res.status(200).send(`${req.body.firstName} ${req.body.lastName} updated successfully`);
 });
-
 
 module.exports = router;

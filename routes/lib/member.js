@@ -26,10 +26,18 @@ function validate(member) {
     classRoom: Joi.string().allow(null, "").optional(),
     cardNo: Joi.string().allow(null, "").optional(),
     joinedAt: Joi.date().iso().required(),
-    password: passwordComplexity(complexityOptions),
+    password: passwordComplexity(complexityOptions).required()
   });
 
   return memberSchema.validate(member);
 }
 
-module.exports = validate;
+function validatePassword(password) {
+  const schema = Joi.object({
+    oldPassword: passwordComplexity(complexityOptions),
+    newPassword: passwordComplexity(complexityOptions),
+  });
+  return schema.validate(password);
+}
+
+module.exports = { validate, validatePassword };
