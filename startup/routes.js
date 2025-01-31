@@ -4,7 +4,7 @@ const bookcopies = require("../routes/bookcopies");
 const institutions = require("../routes/institutions");
 const members = require("../routes/members");
 const librarians = require("../routes/librarians");
-const aquisitions = require("../routes/aquisition");
+const acquisitions = require("../routes/acquisitions");
 const suppliers = require("../routes/supplier");
 
 module.exports = function (app) {
@@ -15,4 +15,5 @@ module.exports = function (app) {
     app.use('/members', members);
     app.use('/librarians', librarians);
     app.use('/suppliers', suppliers);
+    app.use('/acquisitions', acquisitions);
 }

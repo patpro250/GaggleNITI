@@ -3,7 +3,7 @@ model Aquisition {
   bookId         String
   quantity       Int
   librarianId    String
-  doneOn         DateTime
+  doneOn         DateTime @default(now())
   insititutionId String
   supplierId     String
   book           Book        @relation("Aquisition", fields: [bookId], references: [id], onDelete: Cascade)

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Aquisitions" ALTER COLUMN "doneOn" SET DEFAULT CURRENT_TIMESTAMP;
