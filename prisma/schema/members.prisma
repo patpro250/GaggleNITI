@@ -12,6 +12,7 @@ model Member {
   joinedAt       DateTime        @default(now())
   password       String
   reservation    Reservation[]    @relation("Reservation")
+  member    Circulation[] @relation("incirculation")
 
   @@index([email])
   @@index([cardNo])

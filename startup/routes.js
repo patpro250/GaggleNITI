@@ -7,6 +7,7 @@ const members = require("../routes/members");
 const librarians = require("../routes/librarians");
 const acquisitions = require("../routes/acquisitions");
 const suppliers = require("../routes/suppliers");
+const borrowing = require("../routes/borrowing");
 
 module.exports = function (app) {
     app.use(express.json());
@@ -18,4 +19,5 @@ module.exports = function (app) {
     app.use('/librarians', librarians);
     app.use('/suppliers', suppliers);
     app.use('/acquisitions', acquisitions);
+    app.use('/borrowing', borrowing);
 }

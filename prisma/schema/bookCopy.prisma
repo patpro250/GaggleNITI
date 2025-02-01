@@ -7,7 +7,7 @@ model BookCopy {
   dateOfAquisition DateTime
   code             String?  
   book             Book           @relation("BookCopy", fields: [bookId], references: [id])
-  circulation      Circulation?    @relation("BookCopy")
+  circulation      Circulation[]  @relation("BookCopy")
   bookR            Library        @relation("BookCopy", fields: [libraryId], references: [id])
   interLibrary     InterLibrary?  @relation("InterLibrarybookCopy")
   reservation      Reservation?   @relation("Reservation")

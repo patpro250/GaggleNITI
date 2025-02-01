@@ -12,6 +12,7 @@ model Librarian {
   manages       Institution[] @relation("InstitutionManager")
   institution   Institution?  @relation("InstitutionLibrarians", fields: [institutionId], references: [id], onDelete: Restrict)
   library       Library[]     @relation("librarian")
+  librarian     Circulation[] @relation("circulation")
 
   @@map("librarians")
 }
