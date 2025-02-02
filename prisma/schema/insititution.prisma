@@ -14,6 +14,7 @@ model Institution {
   borrower          InterLibrary[]   @relation("InterLibraryBorrowerId")
   lender            InterLibrary[]   @relation("InterLibraryLender")
   book              Book[]           @relation("Book")
+  institution Circulation[]  @relation("fromcirculation")
   // institutionType   InstitutionType? @relation(fields: [institutionTypeId], references: [id], onDelete: Restrict)
   manager           Librarian?       @relation("InstitutionManager", fields: [managerId], references: [librarianId], onDelete: Restrict)
   librarians        Librarian[]      @relation("InstitutionLibrarians")
