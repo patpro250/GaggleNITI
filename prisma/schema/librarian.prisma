@@ -3,7 +3,7 @@ model Librarian {
   institutionId String?
   firstName     String
   lastName      String
-  email         String        @unique
+  email         String
   phoneNumber   String
   password      String        @db.VarChar(2055)
   isAdmin       Boolean       @default(false)
