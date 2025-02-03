@@ -1,5 +1,6 @@
 const express = require("express");
 const Joi = require("joi");
+const _ = require("lodash");
 const { PrismaClient } = require("@prisma/client");
 
 const router = express.Router();
@@ -14,7 +15,7 @@ router.get("/", async (req, res) => {
 });
 
 router.get("/:id", async (req, res) => {
-  const borrowing = await prisma.circulation.findFirst({
+  let borrowing = await prisma.circulation.findFirst({
     where: {
       copyId: req.params.id,
       returnDate: null
@@ -26,12 +27,13 @@ router.get("/:id", async (req, res) => {
     }
   });
   if (!borrowing || borrowing.length <= 0) return res.status(404).send(`Book with ID: ${req.params.id} is not issued.`);
+  borrowing = _.omit(borrowing, ["member.password", "librarian.password"]);
   res.status(200).send(borrowing);
 });
 
 router.post("/lend", async (req, res) => {
   const { error } = validate(req.body);
-  if (error) return res.status(404).send(error.details[0].message);
+  if (error) return res.status(400).send(error.details[0].message);
 
   let copy = await prisma.bookCopy.findFirst({where: { id: req.body.copyId }});
   if (!copy) return res.status(400).send(`Copy with ID: ${req.body.copyId} does not exist, add it to the database.`);

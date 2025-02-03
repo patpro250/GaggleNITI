@@ -1,12 +1,13 @@
 model Reservation {
-  id       String            @id @default(uuid())
-  memberId String
-  copyId   String            @unique
-  doneOn   DateTime          @default(now())
-  dueDate  DateTime?
-  status   ReservationStatus @default(PENDING)
-  bookCopy BookCopy          @relation("Reservation", fields: [copyId], references: [id])
-  member   Member            @relation("Reservation", fields: [memberId], references: [id])
+  id            String            @id @default(uuid())
+  memberId      String
+  copyId        String            @unique
+  doneOn        DateTime          @default(now())
+  dueDate       DateTime?
+  // institutionId String
+  status        ReservationStatus @default(PENDING)
+  bookCopy      BookCopy          @relation("Reservation", fields: [copyId], references: [id])
+  member        Member            @relation("Reservation", fields: [memberId], references: [id])
 
   @@map("reservations")
 }

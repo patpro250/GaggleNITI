@@ -8,13 +8,15 @@ const {validate, validatePassword} = require("../routes/lib/member");
 const prisma = new PrismaClient();
 
 router.get("/", async (req, res) => {
-  const users = await prisma.member.findMany();
-  res.status(200).send(users);
+  let members = await prisma.member.findMany();
+  members = members.map(member => _.omit(member, ["password"]));
+  res.status(200).send(members);
 });
 
 router.get("/:id", async (req, res) => {
-    const member = await prisma.member.findUnique({where: {id: req.params.id}});
+    let member = await prisma.member.findUnique({where: {id: req.params.id}});
     if (!member) return res.status(404).send("Member not found");
+    member = _.omit(member, ["password"]);
     res.status(200).send(member);
 });
 
