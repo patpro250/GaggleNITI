@@ -26,7 +26,7 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   let reservation = await prisma.reservation.findUnique({
     where: { id: req.params.id },
-    include: { bookCopy: true, member: true },
+    include: { bookCopy: true, member: true, institution: true },
   });
   if (!reservation)
     return res
@@ -40,6 +40,12 @@ router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(404).send(error.details[0].message);
 
+  const institution = await prisma.institution.findUnique({ where: {id: req.body.institutionId },});
+  if (!institution) return res.status(404).send("Institution not found!");
+
+  let settings = institution.settings.circulation;
+  if (!settings.reserveBook) return res.status(400).send("Reservations are disabled!");
+
   let isAvailable = await prisma.bookCopy.findUnique({
     where: { id: req.body.copyId },
   });
@@ -51,24 +57,21 @@ router.post("/", async (req, res) => {
       status: "AVAILABLE",
     },
   });
+  
+  const book = await prisma.bookCopy.findFirst({where: {id: req.body.copyId}});
   if (!isAvailable)
     return res
       .status(400)
-      .send("This book is not available or maybe reserved!");
+      .send(`This book is ${book.status}!`);
 
   const member = await prisma.member.findUnique({
     where: { id: req.body.memberId },
   });
   if (!member) return res.status(404).send("Member not found!");
 
-  const institution = await prisma.institution.findUnique({
-    where: { id: req.body.institutionId },
-  });
-  if (!institution) return res.status(404).send("Institution not found!");
-
-  // Limit the number of reservations
+  const limit = settings.maxLoanPeriod;
   const dueDate = new Date();
-  dueDate.setDate(dueDate.getDate() + 7);
+  dueDate.setDate(dueDate.getDate() + limit);
 
   const [updatedCopy, createdReservation] = await prisma.$transaction([
     prisma.bookCopy.update({
@@ -131,7 +134,7 @@ router.post("/reject/:id", async (req, res) => {
   if (error) return res.status(404).send(error.details[0].message);
 
   const reservation = await prisma.reservation.findUnique({
-    where: { copyId: req.params.id },
+    where: { id: req.params.id },
   });
   if (!reservation)
     return res

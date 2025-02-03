@@ -1,26 +1,28 @@
 model Institution {
-  id                String           @id @default(uuid())
+  id                String         @id @default(uuid())
   name              String
   address           String
   phone             String
   openingHours      String?
-  email             String           @unique
+  email             String         @unique
   managerId         String?
-  status            Status           @default(ACTIVE)
-  established       DateTime         @default(now())
-  rating            Float            @default(0.0)
+  status            Status         @default(ACTIVE)
+  established       DateTime       @default(now())
+  rating            Float          @default(0.0)
+  settings          Json?
   institutionTypeId String?
-  aquisition        Aquisition[]     @relation("aquisition")
-  borrower          InterLibrary[]   @relation("InterLibraryBorrowerId")
-  lender            InterLibrary[]   @relation("InterLibraryLender")
-  book              Book[]           @relation("Book")
-  institution Circulation[]  @relation("fromcirculation")
+  aquisition        Aquisition[]   @relation("aquisition")
+  borrower          InterLibrary[] @relation("InterLibraryBorrowerId")
+  lender            InterLibrary[] @relation("InterLibraryLender")
+  book              Book[]         @relation("Book")
+  institution       Circulation[]  @relation("fromcirculation")
   // institutionType   InstitutionType? @relation(fields: [institutionTypeId], references: [id], onDelete: Restrict)
-  manager           Librarian?       @relation("InstitutionManager", fields: [managerId], references: [librarianId], onDelete: Restrict)
-  librarians        Librarian[]      @relation("InstitutionLibrarians")
-  library           Library[]        @relation("institution")
-  reservation     Reservation[]         @relation("fromReservationToinsititution")
-  @@index([name,email,address, phone  ])
+  manager           Librarian?     @relation("InstitutionManager", fields: [managerId], references: [librarianId], onDelete: Restrict)
+  librarians        Librarian[]    @relation("InstitutionLibrarians")
+  library           Library[]      @relation("institution")
+  reservation       Reservation[]  @relation("fromReservationToinsititution")
+
+  @@index([name, email, address, phone])
   @@map("institutions")
 }
 

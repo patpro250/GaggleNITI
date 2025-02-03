@@ -1,7 +1,7 @@
 model Reservation {
   id            String            @id @default(uuid())
   memberId      String
-  copyId        String            @unique
+  copyId        String           
   doneOn        DateTime          @default(now())
   dueDate       DateTime?
   librarianId   String?
