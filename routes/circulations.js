@@ -18,8 +18,7 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   let borrowing = await prisma.circulation.findFirst({
     where: {
-      copyId: req.params.id,
-      returnDate: null,
+      AND: [{ copyId: req.params.id }, { returnDate: null }],
     },
     include: {
       bookCopy: true,
@@ -94,7 +93,9 @@ router.post("/lend", async (req, res) => {
         book.title
       }' with author: ${book.author}, publisher: ${book.publisher}, code: ${
         copy.code
-      }, call number: ${book.callNo} to ${userId.firstName} ${userId.lastName}. On ${now()}`
+      }, call number: ${book.callNo} to ${userId.firstName} ${
+        userId.lastName
+      }. On ${now()}`
     );
 });
 
@@ -136,7 +137,9 @@ router.post("/return", async (req, res) => {
     }),
   ]);
 
-  let copy = await prisma.bookCopy.findFirst({ where: { id: isIssued.copyId } });
+  let copy = await prisma.bookCopy.findFirst({
+    where: { id: isIssued.copyId },
+  });
   let book = await prisma.book.findFirst({ where: { id: copy.bookId } });
 
   let member = await prisma.member.findUnique({
@@ -145,12 +148,43 @@ router.post("/return", async (req, res) => {
   res
     .status(200)
     .send(
-      `${member.firstName} ${member.lastName}, you have successfully returned '${
-        book.title
-      }' with author: ${book.author}, publisher: ${book.publisher}, code: ${
-        copy.code
-      }, call number: ${book.callNo} to ${librarian.firstName} ${librarian.firstName}. On ${now()}`
+      `${member.firstName} ${
+        member.lastName
+      }, you have successfully returned '${book.title}' with author: ${
+        book.author
+      }, publisher: ${book.publisher}, code: ${copy.code}, call number: ${
+        book.callNo
+      } to ${librarian.firstName} ${librarian.firstName}. On ${now()}`
     );
+});
+
+router.post("/renew/:id", async (req, res) => {
+  const bookcopy = await prisma.circulation.findFirst({
+    where: {
+      AND: [{ copyId: req.params.id }, { returnDate: null }],
+    },
+  });
+  if (!bookcopy) return res.status(404).send("book copy is not available");
+
+  const institution = await prisma.institution.findUnique({
+    where: { id: req.body.institutionId },
+  });
+  if (!institution) return res.status(404).send("institution is not found");
+
+  const limit = institution.settings.circulation.maxLoanPeriod;
+  const dueDate = bookcopy.dueDate;
+  dueDate.setDate(dueDate.getDate() + limit);
+
+  await prisma.circulation.updateMany({
+    where: {
+      AND: [{ copyId: req.params.id }, { returnDate: null }],
+    },
+    data: {
+      dueDate: dueDate,
+    },
+  });
+
+  res.status(200).send(`Book renewed successfully`);
 });
 
 function validate(borrow) {
