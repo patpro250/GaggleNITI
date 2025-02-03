@@ -34,7 +34,9 @@ router.post('/', async (req, res) => {
     const member = await prisma.member.findUnique({where: {id: req.body.memberId}});
     if (!member) return res.status(404).send('Member not found!');
 
-    // Institution checking
+    const institution = await prisma.institution.findUnique({where: {id: req.body.institutionId}});
+    if (!institution) return res.status(404).send('Institution not found!');
+
     // Limit the number of reservations
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 7);
@@ -44,17 +46,42 @@ router.post('/', async (req, res) => {
         prisma.reservation.create({data: {
             memberId: req.body.memberId,
             copyId: req.body.copyId,
-            dueDate: dueDate
+            dueDate: dueDate,
+            institutionId: req.body.institutionId
         }})
     ]);
 
     res.status(201).send(createdReservation);
 });
 
+router.post('/approve/:id', async (req, res) => {
+    const reservation = await prisma.reservation.findUnique({where: {id: req.params.id}});
+    if (!reservation) return res.status(404).send(`The reservation with ID ${req.params.id} was not found.`);
+
+    // Use Token payload from middleware
+    await prisma.$transaction([
+        await prisma.bookCopy.update({where: {id: reservation.copyId}, data: {
+            status: 'RESERVED'
+        }}),
+        await prisma.reservation.update({where: {id: reservation.id}, data: {
+            status: 'APPROVED',
+            librarianId: '94adc451-74a3-4e17-8c44-fb1ebe7769f7'
+        }}),
+        await prisma.member.update({where: {id: reservation.memberId}, data: {
+            reservations: {
+                disconnect: {id: reservation.id}
+            }
+        }}),
+    ]);
+
+    res.status(200).send('Reservation approved!');
+});
+
 function validate(reservation) {
     const schema = Joi.object({
         memberId: Joi.string().required().uuid(),
-        copyId: Joi.string().required().uuid()
+        copyId: Joi.string().required().uuid(),
+        institutionId: Joi.string().required().uuid()
     });
     return schema.validate(reservation);
 }

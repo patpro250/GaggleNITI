@@ -13,6 +13,7 @@ model Librarian {
   institution   Institution?  @relation("InstitutionLibrarians", fields: [institutionId], references: [id], onDelete: Restrict)
   library       Library[]     @relation("librarian")
   librarian     Circulation[] @relation("circulation")
+  reservation   Reservation[] @relation("FromReservation")
 
   @@map("librarians")
 }

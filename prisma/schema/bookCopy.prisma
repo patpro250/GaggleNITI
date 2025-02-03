@@ -28,6 +28,7 @@ enum BookCopyStatus {
   ONDISPLAY
   MISSING
   PROCESSING
+  RESERVED
 }
 
 enum Condition {
