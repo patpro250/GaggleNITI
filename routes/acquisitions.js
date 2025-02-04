@@ -1,5 +1,6 @@
 const express = require("express");
 const Joi = require("joi");
+const generate = require("./lib/generateCopies");
 const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 
@@ -36,18 +37,51 @@ router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  await prisma.aquisition.create({ data: req.body });
-  res.status(201).send("Successfully created");
+  const copies = generate(req.body);
+
+  await prisma.$transaction([
+    prisma.aquisition.create({
+      data: {
+        book: req.body.bookId,
+        quantity: req.body.quantity,
+        librarian: req.body.librarianId,
+        doneOn: new Date(),
+        insititution: req.body.insititutionId,
+        supplier: req.body.supplierId,
+        book: {
+          connect: { id: req.body.bookId },
+        },
+        insititution: {
+          connect: { id: req.body.institutionId },
+        },
+        librarian: {
+          connect: { librarianId: req.body.librarianId },
+        },
+        supplier: {
+          connect: { id: req.body.supplierId },
+        },
+      },
+    }),
+    prisma.bookCopy.createMany({ data: copies }),
+  ]);
+
+  const book = await prisma.book.findFirst({where: {id: req.body.bookId}});
+  const supplier = await prisma.supplier.findFirst({where: {id: req.body.supplierId}});
+
+  res.status(201).send(`${req.body.quantity} books of ${book.title} acquired from ${supplier.name}.`);
 });
 
 function validate(acquisition) {
   const schema = Joi.object({
-    bookId: Joi.string().uuid().required(), 
+    bookId: Joi.string().uuid().required(),
     quantity: Joi.number().integer().required(),
     librarianId: Joi.string().uuid().required(),
     doneOn: Joi.date().iso().required(),
     institutionId: Joi.string().uuid().required(),
     supplierId: Joi.string().uuid().required(),
+    code: Joi.string().required(),
+    libraryId: Joi.string().uuid().required(),
+    dateOfAquisition: Joi.date().iso().required()
   });
   return schema.validate(acquisition);
 }
