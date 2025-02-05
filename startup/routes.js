@@ -9,6 +9,7 @@ const acquisitions = require("../routes/acquisitions");
 const suppliers = require("../routes/suppliers");
 const circulations = require("../routes/circulations");
 const reservations = require("../routes/reservations");
+const interLibrary = require("../routes/interLibrary");
 
 module.exports = function (app) {
     app.use(express.json());
@@ -22,4 +23,5 @@ module.exports = function (app) {
     app.use('/acquisitions', acquisitions);
     app.use('/circulations', circulations);
     app.use("/reservations", reservations);
+    app.use("/interlibrary", interLibrary);
 }
