@@ -38,6 +38,14 @@ router.post("/", async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   const copies = generate(req.body);
+  
+  const LIMIT = 300;
+  if (copies.length > LIMIT) return res.status(400).send(`The acquired books exceed the limit of ${LIMIT}.`);
+  
+  let check = `${req.body.quantity}/${req.body.code}`;
+  const isFound = await prisma.bookCopy.findFirst({where: {code: {contains: check}}});
+  if (isFound) return res.status(400).send(`Book ending with code: ${check} already exists!`);
+
 
   await prisma.$transaction([
     prisma.aquisition.create({
