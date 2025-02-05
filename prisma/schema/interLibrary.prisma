@@ -2,10 +2,10 @@ model InterLibrary {
   id         String             @id @default(uuid())
   lenderId   String
   borrowerId String
-  bookId     String             @unique
+  bookId     String
   borrowDate DateTime           @default(now())
   returnDate DateTime?
-  dueDate    DateTime
+  dueDate    DateTime?
   status     interLibraryStatus
   book       BookCopy           @relation("InterLibrarybookCopy", fields: [bookId], references: [id])
   borrower   Institution        @relation("InterLibraryBorrowerId", fields: [borrowerId], references: [id])
