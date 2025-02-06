@@ -141,8 +141,9 @@ router.post("/approve/:id", async (req, res) => {
       data: { status: "CHECKEDOUT" },
     }),
   ]);
+  let book = await prisma.book.findFirst({where: {id: isApproved.bookId}});
 
-  res.status(200).send(`The inter library request was successfully approved`);
+  res.status(200).send(`${book.title} with author: ${book.author}, publisher: ${book.publisher} requested successfully!`);
 });
 
 router.post("/reject/:id", async (req, res) => {
@@ -181,6 +182,32 @@ router.post("/reject/:id", async (req, res) => {
   res.status(200).send(`The inter library request was successfully rejected`);
 });
 
+router.post('/return/:id', async (req, res) => {
+  const { error } = validateReturn(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  const borrower = await prisma.interLibrary.findFirst({ where: {borrowerId: req.body.borrowerId}});
+  if (!borrower) return res.status(404).send(`Borrower not found or not the appropriate borrower of the book!`);
+
+  const copy = await prisma.bookCopy.findFirst({where: {id: req.body.copyId}});
+  if (!copy) return res.status(404).send(`Book copy not found!`);
+
+  if (copy.status !== 'CHECKEDOUT') return res.status(400).send(`This book is not issued, it is ${copy.status}`);
+
+  await prisma.$transaction([
+    prisma.interLibrary.update({where: {id: req.params.id}, data: {
+      status: 'RETURNED',
+      returnDate: new Date()
+    }}),
+
+    prisma.bookCopy.update({where: {id: req.body.copyId}, data: {status: 'AVAILABLE'}})
+  ]);
+
+  let book = await prisma.book.findFirst({where: {id: copy.bookId}});
+
+  res.status(200).send(`${book.title} was successfully returned`);
+});
+
 function validate(request) {
   const schema = Joi.object({
     lenderId: Joi.string().uuid().required(),
@@ -205,4 +232,11 @@ function validateRejection(request) {
   return schema.validate(request);
 }
 
+function validateReturn(request) {
+  const schema = Joi.object({
+    copyId: Joi.string().uuid().required(),
+    borrowerId: Joi.string().uuid().required()
+  });
+  return schema.validate(request);
+}
 module.exports = router;

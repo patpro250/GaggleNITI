@@ -121,7 +121,7 @@ router.post("/return", async (req, res) => {
   });
   if (!user) return res.status(404).send("User not found or didn't borrow!");
 
-  const [updateLoan, updateBook] = await prisma.$transaction([
+  await prisma.$transaction([
     prisma.circulation.update({
       where: { id: isIssued.id },
       data: {
