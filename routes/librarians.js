@@ -7,6 +7,10 @@ const bcrypt = require("bcrypt");
 
 const prisma = new PrismaClient();
 
+router.get('/dashboard', async (req, res) => {
+  const totalLibrarians = await prisma.librarian.count();
+  res.status(200).send({totalLibrarians});
+});
 router.get("/", async (req, res) => {
   const librarians = await prisma.librarian.findMany({ include: { institution: true },});
   res.status(200).send(librarians);

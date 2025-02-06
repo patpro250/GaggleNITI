@@ -2,11 +2,27 @@ const express = require("express");
 const Joi = require("joi");
 const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
+const { take } = require("lodash");
 
 const prisma = new PrismaClient();
 
+router.get('/dashboard', async (req, res) => {
+  const totalBooks = await prisma.bookCopy.count();
+  const issued = await prisma.bookCopy.count({where: {status: 'CHECKEDOUT'}});
+  const available = await prisma.bookCopy.count({where: {status: 'AVAILABLE'}});
+  const returned = await prisma.circulation.count({where: {returnDate: {not: null}}});
+
+  const stats = {
+    totalBooks,
+    issued,
+    available,
+    returned,
+  };
+  res.status(200).send(stats);
+});
+
 router.get("/", async (req, res) => {
-  const bookcopies = await prisma.BookCopy.findMany();
+  const bookcopies = await prisma.BookCopy.findMany({take: 10});
   if (bookcopies.length > 0) return res.status(200).send(bookcopies);
   res.status(404).send("No BookCopy Found");
 });
