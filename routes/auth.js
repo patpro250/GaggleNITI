@@ -21,8 +21,10 @@ router.post('/members', async (req, res) => {
     const isValid = await bcrypt.compare(req.body.password, member.password);
     if (!isValid) return res.status(400).send('Invalid email or password');
 
-    const token = jwt.sign({id: member.id}, process.env.JWT_KEY);
-    res.status(200).send(token);
+    let payload = _.pick(member, ["id", "email", "firstName", "lastName"]);
+
+    const token = jwt.sign(payload, process.env.JWT_KEY);
+    res.status(200).header('x-auth-token', token).send('Successfully logged in!');
 });
 
 function validateMember(req) {
