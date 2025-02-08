@@ -5,6 +5,8 @@ const { PrismaClient } = require("@prisma/client");
 const _ = require("lodash");
 const bcrypt = require("bcrypt");
 
+const {Role, rolePermissions} = require("../routes/lib/librarianRoles");
+
 const prisma = new PrismaClient();
 
 router.get('/dashboard', async (req, res) => {
@@ -43,10 +45,14 @@ router.post("/", async (req, res) => {
 
      if (librarian) return res.status(400).send(`Librarian with email: ${req.body.email} , phone: ${req.body.phoneNumber}  already exists!`);
 
+    librarian = req.body;
+    let { role } = librarian;
+    librarian.permissions = rolePermissions[role];
+
     const salt = await bcrypt.genSalt(10);
     req.body.password = await bcrypt.hash(req.body.password, salt);
 
-    await prisma.librarian.create({data: req.body});
+    await prisma.librarian.create({data: librarian});
     res.status(201).send("Librarian created successfully");
 });
 
@@ -71,6 +77,8 @@ function validate(librarian){
     phoneNumber: Joi.string().min(10).max(15).required(),
     password: Joi.string().min(8).required(),
     institutionId: Joi.string().uuid().required(),
+    role: Joi.string().valid(...Object.values(Role)).required(),
+    gender: Joi.string().valid('F', 'M', 'O').required()
   });
 
   return schema.validate(librarian);

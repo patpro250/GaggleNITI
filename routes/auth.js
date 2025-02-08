@@ -12,7 +12,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 router.post('/members', async (req, res) => {
-    const { error } = validateMember(req.body);
+    const { error } = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
     let member = await prisma.member.findFirst({where: {email: req.body.email}});
@@ -27,7 +27,23 @@ router.post('/members', async (req, res) => {
     res.status(200).header('x-auth-token', token).send('Successfully logged in!');
 });
 
-function validateMember(req) {
+router.post('/librarians', async (req, res) => {
+    const { error } = validate(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    let librarian = await prisma.librarian.findFirst({where: {email: req.body.email}});
+    if (!librarian) return res.status(400).send('Invalid email or password');
+
+    const isValid = await bcrypt.compare(req.body.password, librarian.password);
+    if (!isValid) return res.status(400).send('Invalid email or password');
+
+    let payload = _.pick(librarian, ["librarianId", "email", "firstName", "lastName", "institutionId", "role"]);
+    const token = jwt.sign(payload, process.env.JWT_KEY);
+
+    res.status(200).header('x-auth-token', token).send('Successfully logged in!');
+});
+
+function validate(req) {
     const schema = Joi.object({
         email: Joi.string().email().required(),
         password: Joi.string().required()

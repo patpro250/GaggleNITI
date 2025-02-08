@@ -4,9 +4,11 @@ model Librarian {
   firstName     String
   lastName      String
   email         String
+  gender        Gender
   phoneNumber   String
   password      String        @db.VarChar(2055)
-  isAdmin       Boolean       @default(false)
+  role          Role
+  permissions   Permission[]
   joined        DateTime      @default(now())
   aquisition    Aquisition[]  @relation("librarian")
   manages       Institution[] @relation("InstitutionManager")
@@ -16,4 +18,43 @@ model Librarian {
   reservation   Reservation[] @relation("FromReservation")
 
   @@map("librarians")
+}
+
+enum Role {
+  DIRECTOR
+  ASSISTANT
+  CATALOGER
+  REFERENCE_LIBRARIAN
+  CIRCULATION_LIBRARIAN
+  ARCHIVIST
+  DIGITAL_LIBRARIAN
+  SYSTEMS_LIBRARIAN
+  ACQUISITIONS_LIBRARIAN
+  YOUTH_LIBRARIAN
+  LAW_LIBRARIAN
+  MEDICAL_LIBRARIAN
+  SCHOOL_LIBRARIAN
+  PUBLIC_SERVICES_LIBRARIAN
+  INTERLIBRARY_LOAN_LIBRARIAN
+  ADMINISTRATOR
+  RESEARCH_LIBRARIAN
+  SERIALS_LIBRARIAN
+  SPECIAL_COLLECTIONS_LIBRARIAN
+  TECHNICAL_LIBRARIAN
+  EVENTS_COORDINATOR
+  VOLUNTEER_COORDINATOR
+}
+
+enum Permission {
+  READ
+  WRITE
+  DELETE
+  MANAGE_USERS
+  SYSTEM_ADMIN
+}
+
+enum Gender {
+  F
+  M
+  O
 }
