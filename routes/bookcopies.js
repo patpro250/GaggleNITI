@@ -1,5 +1,6 @@
 const express = require("express");
 const Joi = require("joi");
+const librarianAuth = require("../middleware/auth/librarian");
 const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 
@@ -32,13 +33,12 @@ router.get('/:id', async (req, res) => {
   res.status(200).send(bookCopy);
 })
 
-router.post("/", async (req, res) => {
+router.post("/", librarianAuth, async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const library = await prisma.library.findUnique({
-    where: { id: req.body.libraryId },
-  });
+  let libraryId = req.user.institutionId;
+  let library = await prisma.library.findFirst({where: {institutionId: libraryId}});
 
   if (!library) return res.status(404).send("Library not found");
 
@@ -67,7 +67,6 @@ function validate(bookcopy) {
   const schema = Joi.object({
     bookId: Joi.string().required(),
     status: Joi.string(),
-    libraryId: Joi.string().required(),
     condition: Joi.string(),
     dateOfAquisition: Joi.date(),
     code: Joi.string().required(),

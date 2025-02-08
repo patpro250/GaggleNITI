@@ -2,12 +2,13 @@ const express = require("express");
 const languageCodes = require("./lib/languages");
 const router = express.Router();
 const Joi = require("joi");
+const librarianAuth = require("../middleware/auth/librarian");
 const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
-router.get("/", async (req, res) => {
-  const books = await prisma.book.findMany();
+router.get("/", librarianAuth, async (req, res) => {
+  const books = await prisma.book.findMany({where: {institutionId: req.user.institutionId}});
   res.status(200).send(books);
 });
 
@@ -15,7 +16,7 @@ router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const exists = await prisma.book.findFirst({ where: { title: req.body.title } });
+  const exists = await prisma.book.findFirst({ where: { institutionId: req.body.institutionId } });
   if (exists) return res.status(400).send(`'${req.body.title}' already exists`);
 
   const institution = await prisma.institution.findUnique({

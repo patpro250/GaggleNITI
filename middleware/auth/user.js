@@ -9,7 +9,7 @@ module.exports = function (req, res, next) {
 
     try {
         const payload = jwt.verify(token, process.env.JWT_KEY);
-        req.member = payload;
+        req.user = payload;
         next();
     } catch (ex) {
         res.status(400).send('Invalid token');
