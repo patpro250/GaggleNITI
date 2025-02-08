@@ -31,7 +31,7 @@ router.post("/", async (req, res) => {
     req.body.password = await bcrypt.hash(req.body.password, salt);
 
     await prisma.member.create({data: req.body});
-    res.status(201).send("Member created successfully");
+    res.status(201).send(`${req.body.firstName} created successfully`);
 });
 
 router.post("/change-password/:id", async (req, res) => {

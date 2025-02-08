@@ -3,9 +3,11 @@
     "@faker-js/faker": "^9.4.0",
     "@prisma/client": "^6.3.0",
     "bcrypt": "^5.1.1",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "joi": "^17.13.3",
     "joi-password-complexity": "^5.2.0",
+    "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21"
   },
   "devDependencies": {

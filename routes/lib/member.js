@@ -22,10 +22,8 @@ function validate(member) {
       .required(),
     address: Joi.object().required(),
     memberShipType: Joi.string().valid("STUDENT", "REGULAR").required(),
-    status: Joi.string().valid("ACTIVE", "INACTIVE", "SUSPENDED").required(),
     classRoom: Joi.string().allow(null, "").optional(),
     cardNo: Joi.string().allow(null, "").optional(),
-    joinedAt: Joi.date().iso().required(),
     password: passwordComplexity(complexityOptions).required()
   });
 

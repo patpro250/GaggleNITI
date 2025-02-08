@@ -6,13 +6,13 @@ model Member {
   phone          String
   address        Json
   memberShipType memberShipType
-  status         memberShipStatus
+  status         memberShipStatus @default(ACTIVE)
   classRoom      String?
   cardNo         String?
-  joinedAt       DateTime        @default(now())
+  joinedAt       DateTime         @default(now())
   password       String
   reservation    Reservation[]    @relation("Reservation")
-  member    Circulation[] @relation("incirculation")
+  member         Circulation[]    @relation("incirculation")
 
   @@index([email])
   @@index([cardNo])
