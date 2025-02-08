@@ -11,8 +11,10 @@ const circulations = require("../routes/circulations");
 const reservations = require("../routes/reservations");
 const interLibrary = require("../routes/interLibrary");
 const auth = require("../routes/auth");
+const user = require("../middleware/auth/user");
 
 module.exports = function (app) {
+    app.use(user);
     app.use(express.json());
     app.use(trimmer);
     app.use('/books', books);

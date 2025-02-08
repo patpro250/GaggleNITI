@@ -32,7 +32,9 @@ router.post("/", async (req, res) => {
     const { error } = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    
+    let institution = await prisma.institution.findFirst({where: {id: req.body.institutionId}});
+    if (!institution) return res.status(404).send('Institution not found!');
+
     let librarian = await prisma.librarian.findFirst({
       where: {
         AND: [
@@ -53,7 +55,7 @@ router.post("/", async (req, res) => {
     req.body.password = await bcrypt.hash(req.body.password, salt);
 
     await prisma.librarian.create({data: librarian});
-    res.status(201).send("Librarian created successfully");
+    res.status(201).send(`${librarian.firstName} ${librarian.lastName} created successfully`);
 });
 
 router.put("/:id", async(req, res) => {

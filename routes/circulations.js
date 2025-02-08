@@ -66,7 +66,7 @@ router.post("/lend", async (req, res) => {
   if (!librarian)
     return res.status(404).send(`Librarian ${req.body.librarianId} not found`);
 
-  const [newLoan, updatedBook] = await prisma.$transaction([
+  await prisma.$transaction([
     prisma.circulation.create({
       data: {
         copyId: req.body.copyId,

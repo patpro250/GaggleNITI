@@ -19,7 +19,7 @@ router.get("/", async (req, res) => {
 });
 
 router.get("/:id", async (req, res) => {
-  const aquisition = await prisma.aquisition.findUnique({
+  const acquisition = await prisma.aquisition.findUnique({
     where: { id: req.params.id },
     include: {
       book: true,
@@ -29,8 +29,8 @@ router.get("/:id", async (req, res) => {
     },
   });
 
-  if (!aquisition) return res.status(404).send("Aquisition not found!");
-  res.send(aquisition);
+  if (!acquisition) return res.status(404).send("Acquisition not found!");
+  res.send(acquisition);
 });
 
 router.post("/", async (req, res) => {

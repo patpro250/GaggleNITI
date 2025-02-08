@@ -2,7 +2,6 @@ const express = require("express");
 const Joi = require("joi");
 const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
-const { take } = require("lodash");
 
 const prisma = new PrismaClient();
 
