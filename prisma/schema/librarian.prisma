@@ -1,5 +1,5 @@
 model Librarian {
-  librarianId   String        @id @default(uuid())
+  librarianId   String          @id @default(uuid())
   institutionId String?
   firstName     String
   lastName      String
@@ -7,16 +7,15 @@ model Librarian {
   status        LibrarianStatus @default(ACTIVE)
   gender        Gender
   phoneNumber   String
-  password      String        @db.VarChar(2055)
+  password      String          @db.VarChar(2055)
   role          Role
   permissions   Permission[]
-  joined        DateTime      @default(now())
-  acquisition    Acquisition[]  @relation("librarian")
-  manages       Institution[] @relation("InstitutionManager")
-  institution   Institution?  @relation("InstitutionLibrarians", fields: [institutionId], references: [id], onDelete: Restrict)
-  library       Library[]     @relation("librarian")
-  librarian     Circulation[] @relation("circulation")
-  reservation   Reservation[] @relation("FromReservation")
+  joined        DateTime        @default(now())
+  acquisition   Acquisition[]   @relation("librarian")
+  institution   Institution?    @relation("InstitutionLibrarians", fields: [institutionId], references: [id], onDelete: Restrict)
+  library       Library[]       @relation("librarian")
+  librarian     Circulation[]   @relation("circulation")
+  reservation   Reservation[]   @relation("FromReservation")
 
   @@map("librarians")
 }
@@ -37,7 +36,6 @@ enum Role {
   SCHOOL_LIBRARIAN
   PUBLIC_SERVICES_LIBRARIAN
   INTERLIBRARY_LOAN_LIBRARIAN
-  ADMINISTRATOR
   RESEARCH_LIBRARIAN
   SERIALS_LIBRARIAN
   SPECIAL_COLLECTIONS_LIBRARIAN

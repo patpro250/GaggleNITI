@@ -1,10 +1,10 @@
 model Book {
-  id                 String       @id @default(uuid())
+  id                 String        @id @default(uuid())
   title              String
   author             String
   publisher          String
   published          DateTime
-  firstAcquisition    DateTime
+  firstAcquisition   DateTime
   isbn               String?
   language           String
   edition            String?
@@ -14,12 +14,11 @@ model Book {
   barCode            String?
   ddcCode            String?
   institutionId      String
-  genreId            Int?
+  genre              String?
   placeOfPublication String?
-  acquisition         Acquisition[] @relation("Acquisition")
-  bookCopy           BookCopy[]   @relation("BookCopy")
-  genre              Genre?       @relation("Genres", fields: [genreId], references: [id])
-  institution        Institution? @relation("Book", fields: [institutionId], references: [id], onDelete: Cascade)
+  acquisition        Acquisition[] @relation("Acquisition")
+  bookCopy           BookCopy[]    @relation("BookCopy")
+  institution        Institution?  @relation("Book", fields: [institutionId], references: [id], onDelete: Cascade)
 
   @@map("books")
 }

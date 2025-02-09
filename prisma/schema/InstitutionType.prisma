@@ -1,7 +1,0 @@
-model InstitutionType {
-  id           String       @id @default(uuid())
-  name         String       @unique
-  // institutions Institution?
-
-  @@map("institutionsTypes")
-}

@@ -32,5 +32,5 @@ enum SupplierStatus {
   INACTIVE
   PENDING
   VERIFIED
-  PREFFERED
+  PREFERRED
 }

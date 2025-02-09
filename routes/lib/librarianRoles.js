@@ -24,7 +24,7 @@ const Role = {
 };
 
 const rolePermissions = {
-  DIRECTOR: ["READ", "WRITE", "DELETE", "MANAGE_USERS", "SYSTEM_ADMIN"],
+  DIRECTOR: ["READ", "WRITE", "DELETE", "MANAGE_USERS"],
   ASSISTANT: ["READ", "WRITE"],
   CATALOGER: ["READ", "WRITE"],
   REFERENCE_LIBRARIAN: ["READ"],

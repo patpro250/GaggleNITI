@@ -1,15 +1,14 @@
 model Library {
   id            String      @id @unique @default(uuid())
   name          String
-  managerId     String
+  directorId    String
   createdAt     DateTime    @default(now())
   institutionId String
   shelvesNo     Int
-  typeId        String      @unique
+  type          String
   bookCopy      BookCopy[]  @relation("BookCopy")
   institution   Institution @relation("institution", fields: [institutionId], references: [id])
-  librarian     Librarian   @relation("librarian", fields: [managerId], references: [librarianId])
-  type          LibraryType @relation("libraryType", fields: [typeId], references: [id])
+  librarian     Librarian   @relation("librarian", fields: [directorId], references: [librarianId])
 
   @@map("libraries")
 }

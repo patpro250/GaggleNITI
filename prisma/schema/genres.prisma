@@ -1,7 +1,0 @@
-model Genre {
-  id    Int    @id @default(autoincrement())
-  name  String @unique
-  bookR Book[] @relation("Genres")
-
-  @@map("genres")
-}

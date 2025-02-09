@@ -1,0 +1,31 @@
+model Institution {
+  id           String         @id @default(uuid())
+  name         String
+  address      String
+  phone        String
+  openingHours String?
+  email        String         @unique
+  status       Status         @default(ACTIVE)
+  joinedAt     DateTime       @default(now())
+  rating       Float          @default(0.0)
+  password     String
+  settings     Json?
+  type         String
+  acquisition  Acquisition[]  @relation("acquisition")
+  borrower     InterLibrary[] @relation("InterLibraryBorrowerId")
+  lender       InterLibrary[] @relation("InterLibraryLender")
+  book         Book[]         @relation("Book")
+  institution  Circulation[]  @relation("fromcirculation")
+  librarians   Librarian[]    @relation("InstitutionLibrarians")
+  library      Library[]      @relation("institution")
+  reservation  Reservation[]  @relation("fromReservationToinstitution")
+
+  @@index([name, email, address, phone])
+  @@map("institutions")
+}
+
+enum Status {
+  CLOSED
+  ACTIVE
+  UNDERRENOVATION
+}
