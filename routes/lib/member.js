@@ -39,4 +39,4 @@ function validatePassword(password) {
   return schema.validate(password);
 }
 
-module.exports = { validate, validatePassword };
+module.exports = { validate, validatePassword, complexityOptions };

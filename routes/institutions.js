@@ -1,6 +1,9 @@
 const express = require("express");
 const Joi = require("joi");
+const bcrypt = require("bcrypt");
+const passwordComplexity = require("joi-password-complexity");
 const _ = require("lodash");
+const {complexityOptions} = require("../routes/lib/member");
 const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 const institutionSettings = require("../routes/lib/defaultSettings");
@@ -40,6 +43,7 @@ router.put("/:id/settings", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
+  if (!req.body.password) return res.status(400).send("Password is required"); 
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -57,6 +61,7 @@ router.post("/", async (req, res) => {
   req.body.settings = defaults.settings; 
 
   if (exists) return res.status(400).send(`${req.body.email} already exists!`);
+  req.body.password = await bcrypt.hash(req.body.password, 10);
    const institution = await prisma.institution.create({
     data: req.body,
   });
@@ -90,12 +95,10 @@ function validate(institution) {
     phone: Joi.string().required(),
     openingHours: Joi.string(),
     email: Joi.string().email({ minDomainSegments: 2 }).required(),
-    managerId: Joi.string(),
     status: Joi.string(),
     established: Joi.date(),
-    rating: Joi.number(),
-    institutionTypeId: Joi.string(),
-    manager: Joi.string()
+    type: Joi.string().required(),
+    password: passwordComplexity(complexityOptions)
   });
   return schema.validate(institution);
 }
