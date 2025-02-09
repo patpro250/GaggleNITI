@@ -1,0 +1,5 @@
+-- CreateEnum
+CREATE TYPE "LibrarianStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'SUSPENDED', 'ON_LEAVE', 'RETIRED', 'TERMINATED', 'PENDING', 'PROBATION', 'RESIGNED', 'TRANSFERRED', 'DECEASED');
+
+-- AlterTable
+ALTER TABLE "librarians" ADD COLUMN     "status" "LibrarianStatus" NOT NULL DEFAULT 'ACTIVE';

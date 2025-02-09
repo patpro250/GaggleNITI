@@ -56,7 +56,7 @@ router.post("/", async (req, res) => {
   const defaults = institutionSettings();
   req.body.settings = defaults.settings; 
 
-  if (exists) return res.status(400).send(`${req.body.name} already exists!`);
+  if (exists) return res.status(400).send(`${req.body.email} already exists!`);
    const institution = await prisma.institution.create({
     data: req.body,
   });

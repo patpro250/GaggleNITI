@@ -71,6 +71,17 @@ router.put("/:id", async(req, res) => {
     res.status(200).send(`${req.body.firstName} ${req.body.lastName} updated successfully`);
 });
 
+router.put('/change-status/:id', async (req, res) => {
+  const { error } = validateChangeStatus(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  let librarian = await prisma.librarian.findUnique({where: {librarianId: req.params.id}});
+  if (!librarian) return res.status(404).send("Librarian not found");
+
+  librarian = await prisma.librarian.update({where: {librarianId: req.params.id}, data: {status: req.body.status}});
+  res.status(200).send(`${librarian.lastName}'s status was changed to ${librarian.status}`);
+});
+
 function validate(librarian){
   const schema = Joi.object({
     firstName: Joi.string().required(),
@@ -84,5 +95,24 @@ function validate(librarian){
   });
 
   return schema.validate(librarian);
+}
+
+function validateChangeStatus(req) {
+  const schema = Joi.object({
+    status: Joi.string().valid(
+      'ACTIVE',
+      'INACTIVE',
+      'SUSPENDED',
+      'ON_LEAVE',
+      'RETIRED',
+      'TERMINATED',
+      'PENDING',
+      'PROBATION',
+      'RESIGNED',
+      'TRANSFERRED',
+      'DECEASED'
+    ).required()
+  })
+  return schema.validate(req);
 }
 module.exports = router;

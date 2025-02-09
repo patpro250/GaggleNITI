@@ -4,6 +4,7 @@ model Librarian {
   firstName     String
   lastName      String
   email         String
+  status        LibrarianStatus @default(ACTIVE)
   gender        Gender
   phoneNumber   String
   password      String        @db.VarChar(2055)
@@ -57,4 +58,18 @@ enum Gender {
   F
   M
   O
+}
+
+enum LibrarianStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  ON_LEAVE
+  RETIRED
+  TERMINATED
+  PENDING
+  PROBATION
+  RESIGNED
+  TRANSFERRED
+  DECEASED
 }

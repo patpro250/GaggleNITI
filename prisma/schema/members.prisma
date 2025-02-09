@@ -1,31 +1,48 @@
 model Member {
-  id             String           @id @default(uuid())
+  id             String         @id @default(uuid())
   firstName      String
   lastName       String
-  email          String           @unique
+  email          String         @unique
+  dateOfBirth    DateTime
   phone          String
+  gender         Gender
   address        Json
-  memberShipType memberShipType
-  status         memberShipStatus @default(ACTIVE)
-  classRoom      String?
-  cardNo         String?
-  joinedAt       DateTime         @default(now())
+  memberShipType MembershipType
+  status         MemberStatus   @default(ACTIVE)
+  profile        Json
+  joinedAt       DateTime       @default(now())
   password       String
-  reservation    Reservation[]    @relation("Reservation")
-  member         Circulation[]    @relation("incirculation")
+  reservation    Reservation[]  @relation("Reservation")
+  member         Circulation[]  @relation("incirculation")
 
   @@index([email])
-  @@index([cardNo])
   @@index([firstName, lastName])
   @@map("members")
 }
 
-enum memberShipType {
+enum MembershipType {
   STUDENT
   REGULAR
+  SENIOR
+  PREMIUM
+  TEMPORARY
+  LIFETIME
+  FAMILY
+  CORPORATE
+  VIP
 }
 
-enum memberShipStatus {
+enum MemberStatus {
   ACTIVE
   INACTIVE
+  PENDING
+  SUSPENDED
+  BANNED
+  EXPIRED
+  ON_HOLD
+  DECEASED
+  BLACKLISTED
+  PROBATION
+  GUEST
+  FROZEN
 }
