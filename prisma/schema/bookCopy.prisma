@@ -4,7 +4,7 @@ model BookCopy {
   status           BookCopyStatus @default(AVAILABLE)
   libraryId        String
   condition        Condition      @default(NEW)
-  dateOfAquisition DateTime
+  dateOfAcquisition DateTime
   code             String?  
   book             Book           @relation("BookCopy", fields: [bookId], references: [id])
   circulation      Circulation[]  @relation("BookCopy")

@@ -31,7 +31,7 @@ CREATE TABLE "librarians" (
 CREATE UNIQUE INDEX "librarians_email_key" ON "librarians"("email");
 
 -- AddForeignKey
-ALTER TABLE "Aquisitions" ADD CONSTRAINT "Aquisitions_librarianId_fkey" FOREIGN KEY ("librarianId") REFERENCES "librarians"("librarianId") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Acquisitions" ADD CONSTRAINT "Acquisitions_librarianId_fkey" FOREIGN KEY ("librarianId") REFERENCES "librarians"("librarianId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "BookCopys" ADD CONSTRAINT "BookCopys_circulationId_fkey" FOREIGN KEY ("circulationId") REFERENCES "Circulation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

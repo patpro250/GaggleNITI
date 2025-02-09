@@ -10,7 +10,7 @@ model Librarian {
   role          Role
   permissions   Permission[]
   joined        DateTime      @default(now())
-  aquisition    Aquisition[]  @relation("librarian")
+  acquisition    Acquisition[]  @relation("librarian")
   manages       Institution[] @relation("InstitutionManager")
   institution   Institution?  @relation("InstitutionLibrarians", fields: [institutionId], references: [id], onDelete: Restrict)
   library       Library[]     @relation("librarian")

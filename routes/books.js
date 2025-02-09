@@ -56,7 +56,7 @@ function validate(book) {
     author: Joi.string().required().min(3),
     publisher: Joi.string().required().min(2),
     published: Joi.date().required(),
-    firstAquisition: Joi.date().required(),
+    firstAcquisition: Joi.date().required(),
     isbn: Joi.string().min(10),
     placeOfPublication: Joi.string(),
     language: Joi.string().valid(...languageCodes).required(),

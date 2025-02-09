@@ -7,7 +7,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 router.get("/", async (req, res) => {
-  const aquisition = await prisma.aquisition.findMany({
+  const acquisition = await prisma.acquisition.findMany({
     include: {
       book: true,
       librarian: true,
@@ -15,11 +15,11 @@ router.get("/", async (req, res) => {
       supplier: true,
     },
   });
-  res.send(aquisition);
+  res.send(acquisition);
 });
 
 router.get("/:id", async (req, res) => {
-  const acquisition = await prisma.aquisition.findUnique({
+  const acquisition = await prisma.acquisition.findUnique({
     where: { id: req.params.id },
     include: {
       book: true,
@@ -48,7 +48,7 @@ router.post("/", async (req, res) => {
 
 
   await prisma.$transaction([
-    prisma.aquisition.create({
+    prisma.acquisition.create({
       data: {
         book: req.body.bookId,
         quantity: req.body.quantity,
@@ -89,7 +89,7 @@ function validate(acquisition) {
     supplierId: Joi.string().uuid().required(),
     code: Joi.string().required(),
     libraryId: Joi.string().uuid().required(),
-    dateOfAquisition: Joi.date().iso().required()
+    dateOfAcquisition: Joi.date().iso().required()
   });
   return schema.validate(acquisition);
 }

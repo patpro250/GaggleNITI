@@ -68,7 +68,7 @@ function validate(bookcopy) {
     bookId: Joi.string().required(),
     status: Joi.string(),
     condition: Joi.string(),
-    dateOfAquisition: Joi.date(),
+    dateOfAcquisition: Joi.date(),
     code: Joi.string().required(),
   });
 

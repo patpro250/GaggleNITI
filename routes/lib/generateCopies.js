@@ -7,7 +7,7 @@ function generate(data) {
             bookId: data.bookId,
             libraryId: data.libraryId,
             code: code,
-            dateOfAquisition: data.dateOfAquisition
+            dateOfAcquisition: data.dateOfAcquisition
         });
     }
     return copies;

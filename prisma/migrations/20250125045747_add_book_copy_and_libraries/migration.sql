@@ -11,7 +11,7 @@ CREATE TABLE "BookCopys" (
     "status" "BookCopyStatus" NOT NULL DEFAULT 'AVAILABLE',
     "libraryId" TEXT NOT NULL,
     "condition" "Condition" NOT NULL DEFAULT 'NEW',
-    "dateOfAquisition" TIMESTAMP(3) NOT NULL,
+    "dateOfAcquisition" TIMESTAMP(3) NOT NULL,
     "circulationId" TEXT NOT NULL,
 
     CONSTRAINT "BookCopys_pkey" PRIMARY KEY ("id")

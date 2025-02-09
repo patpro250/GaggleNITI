@@ -11,7 +11,7 @@ model Institution {
   rating            Float          @default(0.0)
   settings          Json?
   institutionTypeId String?
-  aquisition        Aquisition[]   @relation("aquisition")
+  acquisition        Acquisition[]   @relation("acquisition")
   borrower          InterLibrary[] @relation("InterLibraryBorrowerId")
   lender            InterLibrary[] @relation("InterLibraryLender")
   book              Book[]         @relation("Book")

@@ -4,7 +4,7 @@ model Book {
   author             String
   publisher          String
   published          DateTime
-  firstAquisition    DateTime
+  firstAcquisition    DateTime
   isbn               String?
   language           String
   edition            String?
@@ -16,7 +16,7 @@ model Book {
   institutionId      String
   genreId            Int?
   placeOfPublication String?
-  aquisition         Aquisition[] @relation("Aquisition")
+  acquisition         Acquisition[] @relation("Acquisition")
   bookCopy           BookCopy[]   @relation("BookCopy")
   genre              Genre?       @relation("Genres", fields: [genreId], references: [id])
   institution        Institution? @relation("Book", fields: [institutionId], references: [id], onDelete: Cascade)

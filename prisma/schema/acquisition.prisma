@@ -1,4 +1,4 @@
-model Aquisition {
+model Acquisition {
   id             String      @id @default(uuid())
   bookId         String
   quantity       Int
@@ -6,12 +6,12 @@ model Aquisition {
   doneOn         DateTime @default(now())
   insititutionId String
   supplierId     String
-  book           Book        @relation("Aquisition", fields: [bookId], references: [id], onDelete: Cascade)
-  insititution   Institution @relation("aquisition", fields: [insititutionId], references: [id])
+  book           Book        @relation("Acquisition", fields: [bookId], references: [id], onDelete: Cascade)
+  insititution   Institution @relation("acquisition", fields: [insititutionId], references: [id])
   librarian      Librarian   @relation("librarian", fields: [librarianId], references: [librarianId])
-  supplier       Supplier    @relation("Aquisition", fields: [supplierId], references: [id])
+  supplier       Supplier    @relation("Acquisition", fields: [supplierId], references: [id])
 
-  @@map("Aquisitions")
+  @@map("Acquisitions")
 }
 
 model Supplier {
@@ -22,7 +22,7 @@ model Supplier {
   website    String
   address    Json
   status     SupplierStatus @default(ACTIVE)
-  aquisition Aquisition[]   @relation("Aquisition")
+  acquisition Acquisition[]   @relation("Acquisition")
 
   @@map("Suppliers")
 }
