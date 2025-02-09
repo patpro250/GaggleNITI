@@ -55,7 +55,7 @@ async function seedLibrarians() {
     ]),
     permissions: faker.helpers.arrayElements(
       ["READ", "WRITE", "DELETE", "MANAGE_USERS", "SYSTEM_ADMIN"],
-      faker.number.int({ min: 1, max: 3 }) // 1-3 random permissions
+      faker.number.int({ min: 1, max: 3 }) 
     ),
     joined: faker.date.past(),
   }));
