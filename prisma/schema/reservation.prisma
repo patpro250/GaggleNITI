@@ -8,7 +8,7 @@ model Reservation {
   institutionId String
   status        ReservationStatus @default(PENDING)
   librarian     Librarian?        @relation("FromReservation", fields: [librarianId], references: [librarianId])
-  institution   Institution       @relation("fromReservationToinsititution", fields: [institutionId], references: [id])
+  institution   Institution       @relation("fromReservationToinstitution", fields: [institutionId], references: [id])
   bookCopy      BookCopy          @relation("Reservation", fields: [copyId], references: [id])
   member        Member            @relation("Reservation", fields: [memberId], references: [id])
 

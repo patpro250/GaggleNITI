@@ -4,10 +4,10 @@ model Acquisition {
   quantity       Int
   librarianId    String
   doneOn         DateTime @default(now())
-  insititutionId String
+  institutionId String
   supplierId     String
   book           Book        @relation("Acquisition", fields: [bookId], references: [id], onDelete: Cascade)
-  insititution   Institution @relation("acquisition", fields: [insititutionId], references: [id])
+  institution   Institution @relation("acquisition", fields: [institutionId], references: [id])
   librarian      Librarian   @relation("librarian", fields: [librarianId], references: [librarianId])
   supplier       Supplier    @relation("Acquisition", fields: [supplierId], references: [id])
 

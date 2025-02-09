@@ -8,7 +8,7 @@ CREATE TABLE "Acquisitions" (
     "quantity" INTEGER NOT NULL,
     "librarianId" TEXT NOT NULL,
     "doneOn" TIMESTAMP(3) NOT NULL,
-    "insititutionId" TEXT NOT NULL,
+    "institutionId" TEXT NOT NULL,
     "supplierId" TEXT NOT NULL,
 
     CONSTRAINT "Acquisitions_pkey" PRIMARY KEY ("id")
@@ -31,7 +31,7 @@ CREATE TABLE "Suppliers" (
 CREATE UNIQUE INDEX "Suppliers_email_key" ON "Suppliers"("email");
 
 -- AddForeignKey
-ALTER TABLE "Acquisitions" ADD CONSTRAINT "Acquisitions_insititutionId_fkey" FOREIGN KEY ("insititutionId") REFERENCES "institutions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Acquisitions" ADD CONSTRAINT "Acquisitions_institutionId_fkey" FOREIGN KEY ("institutionId") REFERENCES "institutions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Acquisitions" ADD CONSTRAINT "Acquisitions_supplierId_fkey" FOREIGN KEY ("supplierId") REFERENCES "Suppliers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

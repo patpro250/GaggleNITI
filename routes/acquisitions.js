@@ -11,7 +11,7 @@ router.get("/", async (req, res) => {
     include: {
       book: true,
       librarian: true,
-      insititution: true,
+      institution: true,
       supplier: true,
     },
   });
@@ -24,7 +24,7 @@ router.get("/:id", async (req, res) => {
     include: {
       book: true,
       librarian: true,
-      insititution: true,
+      institution: true,
       supplier: true,
     },
   });
@@ -54,12 +54,12 @@ router.post("/", async (req, res) => {
         quantity: req.body.quantity,
         librarian: req.body.librarianId,
         doneOn: new Date(),
-        insititution: req.body.insititutionId,
+        institution: req.body.institutionId,
         supplier: req.body.supplierId,
         book: {
           connect: { id: req.body.bookId },
         },
-        insititution: {
+        institution: {
           connect: { id: req.body.institutionId },
         },
         librarian: {
