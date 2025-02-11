@@ -13,6 +13,7 @@ model Book {
   callNo             String?
   barCode            String?
   ddcCode            String?
+  createdAt          DateTime      @default(now())
   institutionId      String
   genre              String?
   placeOfPublication String?

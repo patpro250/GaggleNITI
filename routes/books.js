@@ -8,8 +8,32 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 router.get("/", librarianAuth, async (req, res) => {
-  const books = await prisma.book.findMany({where: {institutionId: req.user.institutionId}});
-  res.status(200).send(books);
+  let { cursor, limit, q, sort } = req.query;
+  limit = parseInt(limit) || 10;
+
+  if (limit > 50) limit = 50;
+  const orderBy = sort === 'asc' ? { createdAt: 'asc' } : { createdAt: 'desc' };
+
+  const whereClause = q
+    ? {
+      AND: [
+        { institutionId: req.user.institutionId },
+        { title: { contains: q, mode: "insensitive" } },
+      ],
+    }
+    : { institutionId: req.user.institutionId };
+
+
+  const books = await prisma.book.findMany({
+    where: whereClause,
+    take: limit,
+    skip: cursor ? 1 : 0,
+    cursor: cursor ? { id: cursor } : undefined,
+    orderBy
+  });
+
+  const nextCursor = books.length === limit ? books[books.length - 1].id : null;
+  res.status(200).send({ nextCursor, books });
 });
 
 router.post("/", async (req, res) => {
@@ -36,7 +60,7 @@ router.put("/:id", async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   const book = await prisma.book.findUnique({ where: { id: req.params.id } });
-  if (!book) return res.status(404).send(`Book with ID: ${req.params.id} doen't exist`);
+  if (!book) return res.status(404).send(`Book with ID: ${req.params.id} doesn't exist`);
 
   book = await prisma.book.update({ where: { id: req.params.id }, data: req.body });
   res.status(200).send("Book successfully updated!");
