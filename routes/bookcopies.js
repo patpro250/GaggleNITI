@@ -22,9 +22,21 @@ router.get('/dashboard', async (req, res) => {
 });
 
 router.get("/", async (req, res) => {
-  const bookcopies = await prisma.BookCopy.findMany({take: 10});
-  if (bookcopies.length > 0) return res.status(200).send(bookcopies);
-  res.status(404).send("No BookCopy Found");
+  let { cursor, limit, sort } = req.query;
+  limit = parseInt(limit) || 10;
+
+  if (limit > 50) limit = 50;
+  const orderBy = sort === 'asc' ? { dateOfAcquisition: 'asc' } : { dateOfAcquisition: 'desc' };
+
+  const copies = await prisma.bookCopy.findMany({
+    take: limit,
+    skip: cursor ? 1 : 0,
+    cursor: cursor ? { id: cursor } : undefined,
+    orderBy
+  });
+
+  const nextCursor = copies.length === limit ? copies[copies.length - 1].id : null;
+  res.status(200).send({ nextCursor, copies });
 });
 
 router.get('/:id', async (req, res) => {
