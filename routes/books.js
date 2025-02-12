@@ -18,7 +18,12 @@ router.get("/", librarianAuth, async (req, res) => {
     ? {
       AND: [
         { institutionId: req.user.institutionId },
-        { title: { contains: q, mode: "insensitive" } },
+        {
+          OR: [
+            { title: { contains: q, mode: "insensitive" } },
+            { author: { contains: q, mode: "insensitive" } }
+          ]
+        },
       ],
     }
     : { institutionId: req.user.institutionId };
