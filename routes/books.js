@@ -7,7 +7,7 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
-router.get("/", librarianAuth, async (req, res) => {
+router.get("/", async (req, res) => {
   let { cursor, limit, q, sort } = req.query;
   limit = parseInt(limit) || 10;
 
@@ -41,7 +41,7 @@ router.get("/", librarianAuth, async (req, res) => {
   res.status(200).send({ nextCursor, books });
 });
 
-router.post("/", async (req, res) => {
+router.post("/", librarianAuth, async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 

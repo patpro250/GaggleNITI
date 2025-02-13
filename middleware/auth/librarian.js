@@ -1,8 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
-
 module.exports = async function (req, res, next) {
-    let isLibrarian = await prisma.librarian.findFirst({where: {librarianId: req.user.librarianId}});
-    if (!isLibrarian) return res.status(400).send('This action can be done by Librarian only.');
+    if (!req.user || !req.user.librarianId) return res.status(403).send('This action can be done by Librarian only.');
     next();
 }
