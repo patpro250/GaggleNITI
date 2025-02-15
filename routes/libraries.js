@@ -93,11 +93,11 @@ router.put('/:id', async (req, res) => {
     res.status(200).send(`${req.body.name} updated successfully!`);
 });
 
-router.delete('/:id', async (req, res) => {
+router.put('/deactivate/:id', async (req, res) => {
     let library = await prisma.library.findUnique({where: {id: req.params.id}, include: {librarian: true}});
     if (!library) return res.status(404).send(`This library is not found`);
-    await prisma.library.delete({where: {id: req.params.id}});
-    res.status(200).send(`${library.name} is deleted successfully!`);
+    await prisma.library.update({where: {id: req.params.id}, data: {status: 'CLOSED'}});
+    res.status(200).send(`${library.name} is deactivated successfully!`);
 });
 
 function validate(library) {
