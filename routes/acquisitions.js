@@ -4,9 +4,12 @@ const generate = require("./lib/generateCopies");
 const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 
+const librarianAuth = require("../middleware/auth/librarian");
+const permission = require("../middleware/auth/permissions");
+
 const prisma = new PrismaClient();
 
-router.get("/", async (req, res) => {
+router.get("/", librarianAuth, async (req, res) => {
   const acquisition = await prisma.acquisition.findMany({
     include: {
       book: true,

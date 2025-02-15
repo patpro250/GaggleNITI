@@ -37,7 +37,7 @@ router.post('/librarians', async (req, res) => {
     const isValid = await bcrypt.compare(req.body.password, librarian.password);
     if (!isValid) return res.status(400).send('Invalid email or password');
 
-    let payload = _.pick(librarian, ["librarianId", "firstName", "lastName", "email", "institutionId", "role", "permissions"]);
+    let payload = _.omit(librarian, ["password"]);
     const token = jwt.sign(payload, process.env.JWT_KEY);
 
     res.status(200).header('x-auth-token', token).send('Successfully logged in!');

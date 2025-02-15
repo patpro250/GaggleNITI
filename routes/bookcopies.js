@@ -1,8 +1,10 @@
 const express = require("express");
 const Joi = require("joi");
-const librarianAuth = require("../middleware/auth/librarian");
 const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
+
+const librarianAuth = require("../middleware/auth/librarian");
+const permission = require("../middleware/auth/permissions");
 
 const prisma = new PrismaClient();
 
