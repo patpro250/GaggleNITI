@@ -5,6 +5,7 @@ model Library {
   createdAt     DateTime    @default(now())
   institutionId String
   shelvesNo     Int
+  status        Status      @default(ACTIVE)
   type          String
   bookCopy      BookCopy[]  @relation("BookCopy")
   institution   Institution @relation("institution", fields: [institutionId], references: [id])

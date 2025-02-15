@@ -40,9 +40,11 @@ router.get("/", async (req, res) => {
   res.status(200).send({ nextCursor, books });
 });
 
-router.get("/", async (req, res) => {
-  
-});
+router.get('/:id', async (req, res) => {
+  let book = await prisma.book.findUnique({ where: { id: req.params.id }, include: { institution: true } });
+  if (!book) return res.status(404).send(`This book is not found`);
+  res.status(200).send(book);
+})
 
 router.post("/", isLibrarian, async (req, res) => {
   const { error } = validate(req.body);
@@ -52,7 +54,7 @@ router.post("/", isLibrarian, async (req, res) => {
     where: {
       AND: [
         { institutionId: req.user.institutionId },
-        { edition: {  equals: req.body.edition  } }
+        { edition: { equals: req.body.edition } }
       ]
     }
   });
@@ -74,7 +76,7 @@ router.put("/:id", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const book = await prisma.book.findUnique({ where: { id: req.params.id } });
+  let book = await prisma.book.findUnique({ where: { id: req.params.id } });
   if (!book) return res.status(404).send(`Book with ID: ${req.params.id} doesn't exist`);
 
   book = await prisma.book.update({ where: { id: req.params.id }, data: req.body });

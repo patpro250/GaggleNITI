@@ -37,6 +37,12 @@ router.get('/', async (req, res) => {
     res.status(200).send({ nextCursor, libraries });
 });
 
+router.get('/:id', async (req, res) => {
+    let library = await prisma.library.findUnique({where: {id: req.params.id}, include: {librarian: true}});
+    if (!library) return res.status(404).send(`This library is not found`);
+    res.status(200).send(library);
+});
+
 router.post('/', isDirector, async (req, res) => {
     const { error } = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
@@ -62,18 +68,36 @@ router.post('/', isDirector, async (req, res) => {
             type: req.body.type,
             institution: {
                 connect: {
-                    id: req.user.id  
+                    id: req.user.id
                 }
             },
             librarian: {
                 connect: {
-                    librarianId: req.body.directorId 
+                    librarianId: req.body.directorId
                 }
             }
         }
     });
 
     res.status(200).send(`${req.body.name} added successfully`);
+});
+
+router.put('/:id', async (req, res) => {
+    const { error } = validate(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const library = await prisma.library.findUnique({ where: { id: req.params.id } });
+    if (!library) return res.status(404).send(`Library with ID: ${req.params.id} doesn't exist`);
+
+    await prisma.library.update({where: {id: req.params.id}, data: req.body});
+    res.status(200).send(`${req.body.name} updated successfully!`);
+});
+
+router.delete('/:id', async (req, res) => {
+    let library = await prisma.library.findUnique({where: {id: req.params.id}, include: {librarian: true}});
+    if (!library) return res.status(404).send(`This library is not found`);
+    await prisma.library.delete({where: {id: req.params.id}});
+    res.status(200).send(`${library.name} is deleted successfully!`);
 });
 
 function validate(library) {
