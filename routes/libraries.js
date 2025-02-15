@@ -2,6 +2,8 @@ const express = require("express");
 const Joi = require("joi");
 const router = express.Router();
 
+const isDirector = require("../middleware/auth/director");
+
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
@@ -25,11 +27,63 @@ router.get('/', async (req, res) => {
         take: limit,
         skip: cursor ? 1 : 0,
         cursor: cursor ? { id: cursor } : undefined,
-        orderBy
+        orderBy,
+        include: {
+            librarian: true
+        }
     });
 
     const nextCursor = libraries.length === limit ? libraries[libraries.length - 1].id : null;
     res.status(200).send({ nextCursor, libraries });
 });
+
+router.post('/', isDirector, async (req, res) => {
+    const { error } = validate(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const exists = await prisma.library.findFirst({
+        where: {
+            AND: [
+                { name: req.body.name },
+                { institutionId: req.user.institutionId }
+            ]
+        }
+    });
+    if (exists) return res.status(400).send(`Library with name: ${exists.name} already exists, try again!`);
+
+    const librarian = await prisma.librarian.findUnique({ where: { librarianId: req.body.directorId } });
+    if (!librarian) return res.status(404).send(`The director you assigned to the library doesn't exist, create one!`);
+
+    req.body.institutionId = req.user.id;
+    await prisma.library.create({
+        data: {
+            name: req.body.name,
+            shelvesNo: req.body.shelvesNo,
+            type: req.body.type,
+            institution: {
+                connect: {
+                    id: req.user.id  
+                }
+            },
+            librarian: {
+                connect: {
+                    librarianId: req.body.directorId 
+                }
+            }
+        }
+    });
+
+    res.status(200).send(`${req.body.name} added successfully`);
+});
+
+function validate(library) {
+    let schema = Joi.object({
+        name: Joi.string().required().min(3).max(50),
+        directorId: Joi.string().uuid(),
+        shelvesNo: Joi.number().required(),
+        type: Joi.string().required()
+    });
+    return schema.validate(library);
+}
 
 module.exports = router;

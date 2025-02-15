@@ -53,7 +53,7 @@ router.post("/director", async (req, res) => {
     const isValid = await bcrypt.compare(req.body.password, institution.password);
     if (!isValid) return res.status(400).send('Invalid email or password');
 
-    let payload = _.pick(institution, ['email', 'id', 'status', 'type']);
+    let payload = _.omit(institution, ['password']);
     const token = jwt.sign(payload, process.env.JWT_KEY);
 
     res.status(200).header('x-auth-token', token).send(`Welcome back ${institution.name}!`);
