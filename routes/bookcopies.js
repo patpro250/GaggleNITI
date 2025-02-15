@@ -3,7 +3,7 @@ const Joi = require("joi");
 const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 
-const librarianAuth = require("../middleware/auth/librarian");
+const isLibrarian = require("../middleware/auth/librarian");
 const permission = require("../middleware/auth/permissions");
 
 const prisma = new PrismaClient();
@@ -47,7 +47,7 @@ router.get('/:id', async (req, res) => {
   res.status(200).send(bookCopy);
 })
 
-router.post("/", librarianAuth, async (req, res) => {
+router.post("/", isLibrarian, async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 

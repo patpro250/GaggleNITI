@@ -3,7 +3,7 @@ const languageCodes = require("./lib/languages");
 const router = express.Router();
 const Joi = require("joi");
 
-const librarianAuth = require("../middleware/auth/librarian");
+const isLibrarian = require("../middleware/auth/librarian");
 const permission = require("../middleware/auth/permissions");
 
 const { PrismaClient } = require("@prisma/client");
@@ -44,7 +44,7 @@ router.get("/", async (req, res) => {
   
 });
 
-router.post("/", librarianAuth, async (req, res) => {
+router.post("/", isLibrarian, async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 

@@ -6,6 +6,9 @@ const { PrismaClient } = require("@prisma/client");
 const router = express.Router();
 const prisma = new PrismaClient();
 
+const isMember = require('../middleware/auth/member');
+const isLibrarian = require("../middleware/auth/librarian");
+
 router.get("/", async (req, res) => {
   const { status } = req.query;
   let reservations;
@@ -40,7 +43,7 @@ router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(404).send(error.details[0].message);
 
-  const institution = await prisma.institution.findUnique({ where: {id: req.body.institutionId },});
+  const institution = await prisma.institution.findUnique({ where: { id: req.body.institutionId }, });
   if (!institution) return res.status(404).send("Institution not found!");
 
   let settings = institution.settings.circulation;
@@ -57,8 +60,8 @@ router.post("/", async (req, res) => {
       status: "AVAILABLE",
     },
   });
-  
-  const book = await prisma.bookCopy.findFirst({where: {id: req.body.copyId}});
+
+  const book = await prisma.bookCopy.findFirst({ where: { id: req.body.copyId } });
   if (!isAvailable)
     return res
       .status(400)

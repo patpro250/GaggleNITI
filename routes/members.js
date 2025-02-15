@@ -5,6 +5,9 @@ const _ = require("lodash");
 const bcrypt = require("bcrypt");
 const {validate, validatePassword} = require("../routes/lib/member");
 
+const isMember = require('../middleware/auth/member');
+const permission = require("../middleware/auth/permissions");
+
 const prisma = new PrismaClient();
 
 router.get("/", async (req, res) => {

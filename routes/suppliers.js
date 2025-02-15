@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const Joi = require("joi");
 const _ = require("lodash");
-const trimmer = require("../middleware/trimmer");
 
 const { PrismaClient } = require("@prisma/client");
 

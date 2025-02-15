@@ -1,6 +1,6 @@
 function trimRequestBody(req, res, next) {
   if (req.body && typeof req.body === "object") {
-    req.body = trimStringFields(req.body); // Mutate req.body
+    req.body = trimStringFields(req.body);
   }
   next();
 }
@@ -12,7 +12,7 @@ function trimStringFields(data) {
     if (typeof data[key] === "string") {
       data[key] = data[key].trim();
     } else if (typeof data[key] === "object" && data[key] !== null) {
-      data[key] = trimStringFields(data[key]); // Recursively trim nested objects
+      data[key] = trimStringFields(data[key]);
     }
   }
   return data;

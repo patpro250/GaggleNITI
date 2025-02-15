@@ -4,8 +4,10 @@ const now = require("../routes/lib/now");
 const _ = require("lodash");
 const { PrismaClient } = require("@prisma/client");
 
-const router = express.Router();
+const isLibrarian = require("../middleware/auth/librarian");
+const permission = require("../middleware/auth/permissions");
 
+const router = express.Router();
 const prisma = new PrismaClient();
 
 router.get("/", async (req, res) => {
