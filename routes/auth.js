@@ -43,6 +43,22 @@ router.post('/librarians', async (req, res) => {
     res.status(200).header('x-auth-token', token).send('Successfully logged in!');
 });
 
+router.post("/director", async (req, res) => {
+    const { error } = validate(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    let institution = await prisma.institution.findFirst({where: {email: req.body.email}});
+    if (!institution) return res.status(400).send('Invalid email or password');
+
+    const isValid = await bcrypt.compare(req.body.password, institution.password);
+    if (!isValid) return res.status(400).send('Invalid email or password');
+
+    let payload = _.pick(institution, ['email', 'id', 'status', 'type']);
+    const token = jwt.sign(payload, process.env.JWT_KEY);
+
+    res.status(200).header('x-auth-token', token).send(`Welcome back ${institution.name}!`);
+});
+
 function validate(req) {
     const schema = Joi.object({
         email: Joi.string().email().required(),
