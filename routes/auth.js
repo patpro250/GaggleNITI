@@ -24,7 +24,7 @@ router.post('/members', async (req, res) => {
     let payload = _.pick(member, ["id", "email", "firstName", "lastName"]);
 
     const token = jwt.sign(payload, process.env.JWT_KEY);
-    res.status(200).header('x-auth-token', token).send('Successfully logged in!');
+    res.status(200).header('x-auth-token', token).send(`Welcome back ${member.lastName}!`);
 });
 
 router.post('/librarians', async (req, res) => {
@@ -40,7 +40,7 @@ router.post('/librarians', async (req, res) => {
     let payload = _.omit(librarian, ["password"]);
     const token = jwt.sign(payload, process.env.JWT_KEY);
 
-    res.status(200).header('x-auth-token', token).send('Successfully logged in!');
+    res.status(200).header('x-auth-token', token).send(`Welcome back ${librarian.lastName}`);
 });
 
 router.post("/director", async (req, res) => {

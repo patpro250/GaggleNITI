@@ -5,14 +5,15 @@ const passwordComplexity = require("joi-password-complexity");
 const _ = require("lodash");
 const {complexityOptions} = require("../routes/lib/member");
 const router = express.Router();
-const { PrismaClient } = require("@prisma/client");
-const institutionSettings = require("../routes/lib/defaultSettings");
 
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
+
+const institutionSettings = require("../routes/lib/defaultSettings");
 const isLibrarian = require("../middleware/auth/librarian");
 const isDirector = require("../middleware/auth/director");
 const permission = require("../middleware/auth/permissions");
 
-const prisma = new PrismaClient();
 
 router.get("/", async (req, res) => {
   const institutions = await prisma.institution.findMany();

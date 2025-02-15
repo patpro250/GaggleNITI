@@ -49,6 +49,7 @@ enum Permission {
   DELETE
   MANAGE_USERS
   SYSTEM_ADMIN
+  UPDATE
 }
 
 enum Gender {

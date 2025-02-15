@@ -10,20 +10,39 @@ const permission = require("../middleware/auth/permissions");
 const prisma = new PrismaClient();
 
 router.get("/", isLibrarian, async (req, res) => {
-  const acquisition = await prisma.acquisition.findMany({
+  let { cursor, limit, sort } = req.query;
+  limit = parseInt(limit) || 10;
+
+  const orderBy = sort === 'asc' ? { doneOn: 'asc' } : { doneOn: 'desc' };
+
+  if (limit > 50) limit = 50;
+  const acquisitions = await prisma.acquisition.findMany({
+    where: {
+      institutionId: req.user.institutionId
+    },
     include: {
       book: true,
       librarian: true,
       institution: true,
       supplier: true,
     },
+    orderBy,
+    take: limit,
+    cursor: cursor ? { id: cursor } : undefined,
+    skip: cursor ? 1 : 0
   });
-  res.send(acquisition);
+  const nextCursor = acquisitions.length === limit ? acquisitions[acquisitions.length - 1].id : null;
+  res.send({ nextCursor, acquisitions });
 });
 
-router.get("/:id", async (req, res) => {
-  const acquisition = await prisma.acquisition.findUnique({
-    where: { id: req.params.id },
+router.get("/:id", isLibrarian, async (req, res) => {
+  const acquisition = await prisma.acquisition.findFirst({
+    where: {
+      AND: [
+        { id: req.params.id },
+        { institutionId: req.user.institutionId }
+      ]
+    },
     include: {
       book: true,
       librarian: true,
@@ -36,17 +55,17 @@ router.get("/:id", async (req, res) => {
   res.send(acquisition);
 });
 
-router.post("/", async (req, res) => {
+router.post("/",[isLibrarian, permission(['WRITE'])] , async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   const copies = generate(req.body);
-  
+
   const LIMIT = 300;
   if (copies.length > LIMIT) return res.status(400).send(`The acquired books exceed the limit of ${LIMIT}.`);
-  
+
   let check = `${req.body.quantity}/${req.body.code}`;
-  const isFound = await prisma.bookCopy.findFirst({where: {code: {contains: check}}});
+  const isFound = await prisma.bookCopy.findFirst({ where: { code: { contains: check } } });
   if (isFound) return res.status(400).send(`Book ending with code: ${check} already exists!`);
 
 
@@ -55,9 +74,9 @@ router.post("/", async (req, res) => {
       data: {
         book: req.body.bookId,
         quantity: req.body.quantity,
-        librarian: req.body.librarianId,
+        librarian: req.user.librarianId,
         doneOn: new Date(),
-        institution: req.body.institutionId,
+        institution: req.user.institutionId,
         supplier: req.body.supplierId,
         book: {
           connect: { id: req.body.bookId },
@@ -66,7 +85,7 @@ router.post("/", async (req, res) => {
           connect: { id: req.body.institutionId },
         },
         librarian: {
-          connect: { librarianId: req.body.librarianId },
+          connect: { librarianId: req.user.librarianId },
         },
         supplier: {
           connect: { id: req.body.supplierId },
@@ -76,8 +95,8 @@ router.post("/", async (req, res) => {
     prisma.bookCopy.createMany({ data: copies }),
   ]);
 
-  const book = await prisma.book.findFirst({where: {id: req.body.bookId}});
-  const supplier = await prisma.supplier.findFirst({where: {id: req.body.supplierId}});
+  const book = await prisma.book.findFirst({ where: { id: req.body.bookId } });
+  const supplier = await prisma.supplier.findFirst({ where: { id: req.body.supplierId } });
 
   res.status(201).send(`${req.body.quantity} books of ${book.title} acquired from ${supplier.name}.`);
 });
@@ -86,9 +105,7 @@ function validate(acquisition) {
   const schema = Joi.object({
     bookId: Joi.string().uuid().required(),
     quantity: Joi.number().integer().required(),
-    librarianId: Joi.string().uuid().required(),
     doneOn: Joi.date().iso().required(),
-    institutionId: Joi.string().uuid().required(),
     supplierId: Joi.string().uuid().required(),
     code: Joi.string().required(),
     libraryId: Joi.string().uuid().required(),

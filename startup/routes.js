@@ -12,6 +12,7 @@ const reservations = require("../routes/reservations");
 const interLibrary = require("../routes/interLibrary");
 const auth = require("../routes/auth");
 const user = require("../middleware/auth/user");
+const libraries = require("../routes/libraries");
 
 module.exports = function (app) {
     app.use(user);
@@ -28,4 +29,5 @@ module.exports = function (app) {
     app.use("/reservations", reservations);
     app.use("/interlibrary", interLibrary);
     app.use('/auth', auth);
+    app.use('/libraries', libraries);
 }

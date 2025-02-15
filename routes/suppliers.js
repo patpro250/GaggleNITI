@@ -68,7 +68,6 @@ function validate(supplier) {
       .optional()
       .custom((value) => value.toLowerCase()),
     address: Joi.object().required(),
-    status: Joi.optional(),
   });
 
   return schema.validate(supplier);
