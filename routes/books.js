@@ -40,6 +40,51 @@ router.get("/", async (req, res) => {
   res.status(200).send({ nextCursor, books });
 });
 
+router.get("/popular", async (req, res) => {
+  const popularBooks = await prisma.book.findMany({
+    take: 5,
+    orderBy: {
+      bookCopy: {
+        _count: 'desc'
+      }
+    },
+    select: {
+      id: true,
+      title: true,
+      author: true,
+      publisher: true,
+      _count: {
+        select: {
+          bookCopy: true
+        }
+      }
+    }
+  });
+
+
+  res.status(200).send(popularBooks);
+});
+
+router.get('/newest', async (req, res) => {
+  const newestBook = await prisma.bookCopy.findFirst({
+    orderBy: { dateOfAcquisition: 'desc' },
+    select: { dateOfAcquisition: true }
+  });
+  if (!newestBook) return res.status(404).send(`No book found in acquisition!`);
+  res.status(200).send(newestBook);
+});
+
+router.get('/oldest', async (req, res) => {
+  const oldestBook = await prisma.bookCopy.findFirst({
+    orderBy: { dateOfAcquisition: 'asc' },
+    select: { dateOfAcquisition: true }
+  });
+
+  if (!oldestBook) return res.status(404).send(`No book found in acquisitions🤔!`);
+  res.status(200).send(oldestBook);
+});
+
+
 router.get('/:id', async (req, res) => {
   let book = await prisma.book.findUnique({ where: { id: req.params.id }, include: { institution: true } });
   if (!book) return res.status(404).send(`This book is not found`);
@@ -72,7 +117,7 @@ router.post("/", isLibrarian, async (req, res) => {
   res.status(201).send(`${book.title} is added in Library collection`);
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", isLibrarian, async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -81,14 +126,6 @@ router.put("/:id", async (req, res) => {
 
   book = await prisma.book.update({ where: { id: req.params.id }, data: req.body });
   res.status(200).send("Book successfully updated!");
-});
-
-router.delete("/:id", async (req, res) => {
-  const book = await prisma.book.findUnique({ where: { id: req.params.id } });
-  if (!book) return res.status(404).send(`Book with ID: ${req.params.id} not found`);
-
-  book = await prisma.book.delete({ where: { id: req.params.id } });
-  res.status(200).send("Book deleted successfully!");
 });
 
 function validate(book) {

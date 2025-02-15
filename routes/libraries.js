@@ -82,7 +82,7 @@ router.post('/', isDirector, async (req, res) => {
     res.status(200).send(`${req.body.name} added successfully`);
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', isDirector, async (req, res) => {
     const { error } = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
@@ -93,7 +93,7 @@ router.put('/:id', async (req, res) => {
     res.status(200).send(`${req.body.name} updated successfully!`);
 });
 
-router.put('/deactivate/:id', async (req, res) => {
+router.put('/deactivate/:id', isDirector, async (req, res) => {
     let library = await prisma.library.findUnique({where: {id: req.params.id}, include: {librarian: true}});
     if (!library) return res.status(404).send(`This library is not found`);
     await prisma.library.update({where: {id: req.params.id}, data: {status: 'CLOSED'}});
