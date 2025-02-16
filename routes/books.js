@@ -65,28 +65,36 @@ router.get("/popular", async (req, res) => {
   res.status(200).send(popularBooks);
 });
 
-router.get('/newest', async (req, res) => {
+router.get('/newest',isLibrarian, async (req, res) => {
   const newestBook = await prisma.bookCopy.findFirst({
+    where: {libraryId: req.user.institutionId},
     orderBy: { dateOfAcquisition: 'desc' },
-    select: { dateOfAcquisition: true }
+    select: { dateOfAcquisition: true, book: true }
   });
-  if (!newestBook) return res.status(404).send(`No book found in acquisition!`);
+  if (!newestBook) return res.status(404).send(`No books found in your library🤔!`);
   res.status(200).send(newestBook);
 });
 
-router.get('/oldest', async (req, res) => {
+router.get('/oldest',isLibrarian,  async (req, res) => {
   const oldestBook = await prisma.bookCopy.findFirst({
+    where: {libraryId: req.user.institutionId},
     orderBy: { dateOfAcquisition: 'asc' },
-    select: { dateOfAcquisition: true }
+    select: { dateOfAcquisition: true, book: true }
   });
 
-  if (!oldestBook) return res.status(404).send(`No book found in acquisitions🤔!`);
+  if (!oldestBook) return res.status(404).send(`No book found in your library🤔!`);
   res.status(200).send(oldestBook);
 });
 
 
 router.get('/:id', async (req, res) => {
-  let book = await prisma.book.findUnique({ where: { id: req.params.id }, include: { institution: true } });
+  let book = await prisma.book.findUnique({
+    where: { id: req.params.id }, include: {
+      institution: {
+        select: { name: true, email: true, id: true }
+      }
+    }
+  });
   if (!book) return res.status(404).send(`This book is not found`);
   res.status(200).send(book);
 })
