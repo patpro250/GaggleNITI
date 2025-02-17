@@ -3,7 +3,6 @@ const languageCodes = require("./lib/languages");
 const router = express.Router();
 const Joi = require("joi");
 
-const isLibrarian = require("../middleware/auth/librarian");
 const permission = require("../middleware/auth/permissions");
 
 const { PrismaClient } = require("@prisma/client");
@@ -65,7 +64,7 @@ router.get("/popular", async (req, res) => {
   res.status(200).send(popularBooks);
 });
 
-router.get('/newest',isLibrarian, async (req, res) => {
+router.get('/newest', async (req, res) => {
   const newestBook = await prisma.bookCopy.findFirst({
     where: {libraryId: req.user.institutionId},
     orderBy: { dateOfAcquisition: 'desc' },
@@ -75,7 +74,7 @@ router.get('/newest',isLibrarian, async (req, res) => {
   res.status(200).send(newestBook);
 });
 
-router.get('/oldest',isLibrarian,  async (req, res) => {
+router.get('/oldest',  async (req, res) => {
   const oldestBook = await prisma.bookCopy.findFirst({
     where: {libraryId: req.user.institutionId},
     orderBy: { dateOfAcquisition: 'asc' },
@@ -99,7 +98,7 @@ router.get('/:id', async (req, res) => {
   res.status(200).send(book);
 })
 
-router.post("/", isLibrarian, async (req, res) => {
+router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -125,7 +124,7 @@ router.post("/", isLibrarian, async (req, res) => {
   res.status(201).send(`${book.title} is added in Library collection`);
 });
 
-router.put("/:id", isLibrarian, async (req, res) => {
+router.put("/:id", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 

@@ -4,7 +4,6 @@ const now = require("../routes/lib/now");
 const _ = require("lodash");
 const { PrismaClient } = require("@prisma/client");
 
-const isLibrarian = require("../middleware/auth/librarian");
 const permission = require("../middleware/auth/permissions");
 
 const router = express.Router();

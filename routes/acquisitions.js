@@ -4,12 +4,11 @@ const generate = require("./lib/generateCopies");
 const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 
-const isLibrarian = require("../middleware/auth/librarian");
 const permission = require("../middleware/auth/permissions");
 
 const prisma = new PrismaClient();
 
-router.get("/", isLibrarian, async (req, res) => {
+router.get("/", async (req, res) => {
   let { cursor, limit, sort } = req.query;
   limit = parseInt(limit) || 10;
 
@@ -35,7 +34,7 @@ router.get("/", isLibrarian, async (req, res) => {
   res.send({ nextCursor, acquisitions });
 });
 
-router.get("/:id", isLibrarian, async (req, res) => {
+router.get("/:id", async (req, res) => {
   const acquisition = await prisma.acquisition.findFirst({
     where: {
       AND: [
@@ -55,7 +54,7 @@ router.get("/:id", isLibrarian, async (req, res) => {
   res.send(acquisition);
 });
 
-router.post("/",[isLibrarian, permission(['WRITE'])] , async (req, res) => {
+router.post("/",permission(['WRITE']), async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 

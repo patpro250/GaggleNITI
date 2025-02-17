@@ -3,8 +3,6 @@ const Joi = require("joi");
 const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 
-const isLibrarian = require("../middleware/auth/librarian");
-const isDirector = require("../middleware/auth/director");
 const permission = require("../middleware/auth/permissions");
 
 const prisma = new PrismaClient();
@@ -130,7 +128,7 @@ router.get('/:id', async (req, res) => {
 
 
 
-router.post("/", isLibrarian, async (req, res) => {
+router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -144,7 +142,7 @@ router.post("/", isLibrarian, async (req, res) => {
   res.status(201).send(`${req.body.bookId} bookCopy Is Created`);
 });
 
-router.put("/archive/:id", isLibrarian, async (req, res) => {
+router.put("/archive/:id", async (req, res) => {
   const bookcopy = await prisma.bookCopy.findUnique({ where: { id: req.params.id }, });
   if (!bookcopy) {
     return res.status(404).send("BookCopy not found");

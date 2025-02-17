@@ -6,9 +6,6 @@ const { PrismaClient } = require("@prisma/client");
 const router = express.Router();
 const prisma = new PrismaClient();
 
-const isMember = require('../middleware/auth/member');
-const isLibrarian = require("../middleware/auth/librarian");
-
 router.get("/", async (req, res) => {
   const { status } = req.query;
   let reservations;

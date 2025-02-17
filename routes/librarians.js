@@ -5,8 +5,6 @@ const { PrismaClient } = require("@prisma/client");
 const _ = require("lodash");
 const bcrypt = require("bcrypt");
 
-const isDirector = require("../middleware/auth/director");
-
 const {Role, rolePermissions} = require("../routes/lib/librarianRoles");
 
 const prisma = new PrismaClient();

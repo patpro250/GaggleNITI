@@ -10,8 +10,6 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const institutionSettings = require("../routes/lib/defaultSettings");
-const isLibrarian = require("../middleware/auth/librarian");
-const isDirector = require("../middleware/auth/director");
 const permission = require("../middleware/auth/permissions");
 
 
@@ -71,7 +69,7 @@ router.post("/", async (req, res) => {
     data: req.body,
   });
 
-  res.status(201).send(institution);
+  res.status(201).send(`${institution.name}, Welcome to Gaggle`);
 });
 
 router.put("/:id", async(req, res) => {
