@@ -5,6 +5,7 @@ model InterLibrary {
   bookId     String
   borrowDate DateTime           @default(now())
   returnDate DateTime?
+  updatedAt  DateTime           @updatedAt @db.Timestamp(6)
   dueDate    DateTime?
   status     interLibraryStatus
   book       BookCopy           @relation("InterLibrarybookCopy", fields: [bookId], references: [id])

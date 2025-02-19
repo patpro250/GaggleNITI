@@ -14,6 +14,7 @@ const interLibrary = require("../routes/interLibrary");
 const auth = require("../routes/auth");
 const user = require("../middleware/auth/user");
 const libraries = require("../routes/libraries");
+const students = require("../routes/students");
 
 module.exports = function (app) {
     app.use(user);
@@ -31,5 +32,6 @@ module.exports = function (app) {
     app.use("/interlibrary", interLibrary);
     app.use('/auth', auth);
     app.use('/libraries', libraries);
+    app.use('/students', students);
     app.use(error);
 }

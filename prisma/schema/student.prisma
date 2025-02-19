@@ -1,17 +1,20 @@
 model Student {
-    id          String        @id @default(uuid())
-    code        String
-    firstName   String
-    lastName    String
-    parentPhone String
-    className   String
-    status      StudentStatus
+    id            String        @id @default(uuid())
+    code          String
+    firstName     String
+    lastName      String
+    parentPhone   String
+    className     String
+    status        StudentStatus
     institutionId String
-    email String?
-    studentCard String?
-    Institution Institution?  @relation("Student", fields: [institutionId], references: [id])
-    circulation  Circulation[]   @relation("Student")
-    Reservation Reservation[] @relation("Reservation")
+    email         String?
+    createdAt     DateTime      @default(now()) @db.Timestamp(6)
+    updatedAt     DateTime      @updatedAt @db.Timestamp(6)
+    studentCard   String?
+    Institution   Institution?  @relation("Student", fields: [institutionId], references: [id])
+    circulation   Circulation[] @relation("Student")
+    Reservation   Reservation[] @relation("Reservation")
+
     @@index([firstName])
     @@index([lastName])
     @@index([code])

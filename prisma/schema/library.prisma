@@ -2,10 +2,11 @@ model Library {
   id            String      @id @unique @default(uuid())
   name          String
   directorId    String
-  createdAt     DateTime    @default(now())
   institutionId String
   shelvesNo     Int
   status        Status      @default(ACTIVE)
+  createdAt     DateTime    @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime    @updatedAt @db.Timestamp(6)
   type          String
   bookCopy      BookCopy[]  @relation("BookCopy")
   institution   Institution @relation("institution", fields: [institutionId], references: [id])

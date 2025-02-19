@@ -10,7 +10,8 @@ model Librarian {
   password      String          @db.VarChar(2055)
   role          Role
   permissions   Permission[]
-  joined        DateTime        @default(now())
+  createdAt     DateTime        @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime        @updatedAt @db.Timestamp(6)
   acquisition   Acquisition[]   @relation("librarian")
   institution   Institution?    @relation("InstitutionLibrarians", fields: [institutionId], references: [id], onDelete: Restrict)
   library       Library[]       @relation("librarian")

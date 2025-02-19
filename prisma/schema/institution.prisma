@@ -11,6 +11,8 @@ model Institution {
   password     String
   settings     Json?
   type         String
+  createdAt    DateTime       @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime       @updatedAt @db.Timestamp(6)
   acquisition  Acquisition[]  @relation("acquisition")
   borrower     InterLibrary[] @relation("InterLibraryBorrowerId")
   lender       InterLibrary[] @relation("InterLibraryLender")
@@ -19,7 +21,7 @@ model Institution {
   librarians   Librarian[]    @relation("InstitutionLibrarians")
   library      Library[]      @relation("institution")
   reservation  Reservation[]  @relation("fromReservationToinstitution")
-  Student Student[]  @relation("Student")
+  Student      Student[]      @relation("Student")
 
   @@index([name, email, address, phone])
   @@map("institutions")

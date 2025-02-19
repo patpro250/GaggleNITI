@@ -10,7 +10,8 @@ model Member {
   memberShipType MembershipType
   status         MemberStatus   @default(ACTIVE)
   profile        Json
-  joinedAt       DateTime       @default(now())
+  createdAt      DateTime       @default(now()) @db.Timestamp(6)
+  updatedAt      DateTime       @updatedAt @db.Timestamp(6)
   password       String
   reservation    Reservation[]  @relation("Reservation")
   member         Circulation[]  @relation("incirculation")
