@@ -1,7 +1,8 @@
 model Reservation {
   id            String            @id @default(uuid())
-  memberId      String
-  copyId        String           
+  memberId      String?
+  copyId        String 
+  studentId     String?          
   doneOn        DateTime          @default(now())
   dueDate       DateTime?
   librarianId   String?
@@ -10,8 +11,8 @@ model Reservation {
   librarian     Librarian?        @relation("FromReservation", fields: [librarianId], references: [librarianId])
   institution   Institution       @relation("fromReservationToinstitution", fields: [institutionId], references: [id])
   bookCopy      BookCopy          @relation("Reservation", fields: [copyId], references: [id])
-  member        Member            @relation("Reservation", fields: [memberId], references: [id])
-
+  member        Member?            @relation("Reservation", fields: [memberId], references: [id])
+  student Student? @relation("Reservation", fields: [studentId], references: [id])
   @@map("reservations")
 }
 

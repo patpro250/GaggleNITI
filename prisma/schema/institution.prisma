@@ -19,6 +19,7 @@ model Institution {
   librarians   Librarian[]    @relation("InstitutionLibrarians")
   library      Library[]      @relation("institution")
   reservation  Reservation[]  @relation("fromReservationToinstitution")
+  Student Student[]  @relation("Student")
 
   @@index([name, email, address, phone])
   @@map("institutions")

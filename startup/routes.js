@@ -1,4 +1,5 @@
 const express = require("express");
+const error = require("../middleware/error");
 const trimmer = require("../middleware/trimmer");
 const books = require("../routes/books");
 const bookcopies = require("../routes/bookcopies");
@@ -30,4 +31,5 @@ module.exports = function (app) {
     app.use("/interlibrary", interLibrary);
     app.use('/auth', auth);
     app.use('/libraries', libraries);
+    app.use(error);
 }

@@ -1,0 +1,24 @@
+model Student {
+    id          String        @id @default(uuid())
+    code        String
+    firstName   String
+    lastName    String
+    parentPhone String
+    className   String
+    status      StudentStatus
+    institutionId String
+    email String?
+    studentCard String?
+    Institution Institution?  @relation("Student", fields: [institutionId], references: [id])
+    circulation  Circulation[]   @relation("Student")
+    Reservation Reservation[] @relation("Reservation")
+    @@index([firstName])
+    @@index([lastName])
+    @@index([code])
+    @@map("students")
+}
+
+enum StudentStatus {
+    ACTIVE
+    INACTIVE
+}

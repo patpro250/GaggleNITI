@@ -1,7 +1,8 @@
 model Circulation {
   id            String      @id @default(uuid())
   copyId        String
-  userId        String
+  userId        String?
+  StudentId     String?
   librarianIdNo String
   institutionId String
   returnDate    DateTime?
@@ -9,6 +10,7 @@ model Circulation {
   dueDate       DateTime
   institution   Institution @relation("fromcirculation", fields: [institutionId], references: [id])
   bookCopy      BookCopy    @relation("BookCopy", fields: [copyId], references: [id])
-  member        Member      @relation("incirculation", fields: [userId], references: [id])
+  member        Member?      @relation("incirculation", fields: [userId], references: [id])
+  student     Student?      @relation("Student", fields: [StudentId], references: [id])
   librarian     Librarian   @relation("circulation", fields: [librarianIdNo], references: [librarianId])
 }
