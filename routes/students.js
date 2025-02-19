@@ -12,7 +12,30 @@ router.get("/", async (req, res) => {
 
   if (limit > 50) limit = 50;
   const orderBy = sort === 'asc' ? { createdAt: 'asc' } : { createdAt: 'desc' };
+
+  const whereClause = {
+    institutionId: req.user?.institutionId,
+    ...(q && {
+      OR: [
+        { firstName: { contains: q, mode: "insensitive" } },
+        { lastName: { contains: q, mode: "insensitive" } }
+      ]
+    }),
+  };
+
+  const students = await prisma.student.findMany({
+    where: whereClause,
+    take: limit,
+    skip: cursor ? 1 : 0,
+    cursor: cursor ? { id: cursor } : undefined,
+    orderBy
+  });
+
+  const nextCursor = students.length === limit ? students[students.length - 1].id : null;
+  res.status(200).send({ nextCursor, students });
+
 });
+
 
 function validate(student) {
   let schema = Joi.object({
