@@ -32,7 +32,7 @@ router.post("/", async (req, res) => {
     const { error } = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
-    let institution = await prisma.institution.findFirst({where: {id: req.body.institutionId}});
+    let institution = await prisma.institution.findFirst({where: {id: req.user.institutionId}});
     if (!institution) return res.status(404).send('Institution not found!');
 
     let librarian = await prisma.librarian.findFirst({
@@ -48,6 +48,7 @@ router.post("/", async (req, res) => {
      if (librarian) return res.status(400).send(`Librarian with email: ${req.body.email} , phone: ${req.body.phoneNumber}  already exists!`);
 
     librarian = req.body;
+    librarian.institutionId = req.user.institutionId;
     let { role } = librarian;
     librarian.permissions = rolePermissions[role];
 
@@ -89,7 +90,6 @@ function validate(librarian){
     email: Joi.string().email().required(),
     phoneNumber: Joi.string().min(10).max(15).required(),
     password: Joi.string().min(8).required(),
-    institutionId: Joi.string().uuid().required(),
     role: Joi.string().valid(...Object.values(Role)).required(),
     gender: Joi.string().valid('F', 'M', 'O').required()
   });

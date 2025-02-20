@@ -1,6 +1,6 @@
 model Student {
     id            String        @id @default(uuid())
-    code          String
+    code          String        @unique
     firstName     String
     lastName      String
     parentPhone   String

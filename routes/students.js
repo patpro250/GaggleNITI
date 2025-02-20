@@ -5,6 +5,7 @@ const _ = require("lodash");
 
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const generateStudentCode = require("../routes/lib/generateStudentCode");
 
 router.get("/", async (req, res) => {
   let { cursor, limit, q, sort } = req.query;
@@ -37,6 +38,29 @@ router.get("/", async (req, res) => {
 });
 
 
+router.post('/', async (req, res) => {
+  const { error } = validate(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  let student = await prisma.student.findFirst({where: {OR: 
+    [
+      {email: req.body.email},
+      {studentCard: req.body.studentCard}
+    ]
+  }});
+  if (student) return res.status(400).send(`The student ${req.body.firstName} ${req.body.lastName} already exists`);
+
+  const institution = await prisma.institution.findFirst({where: {id: req.user.id}});
+  if (!institution) return res.status(400).send(`Invalid school assigned to student!`);
+
+  let code = await generateStudentCode(req.body.firstName, req.body.lastName);
+  req.body.code = code;
+  req.body.institutionId = req.user.id;
+
+  student = await prisma.student.create({data: req.body});
+  res.status(201).send(`${student.firstName} ${student.lastName} successfully added to the system`);
+});
+
 function validate(student) {
   let schema = Joi.object({
     firstName: Joi.string().max(100).min(3).required(),
@@ -47,9 +71,11 @@ function validate(student) {
       .required(),
     className: Joi.string().max(10).required(),
     status: Joi.string().valid("ACTIVE", "INACTIVE"),
-    email: Joi.email().required(),
+    email: Joi.string().email().required(),
     studentCard: Joi.string().min(3),
   });
+
+  return schema.validate(student);
 }
 
 module.exports = router;
