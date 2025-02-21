@@ -8,20 +8,28 @@ const prisma = new PrismaClient();
 const generateStudentCode = require("../routes/lib/generateStudentCode");
 
 router.get("/", async (req, res) => {
-  let { cursor, limit, q, sort } = req.query;
+  let { cursor, limit, q, sort, status } = req.query;
   limit = parseInt(limit) || 10;
-
   if (limit > 50) limit = 50;
-  const orderBy = sort === 'asc' ? { createdAt: 'asc' } : { createdAt: 'desc' };
+
+  const orderBy = sort === "asc" ? { createdAt: "asc" } : { createdAt: "desc" };
+  if (status !== "ACTIVE") {
+    status = "INACTIVE";
+  }
+
+  const orFilters = [];
+  if (q) {
+    orFilters.push(
+      { firstName: { contains: q, mode: "insensitive" } },
+      { lastName: { contains: q, mode: "insensitive" } }
+    );
+  }
+
+  orFilters.push({ status: { equals: status} });
 
   const whereClause = {
     institutionId: req.user?.institutionId,
-    ...(q && {
-      OR: [
-        { firstName: { contains: q, mode: "insensitive" } },
-        { lastName: { contains: q, mode: "insensitive" } }
-      ]
-    }),
+    OR: orFilters,
   };
 
   const students = await prisma.student.findMany({
@@ -29,36 +37,116 @@ router.get("/", async (req, res) => {
     take: limit,
     skip: cursor ? 1 : 0,
     cursor: cursor ? { id: cursor } : undefined,
-    orderBy
+    orderBy,
   });
 
-  const nextCursor = students.length === limit ? students[students.length - 1].id : null;
+  const nextCursor =
+    students.length === limit ? students[students.length - 1].id : null;
   res.status(200).send({ nextCursor, students });
-
 });
 
+router.get("/:id", async (req, res) => {
+  const student = await prisma.student.findUnique({
+    where: { id: req.params.id },
+  });
+  if (!student)
+    return res.status(404).send(`Student not found! That's all we know`);
+  res.status(200).send(student);
+});
 
-router.post('/', async (req, res) => {
+router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  let student = await prisma.student.findFirst({where: {OR: 
-    [
-      {email: req.body.email},
-      {studentCard: req.body.studentCard}
-    ]
-  }});
-  if (student) return res.status(400).send(`The student ${req.body.firstName} ${req.body.lastName} already exists`);
+  let student = await prisma.student.findFirst({
+    where: {
+      OR: [{ email: req.body.email }, { studentCard: req.body.studentCard }],
+    },
+  });
+  if (student)
+    return res
+      .status(400)
+      .send(
+        `The student ${req.body.firstName} ${req.body.lastName} already exists`
+      );
 
-  const institution = await prisma.institution.findFirst({where: {id: req.user.id}});
-  if (!institution) return res.status(400).send(`Invalid school assigned to student!`);
+  const institution = await prisma.institution.findFirst({
+    where: { id: req.user.id },
+  });
+  if (!institution)
+    return res.status(400).send(`Invalid school assigned to student!`);
 
   let code = await generateStudentCode(req.body.firstName, req.body.lastName);
   req.body.code = code;
+  req.body.className = _.toUpper(req.body.className);
   req.body.institutionId = req.user.id;
 
-  student = await prisma.student.create({data: req.body});
-  res.status(201).send(`${student.firstName} ${student.lastName} successfully added to the system`);
+  student = await prisma.student.create({ data: req.body });
+  res
+    .status(201)
+    .send(
+      `${student.firstName} ${student.lastName} successfully added to the system`
+    );
+});
+
+router.put("/:id", async (req, res) => {
+  const { error } = validate(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  let student = await prisma.student.findUnique({
+    where: { id: req.params.id },
+  });
+  if (!student)
+    return res
+      .status(404)
+      .send(`The student with code: ${req.body.code} does't exist!`);
+
+  let exists = await prisma.student.findFirst({
+    where: {
+      AND: [
+        {
+          OR: [
+            { email: req.body.email },
+            { studentCard: req.body.studentCard },
+          ],
+        },
+        {
+          NOT: { id: req.params.id },
+        },
+      ],
+    },
+  });
+
+  if (exists)
+    return res
+      .status(400)
+      .send(
+        `The student ${req.body.firstName} ${req.body.lastName} already exists`
+      );
+  let hasChanged =
+    student.firstName !== req.body.lastName ||
+    student.lastName !== req.body.lastName;
+
+  if (hasChanged) {
+    let code = await generateStudentCode(req.body.firstName, req.body.lastName);
+    req.body.code = code;
+  }
+  await prisma.student.update({ where: { id: req.params.id }, data: req.body });
+  res.status(200).send(`${req.body.firstName} Updated successfully.`);
+});
+
+router.put("/de-activate/:id", async (req, res) => {
+  let student = await prisma.student.findUnique({
+    where: { id: req.params.id },
+  });
+  if (!student) return res.status(404).send(`Student not found!`);
+  student = await prisma.student.update({
+    where: { id: req.params.id },
+    data: { status: "INACTIVE" },
+  });
+  res
+    .status(200)
+    .send(`${student.firstName} ${student.lastName} is now ${student.status}`);
 });
 
 function validate(student) {
@@ -69,10 +157,17 @@ function validate(student) {
       .min(10)
       .pattern(/^\+?[1-9]\d{1,14}$/)
       .required(),
-    className: Joi.string().max(10).required(),
-    status: Joi.string().valid("ACTIVE", "INACTIVE"),
     email: Joi.string().email().required(),
     studentCard: Joi.string().min(3),
+    className: Joi.string()
+      .custom((value, helpers) => {
+        const matches = value.match(/\d+/g) || [];
+        if (matches.length !== 1) {
+          return helpers.error("any.invalid");
+        }
+        return value;
+      }, "Single numeric sequence validation")
+      .required(),
   });
 
   return schema.validate(student);

@@ -5,7 +5,7 @@ model Student {
     lastName      String
     parentPhone   String
     className     String
-    status        StudentStatus
+    status        StudentStatus @default(ACTIVE)
     institutionId String
     email         String?
     createdAt     DateTime      @default(now()) @db.Timestamp(6)
