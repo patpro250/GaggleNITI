@@ -1,24 +1,24 @@
 model Librarian {
-  librarianId   String          @id @default(uuid())
-  institutionId String?
-  libraryId     String?
-  firstName     String
-  lastName      String
-  email         String
-  status        LibrarianStatus @default(ACTIVE)
-  gender        Gender
-  phoneNumber   String
-  password      String          @db.VarChar(2055)
-  role          Role
-  permissions   Permission[]
-  createdAt     DateTime        @default(now()) @db.Timestamp(6)
-  updatedAt     DateTime        @updatedAt @db.Timestamp(6)
-  library01 Library @relation("Library", fields: [librarianId], references: [id])
-  acquisition   Acquisition[]   @relation("librarian")
-  institution   Institution?    @relation("InstitutionLibrarians", fields: [institutionId], references: [id], onDelete: Restrict)
-  library       Library[]       @relation("librarian")
-  librarian     Circulation[]   @relation("circulation")
-  reservation   Reservation[]   @relation("FromReservation")
+  librarianId    String          @id @default(uuid())
+  institutionId  String?
+  libraryId      String?
+  firstName      String
+  lastName       String
+  email          String          @unique
+  status         LibrarianStatus @default(ACTIVE)
+  gender         Gender
+  phoneNumber    String
+  password       String          @db.VarChar(2055)
+  role           Role
+  permissions    Permission[]
+  createdAt      DateTime        @default(now()) @db.Timestamp(6)
+  updatedAt      DateTime        @updatedAt @db.Timestamp(6)
+  managedLibrary Library?        @relation("LibraryDirector")
+  libraries      Library[]       @relation("LibraryLibrarians")
+  acquisition    Acquisition[]   @relation("librarian")
+  institution    Institution?    @relation("InstitutionLibrarians", fields: [institutionId], references: [id], onDelete: Restrict)
+  librarian      Circulation[]   @relation("circulation")
+  reservation    Reservation[]   @relation("FromReservation")
 
   @@map("librarians")
 }
