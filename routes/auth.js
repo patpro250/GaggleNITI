@@ -3,6 +3,7 @@ const Joi = require("joi");
 const _ = require("lodash");
 const router = express.Router();
 const bcrypt = require("bcrypt");
+const IsUser = require("../middleware/auth/user");
 
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
@@ -10,6 +11,19 @@ dotenv.config();
 
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+
+router.get('/members/me', IsUser, async (req, res) => {
+    const member = await prisma.member.findUnique({where: {id: req.user.id}});
+    if (!member) return res.status(404).send(`User not found`);
+    res.status(200).send(member);
+});
+
+router.get('/librarians/me', IsUser, async (req, res) => {
+    let librarian = await prisma.librarian.findUnique({where: {librarianId: req.user.librarianId}});
+    librarian = _.omit(librarian, ['password']);
+    if (!librarian) return res.status(404).send(`Librarian not found`);
+    res.status(200).send(librarian);
+});
 
 router.post('/members', async (req, res) => {
     const { error } = validate(req.body);

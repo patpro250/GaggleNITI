@@ -77,7 +77,7 @@ router.post('/', async (req, res) => {
         }
     });
 
-    res.status(200).send(`${req.body.name} added successfully`);
+    res.status(200).send(`${req.body.name} added successfully to ${req.user.institutionId}`);
 });
 
 router.put('/:id', async (req, res) => {

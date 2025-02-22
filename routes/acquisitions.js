@@ -8,7 +8,7 @@ const permission = require("../middleware/auth/permissions");
 
 const prisma = new PrismaClient();
 
-router.get("/", async (req, res) => {
+router.get("/", permission(['READ']), async (req, res) => {
   let { cursor, limit, sort } = req.query;
   limit = parseInt(limit) || 10;
 
@@ -34,7 +34,7 @@ router.get("/", async (req, res) => {
   res.send({ nextCursor, acquisitions });
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", permission(['READ']), async (req, res) => {
   const acquisition = await prisma.acquisition.findFirst({
     where: {
       AND: [
@@ -54,7 +54,7 @@ router.get("/:id", async (req, res) => {
   res.send(acquisition);
 });
 
-router.post("/",permission(['WRITE']), async (req, res) => {
+router.post("/",permission(['ACQUIRE']), async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 

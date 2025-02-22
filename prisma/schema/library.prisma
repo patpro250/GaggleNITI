@@ -8,6 +8,7 @@ model Library {
   createdAt     DateTime    @default(now()) @db.Timestamp(6)
   updatedAt     DateTime    @updatedAt @db.Timestamp(6)
   type          String
+  librarian01 Librarian[] @relation("Library")
   bookCopy      BookCopy[]  @relation("BookCopy")
   institution   Institution @relation("institution", fields: [institutionId], references: [id])
   librarian     Librarian   @relation("librarian", fields: [directorId], references: [librarianId])

@@ -25,7 +25,7 @@ router.get("/", async (req, res) => {
     );
   }
 
-  orFilters.push({ status: { equals: status} });
+  orFilters.push({ status: { equals: status } });
 
   const whereClause = {
     institutionId: req.user?.institutionId,
@@ -123,14 +123,6 @@ router.put("/:id", async (req, res) => {
       .send(
         `The student ${req.body.firstName} ${req.body.lastName} already exists`
       );
-  let hasChanged =
-    student.firstName !== req.body.lastName ||
-    student.lastName !== req.body.lastName;
-
-  if (hasChanged) {
-    let code = await generateStudentCode(req.body.firstName, req.body.lastName);
-    req.body.code = code;
-  }
   await prisma.student.update({ where: { id: req.params.id }, data: req.body });
   res.status(200).send(`${req.body.firstName} Updated successfully.`);
 });

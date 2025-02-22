@@ -4,12 +4,12 @@ const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 
 const permission = require("../middleware/auth/permissions");
+const myLibrary = require('../middleware/myLibrary');
 
 const prisma = new PrismaClient();
 
-router.get('/dashboard/:id', async (req, res) => {
-  const libraryId = req.params.id;
-
+router.get('/dashboard', myLibrary, async (req, res) => {
+  const libraryId = req.user.libraryId;
   const totalBooks = await prisma.bookCopy.count({
     where: { libraryId }
   });
