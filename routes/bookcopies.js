@@ -135,6 +135,9 @@ router.post("/", async (req, res) => {
   let library = await prisma.library.findFirst({ where: { id: req.body.libraryId } });
   if (!library) return res.status(404).send("Library not found");
 
+  let book = await prisma.book.findFirst({ where: { id: req.body.bookId } });
+  if (!book) return res.status(404).send("Book not found");
+  
   await prisma.bookCopy.create({
     data: req.body,
   });

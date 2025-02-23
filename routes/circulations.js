@@ -35,6 +35,153 @@ router.get("/:id", async (req, res) => {
   res.status(200).send(borrowing);
 });
 
+router.post("/lend/student", async (req, res) => {
+  const { error } = validateStudentBorrow(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  let librarian = await prisma.librarian.findUnique({
+    where: { librarianId: req.user.librarianId },
+  });
+  if (!librarian) return res.status(404).send(`Librarian not found`);
+
+  let copy = await prisma.bookCopy.findFirst({
+    where: { id: req.body.copyId },
+  });
+  if (!copy)
+    return res
+      .status(400)
+      .send(
+        `Copy with ID: ${req.body.copyId} does not exist, add it to your School Library.`
+      );
+
+  let isIssued = await prisma.bookCopy.findFirst({
+    where: { AND: [{ id: req.body.copyId }, { status: "AVAILABLE" }] },
+  });
+  if (!isIssued)
+    return res
+      .status(400)
+      .send(`This book is already ${copy.status}, you can't issue it!`);
+
+  let institution = await prisma.institution.findFirst({
+    where: { id: req.user.institutionId },
+  });
+  const student = await prisma.student.findUnique({
+    where: { code: req.body.studentCode },
+  });
+  if (!student)
+    return res.status(400).send(`Student doesn't exist, create one!`);
+
+  if (!(student.institutionId === institution.id)) {
+    let school = await prisma.institution.findFirst({
+      where: { id: student.institutionId },
+    });
+    return res
+      .status(400)
+      .send(
+        `${student.lastName} is in ${school.name}, and is not allowed to borrow in our School Library`
+      );
+  }
+
+  console.log(student.id, req.user.librarianId);
+
+  await prisma.$transaction([
+    prisma.circulation.create({
+      data: {
+        copyId: req.body.copyId,
+        studentId: student.id,
+        librarianIdNo: req.user.librarianId,
+        dueDate: req.body.dueDate,
+        institutionId: req.user.institutionId,
+      },
+    }),
+
+    prisma.bookCopy.update({
+      where: { id: req.body.copyId },
+      data: {
+        status: "CHECKEDOUT",
+      },
+    }),
+  ]);
+
+  let book = await prisma.book.findFirst({ where: { id: copy.bookId } });
+
+  res
+    .status(200)
+    .send(
+      `${librarian.firstName} ${librarian.lastName} you have lent '${
+        book.title
+      }' with author: ${book.author}, publisher: ${book.publisher}, code: ${
+        copy.code
+      }, call number: ${book.callNo} to ${student.firstName} ${
+        student.lastName
+      }. On ${now()}`
+    );
+});
+
+router.post("/return/student", async (req, res) => {
+  const { error } = validateStudentReturn(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  const isIssued = await prisma.circulation.findFirst({
+    where: {
+      AND: [{ copyId: req.body.copyId }, { returnDate: null }],
+    },
+  });
+  if (!isIssued)
+    return res.status(400).send(`This copy is not issued, please lend it!`);
+
+  let librarian = await prisma.librarian.findUnique({
+    where: { librarianId: req.user.librarianId },
+  });
+  if (!librarian) return res.status(404).send(`Librarian not found!`);
+
+  let code = await prisma.student.findFirst({
+    where: { code: req.body.studentCode },
+  });
+  if (!code)
+    return res
+      .status(404)
+      .status(`Student with code ${req.body.studentCode} not found!`);
+
+  const student = await prisma.circulation.findFirst({
+    where: { studentId: code.id },
+  });
+  if (!student) return res.status(404).send("Student didn't borrow!");
+
+  await prisma.$transaction([
+    prisma.circulation.update({
+      where: { id: isIssued.id },
+      data: {
+        returnDate: new Date(),
+      },
+    }),
+
+    prisma.bookCopy.update({
+      where: { id: req.body.copyId },
+      data: {
+        status: "AVAILABLE",
+      },
+    }),
+  ]);
+
+  let copy = await prisma.bookCopy.findFirst({
+    where: { id: isIssued.copyId },
+  });
+  let book = await prisma.book.findFirst({ where: { id: copy.bookId } });
+
+  res
+    .status(200)
+    .send(
+      `${code.firstName} ${code.lastName}, you have successfully returned '${
+        book.title
+      }' with author: ${book.author}, publisher: ${book.publisher}, code: ${
+        copy.code
+      }, call number: ${book.callNo} to ${librarian.firstName} ${
+        librarian.lastName
+      }. On ${now()}`
+    );
+});
+
 router.post("/lend", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -46,7 +193,7 @@ router.post("/lend", async (req, res) => {
     return res
       .status(400)
       .send(
-        `Copy with ID: ${req.body.copyId} does not exist, add it to the database.`
+        `Copy with ID: ${req.body.copyId} does not exist, add it to to your Institution.`
       );
 
   let isIssued = await prisma.bookCopy.findFirst({
@@ -155,34 +302,29 @@ router.post("/return", async (req, res) => {
         book.author
       }, publisher: ${book.publisher}, code: ${copy.code}, call number: ${
         book.callNo
-      } to ${librarian.firstName} ${librarian.firstName}. On ${now()}`
+      } to ${librarian.firstName} ${librarian.lastName}. On ${now()}`
     );
 });
 
-router.post("/renew/:id", async (req, res) => {
-  const bookcopy = await prisma.circulation.findFirst({
-    where: {
-      AND: [{ copyId: req.params.id }, { returnDate: null }],
-    },
+router.put("/renew/:id", async (req, res) => {
+  let isPending = await prisma.circulation.findFirst({
+    where: { id: req.params.id, returnDate: null },
   });
-  if (!bookcopy) return res.status(404).send("book copy is not available");
+  if (!isPending)
+    return res
+      .status(400)
+      .send(`The circulation is already closed or doesn't exist!`);
 
-  const institution = await prisma.institution.findUnique({
-    where: { id: req.body.institutionId },
+  let institution = await prisma.institution.findFirst({
+    where: { id: req.user.id },
   });
-  if (!institution) return res.status(404).send("institution is not found");
-
   const limit = institution.settings.circulation.maxLoanPeriod;
-  const dueDate = bookcopy.dueDate;
+  const dueDate = isPending.dueDate;
   dueDate.setDate(dueDate.getDate() + limit);
 
-  await prisma.circulation.updateMany({
-    where: {
-      AND: [{ copyId: req.params.id }, { returnDate: null }],
-    },
-    data: {
-      dueDate: dueDate,
-    },
+  await prisma.circulation.update({
+    where: { id: req.params.id },
+    data: { dueDate: dueDate },
   });
 
   res.status(200).send(`Book renewed successfully`);
@@ -207,6 +349,25 @@ function validateReturn(returnData) {
     copyId: Joi.required(),
   });
   return schema.validate(returnData);
+}
+
+function validateStudentBorrow(body) {
+  const schema = Joi.object({
+    copyId: Joi.string().required(),
+    studentCode: Joi.string().required(),
+    dueDate: Joi.date().required(),
+  });
+
+  return schema.validate(body);
+}
+
+function validateStudentReturn(body) {
+  const schema = Joi.object({
+    copyId: Joi.string().required(),
+    studentCode: Joi.string().required(),
+  });
+
+  return schema.validate(body);
 }
 
 module.exports = router;

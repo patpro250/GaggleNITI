@@ -85,7 +85,7 @@ router.post("/", async (req, res) => {
   res
     .status(201)
     .send(
-      `${student.firstName} ${student.lastName} successfully added to the system`
+      `${student.firstName} ${student.lastName} successfully added to ${institution.name}`
     );
 });
 
