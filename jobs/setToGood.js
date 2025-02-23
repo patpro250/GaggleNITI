@@ -4,8 +4,8 @@ const prisma = new PrismaClient();
 
 module.exports = function() {
 
-  cron.schedule("25 16 * * *", async () => {
-    console.log('Cron job started: Updating books acquired 2+ days ago.');
+  cron.schedule("0 0  * *", async () => {
+    console.log('Cron job started: Updating books acquired 30+ days ago.');
     try {
       const currentDate = new Date();
 
