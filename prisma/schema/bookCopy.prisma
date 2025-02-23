@@ -36,4 +36,5 @@ enum Condition {
   NEW
   GOOD
   DAMAGED
+  OLD
 }

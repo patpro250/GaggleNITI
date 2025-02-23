@@ -33,6 +33,10 @@ function institutionSettings() {
         allowGuestAccess: false,
         patronActivityTracking: true,
       },
+      condition: {
+        notNew: 30,
+        old: 10
+      }
     },
   };
 }
