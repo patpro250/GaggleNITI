@@ -38,6 +38,12 @@ router.post("/", async (req, res) => {
   });
   if (!institution) return res.status(404).send("Institution not found!");
 
+  let library = await prisma.library.findFirst({
+    where: { id: req.body.libraryId, institutionId: req.user.institutionId },
+  });
+  if (!library)
+    return res.status(404).send(`Library not found, create it first!`);
+
   let librarian = await prisma.librarian.findFirst({
     where: {
       AND: [
@@ -55,18 +61,27 @@ router.post("/", async (req, res) => {
         `Librarian with email: ${req.body.email} , phone: ${req.body.phoneNumber}  already exists!`
       );
 
-  librarian = req.body;
-  librarian.institutionId = req.user.institutionId;
-  let { role } = librarian;
-  librarian.permissions = rolePermissions[role];
+  req.body.institutionId = req.user.institutionId;
+  let { role } = req.body;
+  req.body.permissions = rolePermissions[role];
 
   const salt = await bcrypt.genSalt(10);
   req.body.password = await bcrypt.hash(req.body.password, salt);
 
-  await prisma.librarian.create({ data: librarian });
+  if (req.body.role === "MANAGER") {
+    const librarian = await prisma.librarian.create({ data: req.body });
+  
+    await prisma.library.update({
+      where: { id: req.body.libraryId },
+      data: { managerId: librarian.librarianId },
+    });
+  } else {
+    await prisma.librarian.create({ data: req.body });
+  }
+  
   res
     .status(201)
-    .send(`${librarian.firstName} ${librarian.lastName} created successfully`);
+    .send(`${req.body.firstName} ${req.body.lastName} created successfully`);
 });
 
 router.put("/:id", async (req, res) => {
@@ -146,7 +161,7 @@ function validate(librarian) {
       .valid(...Object.values(Role))
       .required(),
     gender: Joi.string().valid("F", "M", "O").required(),
-    libraryId: Joi.string(),
+    libraryId: Joi.string().required(),
   });
 
   return schema.validate(librarian);

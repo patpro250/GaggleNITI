@@ -1,7 +1,7 @@
 model Library {
   id            String      @id @unique @default(uuid())
   name          String
-  directorId    String?     @unique
+  managerId    String?     @unique
   institutionId String
   shelvesNo     Int
   status        Status      @default(ACTIVE)
@@ -11,7 +11,7 @@ model Library {
   librarians    Librarian[] @relation("LibraryLibrarians")
   bookCopy      BookCopy[]  @relation("BookCopy")
   institution   Institution @relation("institution", fields: [institutionId], references: [id])
-  director      Librarian?   @relation("LibraryDirector", fields: [directorId], references: [librarianId])
+  manager      Librarian?   @relation("LibraryManager", fields: [managerId], references: [librarianId])
 
   @@map("libraries")
 }
