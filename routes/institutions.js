@@ -33,7 +33,7 @@ router.get("/:id", async (req, res) => {
   res.status(200).send(institution);
 });
 
-router.get("/:id/settings", async (req, res) => {
+router.get("/:id/settings", permission(['DIRECTOR']), async (req, res) => {
   const institution = await prisma.institution.findUnique({
     where: { id: req.params.id },
   });
@@ -44,7 +44,7 @@ router.get("/:id/settings", async (req, res) => {
   res.status(200).send(institution.settings);
 });
 
-router.put("/:id/settings", async (req, res) => {
+router.put("/:id/settings", permission(['DIRECTOR']), async (req, res) => {
   const institution = await prisma.institution.findUnique({
     where: { id: req.params.id },
     select: { settings: true },
@@ -96,7 +96,7 @@ router.post("/", async (req, res) => {
   res.status(201).header('x-auth-token', token).send(`${institution.name}, Welcome to Gaggle`);
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", permission(['DIRECTOR']), async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -115,7 +115,20 @@ router.put("/:id", async (req, res) => {
   res.status(200).send(`${req.body.name} successfully updated!`);
 });
 
-router.delete("/:id", async (req, res) => {
+router.put('/deactivate/:id', permission(['DIRECTOR']), async (req, res) => {
+  const institution = await prisma.institution.findUnique({
+    where: { id: req.params.id },
+  });
+  if (!institution)
+    return res
+      .status(404)
+      .send(`Institution with ID: ${req.params.id} not found`);
+
+  await prisma.institution.update({where: {id: req.user.institutionId}, data: {status: 'CLOSED'}});
+  res.status(200).send(`${institution.name} closed successfully!`);    
+});
+
+router.delete("/:id", permission(['SYSTEM_ADMIN']), async (req, res) => {
   const institution = await prisma.institution.findUnique({
     where: { id: req.params.id },
   });

@@ -6,13 +6,17 @@ const _ = require("lodash");
 const bcrypt = require("bcrypt");
 
 const { Role, rolePermissions } = require("../routes/lib/librarianRoles");
+const permission = require('../middleware/auth/permissions');
 
 const prisma = new PrismaClient();
+
+router.use(permission(['DIRECTOR']));
 
 router.get("/dashboard", async (req, res) => {
   const totalLibrarians = await prisma.librarian.count();
   res.status(200).send({ totalLibrarians });
 });
+
 router.get("/", async (req, res) => {
   const librarians = await prisma.librarian.findMany({
     include: { institution: true },

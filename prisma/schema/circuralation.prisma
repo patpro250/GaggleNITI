@@ -1,16 +1,18 @@
 model Circulation {
-  id            String      @id @default(uuid())
+  id            String    @id @default(uuid())
   copyId        String
   userId        String?
   studentId     String?
   librarianIdNo String
-  institutionId String
+  libraryId     String
   returnDate    DateTime?
-  lendDate      DateTime    @default(now())
+  lendDate      DateTime  @default(now())
   dueDate       DateTime
-  institution   Institution @relation("fromcirculation", fields: [institutionId], references: [id])
-  bookCopy      BookCopy    @relation("BookCopy", fields: [copyId], references: [id])
-  member        Member?     @relation("incirculation", fields: [userId], references: [id])
-  student       Student?    @relation("Student", fields: [studentId], references: [id])
-  librarian     Librarian   @relation("circulation", fields: [librarianIdNo], references: [librarianId])
+  library       Library   @relation("fromLibrary", fields: [libraryId], references: [id])
+  bookCopy      BookCopy  @relation("BookCopy", fields: [copyId], references: [id])
+  member        Member?   @relation("incirculation", fields: [userId], references: [id])
+  student       Student?  @relation("Student", fields: [studentId], references: [id])
+  librarian     Librarian @relation("circulation", fields: [librarianIdNo], references: [librarianId])
+
+  @@map("circulations")
 }

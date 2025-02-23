@@ -5,6 +5,8 @@ const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+const permission = require('../middleware/auth/permissions');
+
 router.get("/", async (req, res) => {
   let { cursor, limit, q, sort } = req.query;
   limit = parseInt(limit) || 10;
@@ -42,6 +44,8 @@ router.get("/:id", async (req, res) => {
   if (!library) return res.status(404).send(`This library is not found`);
   res.status(200).send(library);
 });
+
+router.use(permission(['DIRECTOR']));
 
 router.post("/", async (req, res) => {
   const { error } = validate(req.body);

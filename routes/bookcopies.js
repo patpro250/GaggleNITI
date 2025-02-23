@@ -4,12 +4,11 @@ const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 
 const permission = require("../middleware/auth/permissions");
-const myLibrary = require('../middleware/myLibrary');
 
 const prisma = new PrismaClient();
 
-router.get('/dashboard', myLibrary, async (req, res) => {
-  const libraryId = req.user.libraryId;
+router.get('/dashboard', permission(['READ']), async (req, res) => {
+  let libraryId = req.user.libraryId;
   const totalBooks = await prisma.bookCopy.count({
     where: { libraryId }
   });
@@ -102,7 +101,7 @@ router.get('/dashboard', myLibrary, async (req, res) => {
   res.status(200).send(stats);
 });
 
-router.get("/", async (req, res) => {
+router.get("/", permission(['READ']), async (req, res) => {
   let { cursor, limit, sort } = req.query;
   limit = parseInt(limit) || 10;
 
@@ -120,15 +119,13 @@ router.get("/", async (req, res) => {
   res.status(200).send({ nextCursor, copies });
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', permission(['READ']), async (req, res) => {
   const bookCopy = await prisma.bookCopy.findUnique({ where: { id: req.params.id } })
   if (!bookCopy) return res.status(404).send("BookCopy not found");
   res.status(200).send(bookCopy);
 });
 
-
-
-router.post("/", async (req, res) => {
+router.post("/", permission(['ADD_COPY']), async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -145,7 +142,7 @@ router.post("/", async (req, res) => {
   res.status(201).send(`${req.body.bookId} bookCopy Is Created`);
 });
 
-router.put("/archive/:id", async (req, res) => {
+router.put("/archive/:id", permission(['ARCHIVE']), async (req, res) => {
   const bookcopy = await prisma.bookCopy.findUnique({ where: { id: req.params.id }, });
   if (!bookcopy) {
     return res.status(404).send("BookCopy not found");
@@ -161,7 +158,7 @@ router.put("/archive/:id", async (req, res) => {
   res.status(200).send(`${bookcopy.code} Archived Successfully!`);
 });
 
-function validate(bookcopy) {
+function validate(bookCopy) {
   const schema = Joi.object({
     bookId: Joi.string().required(),
     condition: Joi.string(),
@@ -170,7 +167,7 @@ function validate(bookcopy) {
     code: Joi.string().required(),
   });
 
-  return schema.validate(bookcopy);
+  return schema.validate(bookCopy);
 }
 
 module.exports = router;

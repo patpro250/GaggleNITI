@@ -9,14 +9,27 @@ const permission = require("../middleware/auth/permissions");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-router.get("/", async (req, res) => {
+router.get("/", permission(['READ']), async (req, res) => {
   const borrowing = await prisma.circulation.findMany({
-    where: { returnDate: null },
+    where: { returnDate: null, libraryId: req.user.libraryId },
   });
+  if (borrowing.length === 0) return res.status(404).send(`There is no circulation in your Library, lend some books!`);
   res.status(200).send(borrowing);
 });
 
-router.get("/:id", async (req, res) => {
+router.get('/students', async (req, res) => {
+  const circulations = await prisma.circulation.findMany({where: {libraryId: req.user.libraryId, studentId: {not: null}}});
+  if (circulations.length === 0) return res.status(404).send(`There is no student in circulations!`);
+  res.status(200).send(circulations);
+});
+
+router.get('/members', async (req, res) => {
+  const circulations = await prisma.circulation.findMany({where: {libraryId: req.user.libraryId, userId: {not: null}}});
+  if (circulations.length === 0) return res.status(404).send(`There is no member in circulations!`);
+  res.status(200).send(circulations);
+});
+
+router.get("/:id", permission(['READ']), async (req, res) => {
   let borrowing = await prisma.circulation.findFirst({
     where: {
       AND: [{ copyId: req.params.id }, { returnDate: null }],
@@ -34,6 +47,8 @@ router.get("/:id", async (req, res) => {
   borrowing = _.omit(borrowing, ["member.password", "librarian.password"]);
   res.status(200).send(borrowing);
 });
+
+router.use(permission(['CIRCULATION_MANAGER']));
 
 router.post("/lend/student", async (req, res) => {
   const { error } = validateStudentBorrow(req.body);
@@ -82,8 +97,6 @@ router.post("/lend/student", async (req, res) => {
       );
   }
 
-  console.log(student.id, req.user.librarianId);
-
   await prisma.$transaction([
     prisma.circulation.create({
       data: {
@@ -91,7 +104,7 @@ router.post("/lend/student", async (req, res) => {
         studentId: student.id,
         librarianIdNo: req.user.librarianId,
         dueDate: req.body.dueDate,
-        institutionId: req.user.institutionId,
+        libraryId: req.user.libraryId,
       },
     }),
 
@@ -209,7 +222,7 @@ router.post("/lend", async (req, res) => {
     return res.status(400).send(`User with ID: ${req.body.userId} not found`);
 
   const librarian = await prisma.librarian.findUnique({
-    where: { librarianId: req.body.librarianIdNo },
+    where: { librarianId: req.user.librarianId },
   });
   if (!librarian)
     return res.status(404).send(`Librarian ${req.body.librarianId} not found`);
@@ -219,9 +232,9 @@ router.post("/lend", async (req, res) => {
       data: {
         copyId: req.body.copyId,
         userId: req.body.userId,
-        librarianIdNo: req.body.librarianIdNo,
+        librarianIdNo: req.user.librarianId,
         dueDate: req.body.dueDate,
-        institutionId: req.body.institutionId,
+        librarianId: req.user.libraryId,
       },
     }),
 
@@ -260,7 +273,7 @@ router.post("/return", async (req, res) => {
     return res.status(400).send("Book is not issued, please lend it!");
 
   const librarian = await prisma.librarian.findUnique({
-    where: { librarianId: req.body.librarianIdNo },
+    where: { librarianId: req.user.librarianId },
   });
   if (!librarian) return res.status(404).send("Librarian not found!");
 

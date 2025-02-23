@@ -8,7 +8,7 @@ const permission = require("../middleware/auth/permissions");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-router.get("/", async (req, res) => {
+router.get("/", permission(['READ']), async (req, res) => {
   let { cursor, limit, q, sort, language } = req.query;
   limit = parseInt(limit) || 10;
 
@@ -98,7 +98,7 @@ router.get('/:id', async (req, res) => {
   res.status(200).send(book);
 })
 
-router.post("/", async (req, res) => {
+router.post("/", permission(['MANAGE_BOOKS']), async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -124,7 +124,7 @@ router.post("/", async (req, res) => {
   res.status(201).send(`${book.title} is added in Library collection`);
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", permission(['MANAGE_BOOKS']), async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 

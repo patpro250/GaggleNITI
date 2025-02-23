@@ -9,24 +9,26 @@ const permission = require("../middleware/auth/permissions");
 const router = express.Router();
 const prisma = new PrismaClient();
 
+router.use(permission(['CIRCULATION_MANAGER']));
+
 router.get("/", async (req, res) => {
   const interLibrary = await prisma.interLibrary.findMany();
   res.status(200).send(interLibrary);
 });
 
-router.get("/:institution", async (req, res) => {
+router.get("/my", async (req, res) => {
   const interLibrary = await prisma.interLibrary.findFirst({
-    where: { lenderId: req.params.institution },
+    where: { lenderId: req.user.institutionId },
   });
   if (!interLibrary)
     return res.status(404).send(`You have no inter library activities.`);
   res.status(200).send(interLibrary);
 });
 
-router.get("/:institution/approved", async (req, res) => {
+router.get("/approved", async (req, res) => {
   const interLibrary = await prisma.interLibrary.findFirst({
     where: {
-      AND: [{ lenderId: req.params.institution }, { status: "APPROVED" }],
+      AND: [{ lenderId: req.user.institutionId }, { status: "APPROVED" }],
     },
   });
   if (!interLibrary)
@@ -36,10 +38,10 @@ router.get("/:institution/approved", async (req, res) => {
   res.status(200).send(interLibrary);
 });
 
-router.get("/:institution/pending", async (req, res) => {
+router.get("/pending", async (req, res) => {
   const interLibrary = await prisma.interLibrary.findFirst({
     where: {
-      AND: [{ lenderId: req.params.institution }, { status: "PENDING" }],
+      AND: [{ lenderId: req.user.institutionId }, { status: "PENDING" }],
     },
   });
   if (!interLibrary)
@@ -49,10 +51,10 @@ router.get("/:institution/pending", async (req, res) => {
   res.status(200).send(interLibrary);
 });
 
-router.get("/:institution/rejected", async (req, res) => {
+router.get("/rejected", async (req, res) => {
   const interLibrary = await prisma.interLibrary.findFirst({
     where: {
-      AND: [{ lenderId: req.params.institution }, { status: "REJECTED" }],
+      AND: [{ lenderId: req.user.institutionId }, { status: "REJECTED" }],
     },
   });
   if (!interLibrary)
@@ -61,6 +63,7 @@ router.get("/:institution/rejected", async (req, res) => {
       .send(`You have no rejected inter library activities.`);
   res.status(200).send(interLibrary);
 });
+
 router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -71,7 +74,7 @@ router.post("/", async (req, res) => {
   if (!borrower) return res.status(400).send("Borrower not found");
 
   const lender = await prisma.institution.findFirst({
-    where: { id: req.body.lenderId },
+    where: { id: req.user.institutionId },
   });
   if (!lender) return res.status(400).send("Lender not found");
 
@@ -124,7 +127,7 @@ router.post("/approve/:id", async (req, res) => {
       .send(`The book is not found or already CHECKED OUT!`);
 
   let lender = await prisma.interLibrary.findFirst({
-    where: { AND: [{ id: req.params.id }, { lenderId: req.body.lenderId }] },
+    where: { AND: [{ id: req.params.id }, { lenderId: req.user.institutionId }] },
   });
   if (!lender)
     return res.status(400).send(`You are not the lender of this book`);

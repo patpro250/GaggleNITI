@@ -37,7 +37,7 @@ router.post("/", async (req, res) => {
     res.status(201).send(`${req.body.firstName} ${req.body.lastName} created successfully`);
 });
 
-router.post("/change-password/:id", async (req, res) => {
+router.post("/change-password/:id", isMember, async (req, res) => {
     const { error } = validatePassword(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
@@ -56,7 +56,7 @@ router.post("/change-password/:id", async (req, res) => {
     res.status(200).send("Password Changed successfully!");
 });
 
-router.put("/:id", async(req, res) => {
+router.put("/:id", isMember, async(req, res) => {
     const { error } = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 

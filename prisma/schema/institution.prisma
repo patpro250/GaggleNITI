@@ -17,7 +17,6 @@ model Institution {
   borrower     InterLibrary[] @relation("InterLibraryBorrowerId")
   lender       InterLibrary[] @relation("InterLibraryLender")
   book         Book[]         @relation("Book")
-  institution  Circulation[]  @relation("fromcirculation")
   librarians   Librarian[]    @relation("InstitutionLibrarians")
   library      Library[]      @relation("institution")
   reservation  Reservation[]  @relation("fromReservationToinstitution")
