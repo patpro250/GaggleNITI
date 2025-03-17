@@ -17,7 +17,7 @@ const libraries = require("../routes/libraries");
 const students = require("../routes/students");
 
 module.exports = function (app) {
-    app.use(user);
+    // app.use(user);
     app.use(express.json());
     app.use(trimmer);
     app.use('/books', books);
