@@ -1,6 +1,7 @@
 const express = require("express");
 const error = require("../middleware/error");
 const trimmer = require("../middleware/trimmer");
+const cors = require('cors');
 const books = require("../routes/books");
 const bookcopies = require("../routes/bookcopies");
 const institutions = require("../routes/institutions");
@@ -18,6 +19,7 @@ const students = require("../routes/students");
 
 module.exports = function (app) {
     // app.use(user);
+    app.use(cors());
     app.use(express.json());
     app.use(trimmer);
     app.use('/books', books);
