@@ -22,6 +22,15 @@ router.get("/", async (req, res) => {
   res.status(200).send(institutions);
 });
 
+router.get("/is-taken", async (req, res) => {
+  const { name } = req.query;
+  if (!name) return res.status(400).send("Provide a name of institution!");
+  let taken = await prisma.institution.findFirst({ where: { name: name } });
+  if (taken)
+    return res.status(400).send(`${name} is already taken, try another name!`);
+  res.status(200).send("Okay");
+});
+
 router.get("/:id", async (req, res) => {
   const institution = await prisma.institution.findUnique({
     where: { id: req.params.id },
@@ -33,7 +42,7 @@ router.get("/:id", async (req, res) => {
   res.status(200).send(institution);
 });
 
-router.get("/:id/settings", permission(['DIRECTOR']), async (req, res) => {
+router.get("/:id/settings", permission(["DIRECTOR"]), async (req, res) => {
   const institution = await prisma.institution.findUnique({
     where: { id: req.params.id },
   });
@@ -44,7 +53,7 @@ router.get("/:id/settings", permission(['DIRECTOR']), async (req, res) => {
   res.status(200).send(institution.settings);
 });
 
-router.put("/:id/settings", permission(['DIRECTOR']), async (req, res) => {
+router.put("/:id/settings", permission(["DIRECTOR"]), async (req, res) => {
   const institution = await prisma.institution.findUnique({
     where: { id: req.params.id },
     select: { settings: true },
@@ -93,10 +102,13 @@ router.post("/", async (req, res) => {
   payload.institutionId = payload.id;
   const token = jwt.sign(payload, process.env.JWT_KEY);
 
-  res.status(201).header('x-auth-token', token).send(`${institution.name}, Welcome to Gaggle`);
+  res
+    .status(201)
+    .header("x-auth-token", token)
+    .send(`${institution.name}, Welcome to Gaggle`);
 });
 
-router.put("/:id", permission(['DIRECTOR']), async (req, res) => {
+router.put("/:id", permission(["DIRECTOR"]), async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -115,7 +127,7 @@ router.put("/:id", permission(['DIRECTOR']), async (req, res) => {
   res.status(200).send(`${req.body.name} successfully updated!`);
 });
 
-router.put('/deactivate/:id', permission(['DIRECTOR']), async (req, res) => {
+router.put("/deactivate/:id", permission(["DIRECTOR"]), async (req, res) => {
   const institution = await prisma.institution.findUnique({
     where: { id: req.params.id },
   });
@@ -124,11 +136,14 @@ router.put('/deactivate/:id', permission(['DIRECTOR']), async (req, res) => {
       .status(404)
       .send(`Institution with ID: ${req.params.id} not found`);
 
-  await prisma.institution.update({where: {id: req.user.institutionId}, data: {status: 'CLOSED'}});
-  res.status(200).send(`${institution.name} closed successfully!`);    
+  await prisma.institution.update({
+    where: { id: req.user.institutionId },
+    data: { status: "CLOSED" },
+  });
+  res.status(200).send(`${institution.name} closed successfully!`);
 });
 
-router.delete("/:id", permission(['SYSTEM_ADMIN']), async (req, res) => {
+router.delete("/:id", permission(["SYSTEM_ADMIN"]), async (req, res) => {
   const institution = await prisma.institution.findUnique({
     where: { id: req.params.id },
   });
