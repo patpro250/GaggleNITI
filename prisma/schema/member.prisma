@@ -15,6 +15,7 @@ model Member {
   password       String
   reservation    Reservation[]  @relation("Reservation")
   member         Circulation[]  @relation("incirculation")
+  BookRequest    BookRequest[]  @relation("User")
 
   @@index([email])
   @@index([firstName, lastName])

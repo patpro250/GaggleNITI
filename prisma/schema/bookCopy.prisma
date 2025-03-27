@@ -11,6 +11,7 @@ model BookCopy {
   bookR             Library        @relation("BookCopy", fields: [libraryId], references: [id])
   interLibrary      InterLibrary[] @relation("InterLibrarybookCopy")
   reservation       Reservation[]  @relation("Reservation")
+  BookCopies        BookRequest[]  @relation("Bookcopy")
 
   @@index([code])
   @@map("bookcopies")

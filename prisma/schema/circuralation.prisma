@@ -16,3 +16,21 @@ model Circulation {
 
   @@map("circulations")
 }
+
+model BookRequest {
+  id         String            @id @default(uuid())
+  copyId     String
+  userId     String
+  doneOn     DateTime          @default(now())
+  status     BookRequestStatus @default(PENDING)
+  Member     Member            @relation("User", fields: [userId], references: [id])
+  BookCopies BookCopy          @relation("Bookcopy", fields: [copyId], references: [id])
+
+  @@map("bookRequests")
+}
+
+enum BookRequestStatus {
+  APPROVED
+  REJECTED
+  PENDING
+}
