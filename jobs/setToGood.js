@@ -1,11 +1,9 @@
 const cron = require("node-cron");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../routes/prismaClient");
 
-module.exports = function() {
-
+module.exports = function () {
   cron.schedule("0 0  * *", async () => {
-    console.log('Cron job started: Updating books acquired 30+ days ago.');
+    console.log("Cron job started: Updating books acquired 30+ days ago.");
     try {
       const currentDate = new Date();
 
@@ -25,7 +23,7 @@ module.exports = function() {
             },
           },
           data: {
-            condition: 'GOOD'
+            condition: "GOOD",
           },
         });
 
@@ -37,4 +35,4 @@ module.exports = function() {
       console.error("Error during cron job:", error);
     }
   });
-}
+};

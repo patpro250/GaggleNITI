@@ -3,9 +3,7 @@ const router = express.Router();
 const Joi = require("joi");
 const _ = require("lodash");
 
-const { PrismaClient } = require("@prisma/client");
-
-const prisma = new PrismaClient();
+const prisma = require("./prismaClient");
 
 router.get("/", async (req, res) => {
   const suppliers = await prisma.supplier.findMany();
@@ -40,11 +38,13 @@ router.put("/:id", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  let supplier = await prisma.supplier.findUnique({where: {id: req.params.id}});
+  let supplier = await prisma.supplier.findUnique({
+    where: { id: req.params.id },
+  });
   if (!supplier) return res.status(404).send("Supplier not found");
 
   member = _.omit(req.body, ["email", "phone"]);
-  await prisma.supplier.update({where: {id: req.params.id}, data: member});
+  await prisma.supplier.update({ where: { id: req.params.id }, data: member });
   res.status(200).send(`${req.body.name} updated successfully`);
 });
 

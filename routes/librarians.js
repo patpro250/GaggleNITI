@@ -1,16 +1,15 @@
 const express = require("express");
 const Joi = require("joi");
 const router = express.Router();
-const { PrismaClient } = require("@prisma/client");
 const _ = require("lodash");
 const bcrypt = require("bcrypt");
 
+const prisma = require("./prismaClient");
+
 const { Role, rolePermissions } = require("../routes/lib/librarianRoles");
-const permission = require('../middleware/auth/permissions');
+const permission = require("../middleware/auth/permissions");
 
-const prisma = new PrismaClient();
-
-router.use(permission(['DIRECTOR']));
+router.use(permission(["DIRECTOR"]));
 
 router.get("/dashboard", async (req, res) => {
   const totalLibrarians = await prisma.librarian.count();
@@ -74,7 +73,7 @@ router.post("/", async (req, res) => {
 
   if (req.body.role === "MANAGER") {
     const librarian = await prisma.librarian.create({ data: req.body });
-  
+
     await prisma.library.update({
       where: { id: req.body.libraryId },
       data: { managerId: librarian.librarianId },
@@ -82,7 +81,7 @@ router.post("/", async (req, res) => {
   } else {
     await prisma.librarian.create({ data: req.body });
   }
-  
+
   res
     .status(201)
     .send(`${req.body.firstName} ${req.body.lastName} created successfully`);

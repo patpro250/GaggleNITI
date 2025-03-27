@@ -3,8 +3,7 @@ const Joi = require("joi");
 const router = express.Router();
 const _ = require("lodash");
 
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("./prismaClient");
 const generateStudentCode = require("../routes/lib/generateStudentCode");
 
 router.get("/", async (req, res) => {

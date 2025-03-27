@@ -2,10 +2,9 @@ const express = require("express");
 const Joi = require("joi");
 const router = express.Router();
 
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("./prismaClient");
 
-const permission = require('../middleware/auth/permissions');
+const permission = require("../middleware/auth/permissions");
 
 router.get("/", async (req, res) => {
   let { cursor, limit, q, sort } = req.query;
@@ -45,7 +44,7 @@ router.get("/:id", async (req, res) => {
   res.status(200).send(library);
 });
 
-router.use(permission(['DIRECTOR']));
+router.use(permission(["DIRECTOR"]));
 
 router.post("/", async (req, res) => {
   const { error } = validate(req.body);

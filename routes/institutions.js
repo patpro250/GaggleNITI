@@ -11,8 +11,7 @@ dotenv.config();
 const { complexityOptions } = require("../routes/lib/member");
 const router = express.Router();
 
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("./prismaClient");
 
 const institutionSettings = require("../routes/lib/defaultSettings");
 const permission = require("../middleware/auth/permissions");

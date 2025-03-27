@@ -2,22 +2,21 @@ const express = require("express");
 const Joi = require("joi");
 const generate = require("./lib/generateCopies");
 const router = express.Router();
-const { PrismaClient } = require("@prisma/client");
 
 const permission = require("../middleware/auth/permissions");
 
-const prisma = new PrismaClient();
+const prisma = require("./prismaClient");
 
-router.get("/", permission(['READ']), async (req, res) => {
+router.get("/", permission(["READ"]), async (req, res) => {
   let { cursor, limit, sort } = req.query;
   limit = parseInt(limit) || 10;
 
-  const orderBy = sort === 'asc' ? { doneOn: 'asc' } : { doneOn: 'desc' };
+  const orderBy = sort === "asc" ? { doneOn: "asc" } : { doneOn: "desc" };
 
   if (limit > 50) limit = 50;
   const acquisitions = await prisma.acquisition.findMany({
     where: {
-      institutionId: req.user.institutionId
+      institutionId: req.user.institutionId,
     },
     include: {
       book: true,
@@ -28,19 +27,19 @@ router.get("/", permission(['READ']), async (req, res) => {
     orderBy,
     take: limit,
     cursor: cursor ? { id: cursor } : undefined,
-    skip: cursor ? 1 : 0
+    skip: cursor ? 1 : 0,
   });
-  const nextCursor = acquisitions.length === limit ? acquisitions[acquisitions.length - 1].id : null;
+  const nextCursor =
+    acquisitions.length === limit
+      ? acquisitions[acquisitions.length - 1].id
+      : null;
   res.send({ nextCursor, acquisitions });
 });
 
-router.get("/:id", permission(['READ']), async (req, res) => {
+router.get("/:id", permission(["READ"]), async (req, res) => {
   const acquisition = await prisma.acquisition.findFirst({
     where: {
-      AND: [
-        { id: req.params.id },
-        { institutionId: req.user.institutionId }
-      ]
+      AND: [{ id: req.params.id }, { institutionId: req.user.institutionId }],
     },
     include: {
       book: true,
@@ -54,19 +53,26 @@ router.get("/:id", permission(['READ']), async (req, res) => {
   res.send(acquisition);
 });
 
-router.post("/",permission(['ACQUIRE']), async (req, res) => {
+router.post("/", permission(["ACQUIRE"]), async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   const copies = generate(req.body);
 
   const LIMIT = 300;
-  if (copies.length > LIMIT) return res.status(400).send(`The acquired books exceed the limit of ${LIMIT}.`);
+  if (copies.length > LIMIT)
+    return res
+      .status(400)
+      .send(`The acquired books exceed the limit of ${LIMIT}.`);
 
   let check = `${req.body.quantity}/${req.body.code}`;
-  const isFound = await prisma.bookCopy.findFirst({ where: { code: { contains: check } } });
-  if (isFound) return res.status(400).send(`Book ending with code: ${check} already exists!`);
-
+  const isFound = await prisma.bookCopy.findFirst({
+    where: { code: { contains: check } },
+  });
+  if (isFound)
+    return res
+      .status(400)
+      .send(`Book ending with code: ${check} already exists!`);
 
   await prisma.$transaction([
     prisma.acquisition.create({
@@ -95,9 +101,15 @@ router.post("/",permission(['ACQUIRE']), async (req, res) => {
   ]);
 
   const book = await prisma.book.findFirst({ where: { id: req.body.bookId } });
-  const supplier = await prisma.supplier.findFirst({ where: { id: req.body.supplierId } });
+  const supplier = await prisma.supplier.findFirst({
+    where: { id: req.body.supplierId },
+  });
 
-  res.status(201).send(`${req.body.quantity} books of ${book.title} acquired from ${supplier.name}.`);
+  res
+    .status(201)
+    .send(
+      `${req.body.quantity} books of ${book.title} acquired from ${supplier.name}.`
+    );
 });
 
 function validate(acquisition) {
@@ -108,7 +120,7 @@ function validate(acquisition) {
     supplierId: Joi.string().uuid().required(),
     code: Joi.string().required(),
     libraryId: Joi.string().uuid().required(),
-    dateOfAcquisition: Joi.date().iso().required()
+    dateOfAcquisition: Joi.date().iso().required(),
   });
   return schema.validate(acquisition);
 }

@@ -6,30 +6,38 @@ const router = express.Router();
 
 const permission = require("../middleware/auth/permissions");
 
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("./prismaClient");
 
-router.get("/", permission(['READ']), async (req, res) => {
+router.get("/", permission(["READ"]), async (req, res) => {
   const borrowing = await prisma.circulation.findMany({
     where: { returnDate: null, libraryId: req.user.libraryId },
   });
-  if (borrowing.length === 0) return res.status(404).send(`There is no circulation in your Library, lend some books!`);
+  if (borrowing.length === 0)
+    return res
+      .status(404)
+      .send(`There is no circulation in your Library, lend some books!`);
   res.status(200).send(borrowing);
 });
 
-router.get('/students', async (req, res) => {
-  const circulations = await prisma.circulation.findMany({where: {libraryId: req.user.libraryId, studentId: {not: null}}});
-  if (circulations.length === 0) return res.status(404).send(`There is no student in circulations!`);
+router.get("/students", async (req, res) => {
+  const circulations = await prisma.circulation.findMany({
+    where: { libraryId: req.user.libraryId, studentId: { not: null } },
+  });
+  if (circulations.length === 0)
+    return res.status(404).send(`There is no student in circulations!`);
   res.status(200).send(circulations);
 });
 
-router.get('/members', async (req, res) => {
-  const circulations = await prisma.circulation.findMany({where: {libraryId: req.user.libraryId, userId: {not: null}}});
-  if (circulations.length === 0) return res.status(404).send(`There is no member in circulations!`);
+router.get("/members", async (req, res) => {
+  const circulations = await prisma.circulation.findMany({
+    where: { libraryId: req.user.libraryId, userId: { not: null } },
+  });
+  if (circulations.length === 0)
+    return res.status(404).send(`There is no member in circulations!`);
   res.status(200).send(circulations);
 });
 
-router.get("/:id", permission(['READ']), async (req, res) => {
+router.get("/:id", permission(["READ"]), async (req, res) => {
   let borrowing = await prisma.circulation.findFirst({
     where: {
       AND: [{ copyId: req.params.id }, { returnDate: null }],
@@ -48,7 +56,7 @@ router.get("/:id", permission(['READ']), async (req, res) => {
   res.status(200).send(borrowing);
 });
 
-router.use(permission(['CIRCULATION_MANAGER']));
+router.use(permission(["CIRCULATION_MANAGER"]));
 
 router.post("/lend/student", async (req, res) => {
   const { error } = validateStudentBorrow(req.body);

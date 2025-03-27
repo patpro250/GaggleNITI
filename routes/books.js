@@ -5,34 +5,32 @@ const Joi = require("joi");
 
 const permission = require("../middleware/auth/permissions");
 
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("./prismaClient");
 
-router.get("/", permission(['READ']), async (req, res) => {
+router.get("/", permission(["READ"]), async (req, res) => {
   let { cursor, limit, q, sort, language } = req.query;
   limit = parseInt(limit) || 10;
 
   if (limit > 50) limit = 50;
-  const orderBy = sort === 'asc' ? { createdAt: 'asc' } : { createdAt: 'desc' };
+  const orderBy = sort === "asc" ? { createdAt: "asc" } : { createdAt: "desc" };
 
   const whereClause = {
     institutionId: req.user?.institutionId,
     ...(q && {
       OR: [
         { title: { contains: q, mode: "insensitive" } },
-        { author: { contains: q, mode: "insensitive" } }
-      ]
+        { author: { contains: q, mode: "insensitive" } },
+      ],
     }),
-    ...(language && { language: { equals: language, mode: "insensitive" } })
+    ...(language && { language: { equals: language, mode: "insensitive" } }),
   };
-
 
   const books = await prisma.book.findMany({
     where: whereClause,
     take: limit,
     skip: cursor ? 1 : 0,
     cursor: cursor ? { id: cursor } : undefined,
-    orderBy
+    orderBy,
   });
 
   const nextCursor = books.length === limit ? books[books.length - 1].id : null;
@@ -44,8 +42,8 @@ router.get("/popular", async (req, res) => {
     take: 5,
     orderBy: {
       bookCopy: {
-        _count: 'desc'
-      }
+        _count: "desc",
+      },
     },
     select: {
       id: true,
@@ -54,51 +52,52 @@ router.get("/popular", async (req, res) => {
       publisher: true,
       _count: {
         select: {
-          bookCopy: true
-        }
-      }
-    }
+          bookCopy: true,
+        },
+      },
+    },
   });
-
 
   res.status(200).send(popularBooks);
 });
 
-router.get('/newest', async (req, res) => {
+router.get("/newest", async (req, res) => {
   const newestBook = await prisma.bookCopy.findFirst({
-    where: {libraryId: req.user.institutionId},
-    orderBy: { dateOfAcquisition: 'desc' },
-    select: { dateOfAcquisition: true, book: true }
+    where: { libraryId: req.user.institutionId },
+    orderBy: { dateOfAcquisition: "desc" },
+    select: { dateOfAcquisition: true, book: true },
   });
-  if (!newestBook) return res.status(404).send(`No books found in your library🤔!`);
+  if (!newestBook)
+    return res.status(404).send(`No books found in your library🤔!`);
   res.status(200).send(newestBook);
 });
 
-router.get('/oldest',  async (req, res) => {
+router.get("/oldest", async (req, res) => {
   const oldestBook = await prisma.bookCopy.findFirst({
-    where: {libraryId: req.user.institutionId},
-    orderBy: { dateOfAcquisition: 'asc' },
-    select: { dateOfAcquisition: true, book: true }
+    where: { libraryId: req.user.institutionId },
+    orderBy: { dateOfAcquisition: "asc" },
+    select: { dateOfAcquisition: true, book: true },
   });
 
-  if (!oldestBook) return res.status(404).send(`No book found in your library🤔!`);
+  if (!oldestBook)
+    return res.status(404).send(`No book found in your library🤔!`);
   res.status(200).send(oldestBook);
 });
 
-
-router.get('/:id', async (req, res) => {
+router.get("/:id", async (req, res) => {
   let book = await prisma.book.findUnique({
-    where: { id: req.params.id }, include: {
+    where: { id: req.params.id },
+    include: {
       institution: {
-        select: { name: true, email: true, id: true }
-      }
-    }
+        select: { name: true, email: true, id: true },
+      },
+    },
   });
   if (!book) return res.status(404).send(`This book is not found`);
   res.status(200).send(book);
-})
+});
 
-router.post("/", permission(['MANAGE_BOOKS']), async (req, res) => {
+router.post("/", permission(["MANAGE_BOOKS"]), async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -106,17 +105,22 @@ router.post("/", permission(['MANAGE_BOOKS']), async (req, res) => {
     where: {
       AND: [
         { institutionId: req.user.institutionId },
-        { edition: { equals: req.body.edition } }
-      ]
-    }
+        { edition: { equals: req.body.edition } },
+      ],
+    },
   });
-  if (exists) return res.status(400).send(`'${req.body.title}' edition: '${req.body.edition}' already exists in library collection`);
+  if (exists)
+    return res
+      .status(400)
+      .send(
+        `'${req.body.title}' edition: '${req.body.edition}' already exists in library collection`
+      );
 
   const institution = await prisma.institution.findUnique({
-    where: { id: req.user.institutionId }
+    where: { id: req.user.institutionId },
   });
 
-  req.body.institutionId = req.user.institutionId
+  req.body.institutionId = req.user.institutionId;
 
   if (!institution) return res.status(404).send("Institution not found");
   let book = await prisma.book.create({ data: req.body });
@@ -124,14 +128,18 @@ router.post("/", permission(['MANAGE_BOOKS']), async (req, res) => {
   res.status(201).send(`${book.title} is added in Library collection`);
 });
 
-router.put("/:id", permission(['MANAGE_BOOKS']), async (req, res) => {
+router.put("/:id", permission(["MANAGE_BOOKS"]), async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   let book = await prisma.book.findUnique({ where: { id: req.params.id } });
-  if (!book) return res.status(404).send(`Book with ID: ${req.params.id} doesn't exist`);
+  if (!book)
+    return res.status(404).send(`Book with ID: ${req.params.id} doesn't exist`);
 
-  book = await prisma.book.update({ where: { id: req.params.id }, data: req.body });
+  book = await prisma.book.update({
+    where: { id: req.params.id },
+    data: req.body,
+  });
   res.status(200).send("Book successfully updated!");
 });
 
@@ -144,13 +152,15 @@ function validate(book) {
     firstAcquisition: Joi.date().required(),
     isbn: Joi.string().min(10),
     placeOfPublication: Joi.string(),
-    language: Joi.string().valid(...languageCodes).required(),
+    language: Joi.string()
+      .valid(...languageCodes)
+      .required(),
     edition: Joi.string().max(20),
     numberOfPages: Joi.number().min(5).max(10000).required(),
     shelfLocation: Joi.string().required(),
     callNo: Joi.string().min(3).max(20),
     barCode: Joi.string().max(15),
-    ddcCode: Joi.string().max(15)
+    ddcCode: Joi.string().max(15),
   });
   return schema.validate(book);
 }
