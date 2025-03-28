@@ -19,9 +19,11 @@ const students = require("../routes/students");
 const payments = require("../routes/payments");
 const plans = require("../routes/plans");
 const purchases = require("../routes/purchases");
+const academicYears = require("../routes/academicYears");
+const semesters = require("../routes/semesters");
 
 module.exports = function (app) {
-  // app.use(user);
+  app.use(user);
   app.use(cors());
   app.use(express.json());
   app.use(trimmer);
@@ -41,5 +43,7 @@ module.exports = function (app) {
   app.use("/payments", payments);
   app.use("/plans", plans);
   app.use("/purchases", purchases);
+  app.use("/academic-years", academicYears);
+  app.use("/semesters", semesters);
   app.use(error);
 };

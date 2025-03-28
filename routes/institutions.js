@@ -184,7 +184,17 @@ function validate(institution) {
     email: Joi.string().email({ minDomainSegments: 2 }).required(),
     status: Joi.string(),
     established: Joi.date(),
-    type: Joi.string().required(),
+    type: Joi.string()
+      .valid(
+        "UNIVERSITY",
+        "COLLEGE",
+        "SCHOOL",
+        "PUBLIC_LIBRARY",
+        "PRIVATE_LIBRARY",
+        "NON_PROFIT",
+        "OTHER"
+      )
+      .required(),
     password: passwordComplexity(complexityOptions),
   });
   return schema.validate(institution);

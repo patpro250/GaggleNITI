@@ -1,6 +1,7 @@
 const express = require("express");
 const Joi = require("joi");
 const router = express.Router();
+const LibraryType = require("./libraryType");
 
 const prisma = require("./prismaClient");
 
@@ -52,7 +53,9 @@ router.post("/", async (req, res) => {
 
   let exists = await prisma.library.findFirst({
     where: {
-      AND: [{ name: req.body.name }, { institutionId: req.user.institutionId }],
+      institutionId: req.user.institutionId,
+      name: req.body.name,
+      type: req.body.type,
     },
   });
   if (exists)
@@ -68,11 +71,7 @@ router.post("/", async (req, res) => {
       name: req.body.name,
       shelvesNo: req.body.shelvesNo,
       type: req.body.type,
-      institution: {
-        connect: {
-          id: req.user.institutionId,
-        },
-      },
+      institutionId: req.user.institutionId,
     },
   });
 
@@ -113,7 +112,9 @@ function validate(library) {
     name: Joi.string().required().min(3).max(50),
     directorId: Joi.string().uuid(),
     shelvesNo: Joi.number().required(),
-    type: Joi.string().required(),
+    type: Joi.string()
+      .valid(...Object.values(LibraryType))
+      .required(),
   });
   return schema.validate(library);
 }

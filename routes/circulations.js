@@ -9,13 +9,45 @@ const permission = require("../middleware/auth/permissions");
 const prisma = require("./prismaClient");
 
 router.get("/", permission(["READ"]), async (req, res) => {
-  const borrowing = await prisma.circulation.findMany({
-    where: { returnDate: null, libraryId: req.user.libraryId },
+  const { year } = req.query;
+
+  let whereCondition = { returnDate: null, libraryId: req.user.libraryId };
+  const institutionType = await prisma.institution.findFirst({
+    where: { id: req.user.institutionId },
   });
+
+  let academicYear;
+
+  if (institutionType.type === "UNIVERSITY") {
+    academicYear = await prisma.academicYear.findFirst({
+      where: {
+        academicYear: year,
+        institutionId: req.user.institutionId,
+      },
+    });
+  } else {
+    academicYear = await prisma.defaultAcademicYear.findFirst({
+      where: { academicYear: year },
+    });
+  }
+
+  if (!academicYear) return res.status(404).send("Academic Year not found.");
+
+  whereCondition = {
+    ...whereCondition,
+    startDate: { gte: academicYear.startDate },
+    endDate: { lte: academicYear.endDate },
+  };
+
+  const borrowing = await prisma.circulation.findMany({
+    where: whereCondition,
+  });
+
   if (borrowing.length === 0)
     return res
       .status(404)
-      .send(`There is no circulation in your Library, lend some books!`);
+      .send(`No circulation records found for this academic year.`);
+
   res.status(200).send(borrowing);
 });
 

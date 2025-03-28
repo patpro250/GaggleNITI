@@ -7,7 +7,7 @@ model Library {
   status        Status        @default(ACTIVE)
   createdAt     DateTime      @default(now()) @db.Timestamp(6)
   updatedAt     DateTime      @updatedAt @db.Timestamp(6)
-  type          String
+  type          LibraryType
   librarians    Librarian[]   @relation("LibraryLibrarians")
   circulation   Circulation[] @relation("fromLibrary")
   bookCopy      BookCopy[]    @relation("BookCopy")
@@ -16,4 +16,17 @@ model Library {
   Institution   Institution   @relation("Library", fields: [institutionId], references: [id])
 
   @@map("libraries")
+}
+
+enum LibraryType {
+  PUBLIC
+  ACADEMIC
+  SCHOOL
+  SPECIAL
+  NATIONAL
+  DIGITAL
+  RESEARCH
+  PRIVATE
+  CHILDREN
+  REFERENCE
 }
