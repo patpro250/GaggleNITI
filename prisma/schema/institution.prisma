@@ -2,7 +2,7 @@ model Institution {
   id           String         @id @default(uuid())
   name         String
   address      String
-  phone        String
+  phone        String         @unique
   openingHours String?
   email        String         @unique
   status       Status         @default(ACTIVE)

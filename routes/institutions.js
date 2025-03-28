@@ -119,6 +119,22 @@ router.put("/:id", permission(["DIRECTOR"]), async (req, res) => {
       .status(404)
       .send(`Institution with ID: ${req.params.id} not found`);
 
+  const checkIfTaken = await prisma.institution.findFirst({
+    where: {
+      OR: [
+        { email: req.body.email },
+        { phone: req.body.phone },
+        { name: req.body.name },
+      ],
+    },
+  });
+  if (checkIfTaken)
+    return res
+      .status(400)
+      .send(
+        `The updated fields are already taken by another institution, try another new name.`
+      );
+
   await prisma.institution.update({
     where: { id: req.params.id },
     data: req.body,
@@ -139,7 +155,9 @@ router.put("/deactivate/:id", permission(["DIRECTOR"]), async (req, res) => {
     where: { id: req.user.institutionId },
     data: { status: "CLOSED" },
   });
-  res.status(200).send(`${institution.name} closed successfully!`);
+  res
+    .status(200)
+    .send(`${institution.name} is ${institution.status} successfully!`);
 });
 
 router.delete("/:id", permission(["SYSTEM_ADMIN"]), async (req, res) => {
