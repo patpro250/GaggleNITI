@@ -2,11 +2,12 @@ const express = require("express");
 const Joi = require("joi");
 const router = express.Router();
 const _ = require("lodash");
+const permission = require("../middleware/auth/permissions");
 
 const prisma = require("./prismaClient");
 const generateStudentCode = require("../routes/lib/generateStudentCode");
 
-router.get("/", async (req, res) => {
+router.get("/", permission(["READ"]), async (req, res) => {
   let { cursor, limit, q, sort, status } = req.query;
   limit = parseInt(limit) || 10;
   if (limit > 50) limit = 50;
