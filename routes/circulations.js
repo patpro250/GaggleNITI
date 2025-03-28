@@ -70,10 +70,10 @@ router.post("/request-book", async (req, res) => {
         `Copy with ID: ${req.body.copyId} does not exist, add it to to your Institution.`
       );
 
-  let isIssued = await prisma.bookCopy.findFirst({
-    where: { AND: [{ id: req.body.copyId }, { status: "AVAILABLE" }] },
+  let isAvailable = await prisma.bookCopy.findFirst({
+    where: { id: req.body.copyId, status: "AVAILABLE" },
   });
-  if (!isIssued)
+  if (!isAvailable)
     return res.status(400).send(`Book is ${copy.status} not accessible!`);
 
   const user = await prisma.member.findUnique({
@@ -125,10 +125,10 @@ router.post("/lend/student", async (req, res) => {
         `Copy with ID: ${req.body.copyId} does not exist, add it to your School Library.`
       );
 
-  let isIssued = await prisma.bookCopy.findFirst({
-    where: { AND: [{ id: req.body.copyId }, { status: "AVAILABLE" }] },
+  let isAvailable = await prisma.bookCopy.findFirst({
+    where: { id: req.body.copyId, status: "AVAILABLE" },
   });
-  if (!isIssued)
+  if (!isAvailable)
     return res
       .status(400)
       .send(`This book is already ${copy.status}, you can't issue it!`);
@@ -193,7 +193,8 @@ router.post("/return/student", async (req, res) => {
 
   const isIssued = await prisma.circulation.findFirst({
     where: {
-      AND: [{ copyId: req.body.copyId }, { returnDate: null }],
+      copyId: req.body.copyId,
+      returnDate: null,
     },
   });
   if (!isIssued)
@@ -256,20 +257,24 @@ router.post("/lend", async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   let copy = await prisma.bookCopy.findFirst({
-    where: { id: req.body.copyId },
+    where: { id: req.body.copyId, libraryId: req.user.libraryId },
   });
   if (!copy)
     return res
       .status(400)
       .send(
-        `Copy with ID: ${req.body.copyId} does not exist, add it to to your Institution.`
+        `Copy with ID: ${req.body.copyId} does not exist, add it to to your Library.`
       );
 
-  let isIssued = await prisma.bookCopy.findFirst({
-    where: { AND: [{ id: req.body.copyId }, { status: "AVAILABLE" }] },
+  let isAvailable = await prisma.bookCopy.findFirst({
+    where: {
+      id: req.body.copyId,
+      status: "AVAILABLE",
+      libraryId: req.user.libraryId,
+    },
   });
-  if (!isIssued)
-    return res.status(400).send(`Book is ${copy.status} not accessible!`);
+  if (!isAvailable)
+    return res.status(400).send(`Book is ${copy.status}, not accessible!`);
 
   const user = await prisma.member.findUnique({
     where: { email: req.body.email },
@@ -286,11 +291,11 @@ router.post("/lend", async (req, res) => {
   await prisma.$transaction([
     prisma.circulation.create({
       data: {
-        copyId: isIssued.id,
+        copyId: isAvailable.id,
         userId: user.id,
         librarianIdNo: librarian.librarianId,
         dueDate: req.body.dueDate,
-        librarianId: req.user.libraryId,
+        libraryId: req.user.librarianId,
       },
     }),
 

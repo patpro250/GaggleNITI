@@ -63,7 +63,7 @@ router.get("/popular", async (req, res) => {
 
 router.get("/newest", async (req, res) => {
   const newestBook = await prisma.bookCopy.findFirst({
-    where: { libraryId: req.user.institutionId },
+    where: { libraryId: req.user.libraryId },
     orderBy: { dateOfAcquisition: "desc" },
     select: { dateOfAcquisition: true, book: true },
   });
@@ -74,7 +74,7 @@ router.get("/newest", async (req, res) => {
 
 router.get("/oldest", async (req, res) => {
   const oldestBook = await prisma.bookCopy.findFirst({
-    where: { libraryId: req.user.institutionId },
+    where: { libraryId: req.user.libraryId },
     orderBy: { dateOfAcquisition: "asc" },
     select: { dateOfAcquisition: true, book: true },
   });
@@ -103,10 +103,8 @@ router.post("/", permission(["MANAGE_BOOKS"]), async (req, res) => {
 
   const exists = await prisma.book.findFirst({
     where: {
-      AND: [
-        { institutionId: req.user.institutionId },
-        { edition: { equals: req.body.edition } },
-      ],
+      institutionId: req.user.institutionId,
+      edition: req.body.edition,
     },
   });
   if (exists)

@@ -100,10 +100,11 @@ router.post("/", async (req, res) => {
       .status(400)
       .send(`Another library has already requested for the book`);
 
-  let isIssued = await prisma.bookCopy.findFirst({
-    where: { AND: [{ id: req.body.copyId }, { status: "AVAILABLE" }] },
+  let isAvailable = await prisma.bookCopy.findFirst({
+    where: { id: req.body.copyId, status: "AVAILABLE" },
   });
-  if (!isIssued) return res.status(400).send("This book is already issued");
+  if (!isAvailable)
+    return res.status(400).send(`This book is Available to issue!`);
 
   req.body.status = "PENDING";
   await prisma.interLibrary.create({
