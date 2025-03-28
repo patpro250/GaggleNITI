@@ -1,28 +1,28 @@
 model Acquisition {
-  id             String      @id @default(uuid())
-  bookId         String
-  quantity       Int
-  librarianId    String
-  doneOn         DateTime @default(now())
-  institutionId String
-  supplierId     String
-  book           Book        @relation("Acquisition", fields: [bookId], references: [id], onDelete: Cascade)
-  institution   Institution @relation("acquisition", fields: [institutionId], references: [id])
-  librarian      Librarian   @relation("librarian", fields: [librarianId], references: [librarianId])
-  supplier       Supplier    @relation("Acquisition", fields: [supplierId], references: [id])
+  id          String    @id @default(uuid())
+  bookId      String
+  quantity    Int
+  librarianId String
+  doneOn      DateTime  @default(now())
+  libraryId   String
+  supplierId  String
+  book        Book      @relation("Acquisition1", fields: [bookId], references: [id], onDelete: Cascade)
+  Library     Library   @relation("acquisition3", fields: [libraryId], references: [id])
+  librarian   Librarian @relation("librarian", fields: [librarianId], references: [librarianId])
+  supplier    Supplier  @relation("Acquisition2", fields: [supplierId], references: [id])
 
   @@map("Acquisitions")
 }
 
 model Supplier {
-  id         String         @id @default(uuid())
-  name       String
-  email      String         @unique
-  phone      String
-  website    String
-  address    Json
-  status     SupplierStatus @default(ACTIVE)
-  acquisition Acquisition[]   @relation("Acquisition")
+  id          String         @id @default(uuid())
+  name        String
+  email       String         @unique
+  phone       String
+  website     String
+  address     Json
+  status      SupplierStatus @default(ACTIVE)
+  acquisition Acquisition[]  @relation("Acquisition2")
 
   @@map("Suppliers")
 }

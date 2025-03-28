@@ -18,7 +18,7 @@ model Book {
   institutionId      String
   genre              String?
   placeOfPublication String?
-  acquisition        Acquisition[] @relation("Acquisition")
+  acquisition        Acquisition[] @relation("Acquisition1")
   bookCopy           BookCopy[]    @relation("BookCopy")
   institution        Institution?  @relation("Book", fields: [institutionId], references: [id], onDelete: Cascade)
 

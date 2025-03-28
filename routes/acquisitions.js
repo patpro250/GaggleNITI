@@ -1,6 +1,6 @@
 const express = require("express");
 const Joi = require("joi");
-const generate = require("./lib/generateCopies");
+const generate = require("./generateCopies");
 const router = express.Router();
 
 const permission = require("../middleware/auth/permissions");
@@ -57,22 +57,13 @@ router.post("/", permission(["ACQUIRE"]), async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const copies = generate(req.body);
-
   const LIMIT = 300;
-  if (copies.length > LIMIT)
+  if (parseInt(req.body.quantity) > LIMIT)
     return res
       .status(400)
       .send(`The acquired books exceed the limit of ${LIMIT}.`);
 
-  let check = `${req.body.quantity}/${req.body.code}`;
-  const isFound = await prisma.bookCopy.findFirst({
-    where: { code: { contains: check } },
-  });
-  if (isFound)
-    return res
-      .status(400)
-      .send(`Book ending with code: ${check} already exists!`);
+  const copies = await generate(req.body);
 
   await prisma.$transaction([
     prisma.acquisition.create({
@@ -81,13 +72,13 @@ router.post("/", permission(["ACQUIRE"]), async (req, res) => {
         quantity: req.body.quantity,
         librarian: req.user.librarianId,
         doneOn: new Date(),
-        institution: req.user.institutionId,
+        libraryId: req.body.libraryId,
         supplier: req.body.supplierId,
         book: {
           connect: { id: req.body.bookId },
         },
-        institution: {
-          connect: { id: req.body.institutionId },
+        Library: {
+          connect: { id: req.body.libraryId },
         },
         librarian: {
           connect: { librarianId: req.user.librarianId },

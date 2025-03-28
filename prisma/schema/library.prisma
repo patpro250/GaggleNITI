@@ -1,18 +1,19 @@
 model Library {
-  id            String      @id @unique @default(uuid())
+  id            String        @id @unique @default(uuid())
   name          String
-  managerId    String?     @unique
+  managerId     String?       @unique
   institutionId String
   shelvesNo     Int
-  status        Status      @default(ACTIVE)
-  createdAt     DateTime    @default(now()) @db.Timestamp(6)
-  updatedAt     DateTime    @updatedAt @db.Timestamp(6)
+  status        Status        @default(ACTIVE)
+  createdAt     DateTime      @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime      @updatedAt @db.Timestamp(6)
   type          String
-  librarians    Librarian[] @relation("LibraryLibrarians")
+  librarians    Librarian[]   @relation("LibraryLibrarians")
   circulation   Circulation[] @relation("fromLibrary")
-  bookCopy      BookCopy[]  @relation("BookCopy")
-  institution   Institution @relation("institution", fields: [institutionId], references: [id])
-  manager      Librarian?   @relation("LibraryManager", fields: [managerId], references: [librarianId])
+  bookCopy      BookCopy[]    @relation("BookCopy")
+  Acquisition   Acquisition[] @relation("acquisition3")
+  manager       Librarian?    @relation("LibraryManager", fields: [managerId], references: [librarianId])
+  Institution   Institution   @relation("Library", fields: [institutionId], references: [id])
 
   @@map("libraries")
 }
