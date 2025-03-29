@@ -2,6 +2,7 @@ const express = require("express");
 const languageCodes = require("./lib/languages");
 const router = express.Router();
 const Joi = require("joi");
+const isMember = require("../middleware/auth/member");
 
 const permission = require("../middleware/auth/permissions");
 
@@ -35,6 +36,47 @@ router.get("/", permission(["READ"]), async (req, res) => {
 
   const nextCursor = books.length === limit ? books[books.length - 1].id : null;
   res.status(200).send({ nextCursor, books });
+});
+
+router.get("/institution", permission(["DIRECTOR"]), async (req, res) => {
+  const institutionId = req.user.institutionId;
+
+  const libraries = await prisma.library.findMany({
+    where: { institutionId },
+    select: { id: true },
+  });
+
+  const libraryIds = libraries.map((library) => library.id);
+
+  const totalBooks = await prisma.bookCopy.count({
+    where: { libraryId: { in: libraryIds } },
+  });
+
+  const availableBooks = await prisma.bookCopy.count({
+    where: { libraryId: { in: libraryIds }, status: "AVAILABLE" },
+  });
+
+  const borrowedBooks = await prisma.bookCopy.count({
+    where: { libraryId: { in: libraryIds }, status: "CHECKEDOUT" },
+  });
+
+  const overdueBooks = await prisma.circulation.count({
+    where: {
+      libraryId: { in: libraryIds },
+      dueDate: { lt: new Date() },
+    },
+  });
+
+  res.status(200).send({
+    totalBooks,
+    availableBooks,
+    borrowedBooks,
+    overdueBooks,
+  });
+});
+
+router.get("/recommended", isMember, async (req, res) => {
+  res.send("Recommended books!");
 });
 
 router.get("/popular", async (req, res) => {

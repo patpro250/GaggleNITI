@@ -21,6 +21,20 @@ router.get("/", async (req, res) => {
   res.status(200).send(institutions);
 });
 
+router.get("/dashboard", permission(["DIRECTOR"]), async (req, res) => {
+  const data = {
+    totalLibrarians: 0,
+    totalStudents: 0,
+    totalBooks: 0,
+    totalLibraries: 0,
+    totalIssuedBooks: 0,
+    totalAvailableBooks: 0,
+    mostBorrowedBook: "English",
+    weeklyBorrowedBooks: 0,
+  };
+  res.send(data);
+});
+
 router.get("/is-taken", async (req, res) => {
   const { name } = req.query;
   if (!name) return res.status(400).send("Provide a name of institution!");
@@ -28,6 +42,17 @@ router.get("/is-taken", async (req, res) => {
   if (taken)
     return res.status(400).send(`${name} is already taken, try another name!`);
   res.status(200).send("Okay");
+});
+
+router.get("/settings", permission(["DIRECTOR"]), async (req, res) => {
+  const institution = await prisma.institution.findUnique({
+    where: { id: req.user.institutionId },
+  });
+  if (!institution)
+    return res
+      .status(404)
+      .send(`Institution with ID: ${req.params.id} not found`);
+  res.status(200).send(institution.settings);
 });
 
 router.get("/:id", async (req, res) => {
@@ -41,20 +66,9 @@ router.get("/:id", async (req, res) => {
   res.status(200).send(institution);
 });
 
-router.get("/:id/settings", permission(["DIRECTOR"]), async (req, res) => {
+router.put("/settings", permission(["DIRECTOR"]), async (req, res) => {
   const institution = await prisma.institution.findUnique({
-    where: { id: req.params.id },
-  });
-  if (!institution)
-    return res
-      .status(404)
-      .send(`Institution with ID: ${req.params.id} not found`);
-  res.status(200).send(institution.settings);
-});
-
-router.put("/:id/settings", permission(["DIRECTOR"]), async (req, res) => {
-  const institution = await prisma.institution.findUnique({
-    where: { id: req.params.id },
+    where: { id: req.user.institutionId },
     select: { settings: true },
   });
   if (!institution)

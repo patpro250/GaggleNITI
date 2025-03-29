@@ -3,7 +3,7 @@ const error = require("../middleware/error");
 const trimmer = require("../middleware/trimmer");
 const cors = require("cors");
 const books = require("../routes/books");
-const bookcopies = require("../routes/bookcopies");
+const bookCopies = require("../routes/bookCopies");
 const institutions = require("../routes/institutions");
 const members = require("../routes/members");
 const librarians = require("../routes/librarians");
@@ -21,6 +21,8 @@ const plans = require("../routes/plans");
 const purchases = require("../routes/purchases");
 const academicYears = require("../routes/academicYears");
 const semesters = require("../routes/semesters");
+const reports = require("../routes/reports");
+const favorites = require("../routes/favorites");
 
 module.exports = function (app) {
   app.use(user);
@@ -29,7 +31,7 @@ module.exports = function (app) {
   app.use(trimmer);
   app.use("/books", books);
   app.use("/institutions", institutions);
-  app.use("/bookcopies", bookcopies);
+  app.use("/book-copies", bookCopies);
   app.use("/members", members);
   app.use("/librarians", librarians);
   app.use("/suppliers", suppliers);
@@ -45,5 +47,7 @@ module.exports = function (app) {
   app.use("/purchases", purchases);
   app.use("/academic-years", academicYears);
   app.use("/semesters", semesters);
+  app.use("/reports", reports);
+  app.use("/favorites", favorites);
   app.use(error);
 };

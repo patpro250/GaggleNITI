@@ -5,9 +5,10 @@ model Librarian {
   firstName      String
   lastName       String
   email          String          @unique
+  profile        String?
   status         LibrarianStatus @default(ACTIVE)
   gender         Gender
-  phoneNumber    String
+  phone          String
   password       String          @db.VarChar(2055)
   role           Role
   permissions    Permission[]

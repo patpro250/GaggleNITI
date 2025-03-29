@@ -9,19 +9,6 @@ const permission = require("../middleware/auth/permissions");
 
 const prisma = require("./prismaClient");
 
-router.get("/", async (req, res) => {
-  let members = await prisma.member.findMany();
-  members = members.map((member) => _.omit(member, ["password"]));
-  res.status(200).send(members);
-});
-
-router.get("/:id", async (req, res) => {
-  let member = await prisma.member.findUnique({ where: { id: req.params.id } });
-  if (!member) return res.status(404).send("Member not found");
-  member = _.omit(member, ["password"]);
-  res.status(200).send(member);
-});
-
 router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -43,7 +30,21 @@ router.post("/", async (req, res) => {
     .send(`${req.body.firstName} ${req.body.lastName} created successfully`);
 });
 
-router.post("/change-password/:id", isMember, async (req, res) => {
+router.use(isMember);
+router.get("/", async (req, res) => {
+  let members = await prisma.member.findMany();
+  members = members.map((member) => _.omit(member, ["password"]));
+  res.status(200).send(members);
+});
+
+router.get("/:id", async (req, res) => {
+  let member = await prisma.member.findUnique({ where: { id: req.params.id } });
+  if (!member) return res.status(404).send("Member not found");
+  member = _.omit(member, ["password"]);
+  res.status(200).send(member);
+});
+
+router.post("/change-password/:id", async (req, res) => {
   const { error } = validatePassword(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -65,7 +66,7 @@ router.post("/change-password/:id", isMember, async (req, res) => {
   res.status(200).send("Password Changed successfully!");
 });
 
-router.put("/:id", isMember, async (req, res) => {
+router.put("/:id", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 

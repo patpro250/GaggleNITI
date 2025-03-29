@@ -11,14 +11,38 @@ const permission = require("../middleware/auth/permissions");
 
 router.use(permission(["DIRECTOR"]));
 
-router.get("/dashboard", async (req, res) => {
-  const totalLibrarians = await prisma.librarian.count();
-  res.status(200).send({ totalLibrarians });
+router.get("/analytics", async (req, res) => {
+  const { institutionId } = req.user.institutionId;
+  const total = await prisma.librarian.count({
+    where: { institutionId },
+  });
+  const active = await prisma.librarian.count({
+    where: { institutionId, status: "ACTIVE" },
+  });
+  const inactive = await prisma.librarian.count({
+    where: { institutionId, status: "INACTIVE" },
+  });
+  const suspended = await prisma.librarian.count({
+    where: { institutionId, status: "SUSPENDED" },
+  });
+  const onLeave = await prisma.librarian.count({
+    where: { institutionId, status: "ON_LEAVE" },
+  });
+  res.status(200).send({ total, active, inactive, suspended, onLeave });
 });
 
 router.get("/", async (req, res) => {
   const librarians = await prisma.librarian.findMany({
-    include: { institution: true },
+    where: { institutionId: req.user.institutionId },
+    select: {
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+      role: true,
+      status: true,
+      profile: true,
+    },
   });
   res.status(200).send(librarians);
 });
@@ -165,6 +189,7 @@ function validate(librarian) {
       .required(),
     gender: Joi.string().valid("F", "M", "O").required(),
     libraryId: Joi.string().required(),
+    profile: Joi.string().uri(),
   });
 
   return schema.validate(librarian);

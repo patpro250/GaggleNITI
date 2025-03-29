@@ -1,0 +1,12 @@
+model FavoriteBook {
+    id        String   @id @default(uuid())
+    memberId  String
+    bookId    String
+    createdAt DateTime @default(now())
+
+    member Member @relation("memberInFavoriteBook", fields: [memberId], references: [id])
+    book   Book   @relation("bookInFavoriteBook", fields: [bookId], references: [id])
+
+    @@unique([memberId, bookId])
+    @@map("favoriteBooks")
+}
