@@ -76,7 +76,59 @@ router.get("/institution", permission(["DIRECTOR"]), async (req, res) => {
 });
 
 router.get("/recommended", isMember, async (req, res) => {
-  res.send("Recommended books!");
+  const userId = req.user.id;
+
+  const userActivity = await prisma.favoriteBook.findMany({
+    where: { memberId: userId },
+    include: { book: true },
+  });
+
+  const borrowedBooks = await prisma.circulation.findMany({
+    where: { userId },
+    include: { bookCopy: { include: { book: true } } },
+  });
+
+  const interactedBooks = [
+    ...userActivity.map((fb) => fb.book),
+    ...borrowedBooks.map((bc) => bc.bookCopy.book),
+  ];
+
+  let recommendedBooks;
+
+  if (interactedBooks.length === 0) {
+    recommendedBooks = await prisma.book.findMany({
+      orderBy: {
+        favoriteBook: { _count: "desc" },
+      },
+      take: 10,
+      select: {
+        title: true,
+        author: true,
+        publisher: true,
+        edition: true,
+      },
+    });
+  } else {
+    const favoriteGenres = interactedBooks
+      .map((book) => book.genre)
+      .filter(Boolean);
+
+    recommendedBooks = await prisma.book.findMany({
+      where: {
+        genre: { in: favoriteGenres },
+        id: { notIn: interactedBooks.map((book) => book.id) },
+      },
+      take: 10,
+      select: {
+        title: true,
+        author: true,
+        publisher: true,
+        edition: true,
+      },
+    });
+  }
+
+  res.status(200).send(recommendedBooks);
 });
 
 router.get("/popular", async (req, res) => {
