@@ -106,6 +106,7 @@ router.get("/recommended", isMember, async (req, res) => {
         author: true,
         publisher: true,
         edition: true,
+        language: true,
       },
     });
   } else {
@@ -124,6 +125,7 @@ router.get("/recommended", isMember, async (req, res) => {
         author: true,
         publisher: true,
         edition: true,
+        language: true,
       },
     });
   }
