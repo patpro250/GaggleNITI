@@ -4,6 +4,7 @@ model Library {
   managerId     String?       @unique
   institutionId String
   shelvesNo     Int
+  numberOfSeats Int?
   status        Status        @default(ACTIVE)
   createdAt     DateTime      @default(now()) @db.Timestamp(6)
   updatedAt     DateTime      @updatedAt @db.Timestamp(6)
