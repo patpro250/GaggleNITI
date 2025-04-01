@@ -27,7 +27,7 @@ router.get("/", async (req, res) => {
     cursor: cursor ? { id: cursor } : undefined,
     orderBy,
     include: {
-      librarian: true,
+      librarians: true,
     },
   });
 

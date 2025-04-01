@@ -6,11 +6,11 @@ model Librarian {
   lastName       String
   email          String          @unique
   profile        String?
-  status         LibrarianStatus @default(ACTIVE)
+  status         LibrarianStatus @default(PENDING)
   gender         Gender
   phone          String
   password       String          @db.VarChar(2055)
-  role           Role
+  role           Role?
   permissions    Permission[]
   createdAt      DateTime        @default(now()) @db.Timestamp(6)
   updatedAt      DateTime        @updatedAt @db.Timestamp(6)
@@ -74,5 +74,6 @@ enum LibrarianStatus {
   PROBATION
   RESIGNED
   TRANSFERRED
+  REJECTED
   DECEASED
 }

@@ -56,6 +56,18 @@ router.post("/librarians", async (req, res) => {
   });
   if (!librarian) return res.status(400).send("Invalid email or password");
 
+  if (librarian.status === "PENDING")
+    return res
+      .status(400)
+      .send(`Your account is still ${librarian.status}, wait for approval!`);
+
+  if (librarian.status === "REJECTED")
+    return res
+      .status(400)
+      .send(
+        `The director of your institution has rejected your account creation.!`
+      );
+
   const isValid = await bcrypt.compare(req.body.password, librarian.password);
   if (!isValid) return res.status(400).send("Invalid email or password");
 
