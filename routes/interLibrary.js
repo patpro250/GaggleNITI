@@ -301,7 +301,6 @@ router.post("/return/:id", async (req, res) => {
       lenderId: req.user.institutionId,
     },
   });
-  console.log(returned);
   if (returned)
     return res
       .status(400)
@@ -343,8 +342,6 @@ router.post("/return/:id", async (req, res) => {
   } else {
     status = "PARTIALLY_RETURNED";
   }
-
-  console.log(status);
 
   await prisma.$transaction([
     prisma.interLibrary.update({
