@@ -1,0 +1,34 @@
+model Catalog {
+    id                 String    @id @default(uuid())
+    title              String
+    author             String
+    isbn               String    @unique
+    published          DateTime
+    publisher          String
+    category           String
+    language           String
+    description        String
+    ddcCode            String
+    placeOfPublication String?
+    lccCode            String
+    callNo             String
+    keywords           String[]
+    format             MediaType
+    edition            String?
+    pages              Int?
+    coverImageURL      String?
+    createdAt          DateTime  @default(now())
+    updatedAt          DateTime  @updatedAt
+
+    @@index([title])
+    @@index([author])
+    @@index([isbn])
+    @@index([publisher])
+    @@map("catalogs")
+}
+
+enum MediaType {
+    AUDIO
+    EBOOK
+    HARD_COVER
+}

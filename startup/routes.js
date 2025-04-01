@@ -24,6 +24,7 @@ const semesters = require("../routes/semesters");
 const reports = require("../routes/reports");
 const favorites = require("../routes/favorites");
 const search = require("../routes/search");
+const catalog = require("../routes/catalogs");
 
 module.exports = function (app) {
   app.use(cors());
@@ -51,5 +52,6 @@ module.exports = function (app) {
   app.use("/reports", reports);
   app.use("/favorites", favorites);
   app.use("/search", search);
+  app.use("/catalog", catalog);
   app.use(error);
 };
