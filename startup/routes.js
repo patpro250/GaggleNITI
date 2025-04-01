@@ -23,10 +23,11 @@ const academicYears = require("../routes/academicYears");
 const semesters = require("../routes/semesters");
 const reports = require("../routes/reports");
 const favorites = require("../routes/favorites");
+const search = require("../routes/search");
 
 module.exports = function (app) {
-  app.use(user);
   app.use(cors());
+  app.use(user);
   app.use(express.json());
   app.use(trimmer);
   app.use("/books", books);
@@ -49,5 +50,6 @@ module.exports = function (app) {
   app.use("/semesters", semesters);
   app.use("/reports", reports);
   app.use("/favorites", favorites);
+  app.use("/search", search);
   app.use(error);
 };

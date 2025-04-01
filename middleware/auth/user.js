@@ -5,7 +5,6 @@ dotenv.config();
 module.exports = function (req, res, next) {
   if (
     req.path.startsWith("/auth") ||
-    (req.path.startsWith("/members") && req.method === "POST") ||
     req.path.startsWith("/suppliers") ||
     (req.path === "/institutions" && req.method === "POST")
   )

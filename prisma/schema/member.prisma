@@ -7,6 +7,7 @@ model Member {
   dateOfBirth    DateTime
   phone          String
   gender         Gender
+  fine           Float?
   address        Json
   memberShipType MembershipType
   status         MemberStatus   @default(ACTIVE)

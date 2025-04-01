@@ -102,6 +102,7 @@ router.get("/recommended", isMember, async (req, res) => {
       },
       take: 10,
       select: {
+        id: true,
         title: true,
         author: true,
         publisher: true,
@@ -121,6 +122,7 @@ router.get("/recommended", isMember, async (req, res) => {
       },
       take: 10,
       select: {
+        id: true,
         title: true,
         author: true,
         publisher: true,
@@ -181,7 +183,7 @@ router.get("/oldest", async (req, res) => {
 });
 
 router.get("/:id", async (req, res) => {
-  let book = await prisma.book.findUnique({
+  let book = await prisma.book.findFirst({
     where: { id: req.params.id },
     include: {
       institution: {

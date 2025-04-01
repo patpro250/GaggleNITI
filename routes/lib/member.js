@@ -62,6 +62,21 @@ function validate(member) {
   return memberSchema.validate(member);
 }
 
+function validateUpdate(member) {
+  const schema = Joi.object({
+    firstName: Joi.string().min(2).required(),
+    lastName: Joi.string().min(2).required(),
+    phone: Joi.string().min(10).required(),
+    address: {
+      city: Joi.string().min(2),
+      country: Joi.string().min(2),
+    },
+    dateOfBirth: Joi.date(),
+  });
+
+  return schema.validate(member);
+}
+
 function validatePassword(password) {
   const schema = Joi.object({
     oldPassword: passwordComplexity(complexityOptions),
@@ -70,4 +85,9 @@ function validatePassword(password) {
   return schema.validate(password);
 }
 
-module.exports = { validate, validatePassword, complexityOptions };
+module.exports = {
+  validate,
+  validateUpdate,
+  validatePassword,
+  complexityOptions,
+};

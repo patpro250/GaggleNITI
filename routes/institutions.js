@@ -21,6 +21,21 @@ router.get("/", async (req, res) => {
   res.status(200).send(institutions);
 });
 
+router.get("/trending", async (req, res) => {
+  const trendingInstitutions = await prisma.institution.findMany({
+    orderBy: { rating: "desc" },
+    take: 10,
+    select: {
+      id: true,
+      name: true,
+      address: true,
+      type: true,
+    },
+  });
+
+  res.status(200).send(trendingInstitutions);
+});
+
 router.get("/dashboard", permission(["DIRECTOR"]), async (req, res) => {
   const data = {
     totalLibrarians: 0,

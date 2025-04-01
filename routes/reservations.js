@@ -1,6 +1,7 @@
 const express = require("express");
 const Joi = require("joi");
 const _ = require("lodash");
+const isMember = require("../middleware/auth/member");
 const permission = require("../middleware/auth/permissions");
 
 const router = express.Router();
@@ -22,6 +23,35 @@ router.get("/", permission(["CIRCULATION_MANAGER"]), async (req, res) => {
   });
 
   res.status(200).send(reservations);
+});
+
+router.get("/my-reservations", isMember, async (req, res) => {
+  const memberId = req.user.id;
+
+  const pendingReservations = await prisma.reservation.findMany({
+    where: { memberId },
+    orderBy: { status: "asc" },
+    include: {
+      bookCopy: {
+        include: {
+          book: true,
+        },
+      },
+      institution: true,
+    },
+  });
+
+  const formattedReservations = pendingReservations.map((entry) => {
+    return {
+      reservationId: entry.id,
+      bookTitle: entry.bookCopy.book.title,
+      reservedFrom: entry.institution.name,
+      reservationDate: entry.doneOn.toISOString().split("T")[0],
+      dueDate: entry.dueDate ? entry.dueDate.toISOString().split("T")[0] : null,
+      status: "Pending",
+    };
+  });
+  res.status(200).send(formattedReservations);
 });
 
 router.get("/:id", permission(["CIRCULATION_MANAGER"]), async (req, res) => {

@@ -51,6 +51,40 @@ router.get("/", permission(["READ"]), async (req, res) => {
   res.status(200).send(borrowing);
 });
 
+router.get("/current-loans", async (req, res) => {
+  const memberId = req.user.id;
+
+  const overdueBooks = await prisma.circulation.findMany({
+    where: { dueDate: { lt: new Date() }, returnDate: null },
+    include: {
+      bookCopy: {
+        include: {
+          book: true,
+        },
+      },
+    },
+  });
+
+  const formattedBooks = overdueBooks.map((entry) => {
+    const overdueDays = Math.max(
+      Math.floor(
+        (new Date() - new Date(entry.dueDate)) / (1000 * 60 * 60 * 24)
+      ),
+      0
+    );
+
+    return {
+      title: entry.bookCopy.book.title,
+      code: entry.bookCopy.id,
+      author: entry.bookCopy.book.author,
+      publisher: entry.bookCopy.book.publisher,
+      overdueDays,
+    };
+  });
+
+  res.status(200).send(formattedBooks);
+});
+
 router.get("/students", async (req, res) => {
   const circulations = await prisma.circulation.findMany({
     where: { libraryId: req.user.libraryId, studentId: { not: null } },
