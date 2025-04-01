@@ -1,0 +1,4 @@
+model SystemConstants {
+    id     String @id @default(uuid())
+    values Json
+}

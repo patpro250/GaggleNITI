@@ -1,5 +1,5 @@
 model Book {
-  id                 String         @id @default(uuid())
+  id                 String   @id @default(uuid())
   title              String
   author             String
   publisher          String
@@ -13,15 +13,17 @@ model Book {
   callNo             String?
   barCode            String?
   ddcCode            String?
-  createdAt          DateTime       @default(now()) @db.Timestamp(6)
-  updatedAt          DateTime       @updatedAt @db.Timestamp(6)
+  createdAt          DateTime @default(now()) @db.Timestamp(6)
+  updatedAt          DateTime @updatedAt @db.Timestamp(6)
   institutionId      String
   genre              String?
   placeOfPublication String?
-  acquisition        Acquisition[]  @relation("Acquisition1")
-  bookCopy           BookCopy[]     @relation("BookCopy")
-  favoriteBook       FavoriteBook[] @relation("bookInFavoriteBook")
-  institution        Institution?   @relation("Book", fields: [institutionId], references: [id], onDelete: Cascade)
+
+  interLibrary InterLibrary[] @relation("interLibrary")
+  acquisition  Acquisition[]  @relation("Acquisition1")
+  bookCopy     BookCopy[]     @relation("BookCopy")
+  favoriteBook FavoriteBook[] @relation("bookInFavoriteBook")
+  institution  Institution?   @relation("Book", fields: [institutionId], references: [id], onDelete: Cascade)
 
   @@map("books")
 }

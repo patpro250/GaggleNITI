@@ -3,11 +3,10 @@ const Joi = require("joi");
 const now = require("../routes/lib/now");
 
 const prisma = require("./prismaClient");
-
 const permission = require("../middleware/auth/permissions");
+const { tr } = require("@faker-js/faker");
 
 const router = express.Router();
-
 router.use(permission(["CIRCULATION_MANAGER"]));
 
 router.get("/", async (req, res) => {
@@ -50,6 +49,131 @@ router.get("/pending", async (req, res) => {
   res.status(200).send(interLibrary);
 });
 
+router.post("/request", async (req, res) => {
+  const { error } = validate(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  const borrower = await prisma.institution.findFirst({
+    where: { id: req.user.institutionId },
+  });
+  if (!borrower) return res.status(400).send("Borrower not found");
+
+  const pendingApproval = await prisma.interLibrary.findFirst({
+    where: {
+      borrowerId: borrower.id,
+      status: "PENDING",
+    },
+  });
+  if (pendingApproval)
+    return res
+      .status(400)
+      .send(`You can't request a book when you still have a pending request!`);
+
+  const lender = await prisma.institution.findFirst({
+    where: { id: req.body.lenderId },
+  });
+  if (!lender) return res.status(400).send("Lender not found");
+
+  if (lender.id === borrower.id)
+    return res
+      .status(400)
+      .send("The borrower and lender are the same, try again");
+
+  let book = await prisma.book.findFirst({
+    where: { id: req.body.copyId, institutionId: req.body.lenderId },
+  });
+  if (!book)
+    return res
+      .status(400)
+      .send(
+        `The book you want doesn't exist in ${lender.name}, try another one!`
+      );
+
+  const availableCopies = await prisma.bookCopy.count({
+    where: { status: "AVAILABLE", bookId: req.body.bookId },
+  });
+  if (availableCopies === 0)
+    return res
+      .status(404)
+      .send(`There is no available copies of ${book.title} in ${lender.name}.`);
+
+  await prisma.interLibrary.create({
+    data: {
+      lenderId: req.body.lenderId,
+      bookId: req.body.bookId,
+      quantity: req.body.quantity,
+      borrowerId: req.user.institutionId,
+    },
+  });
+
+  res
+    .status(200)
+    .send(
+      `${borrower.name}, you have requested ${req.body.quantity} books of ${book.title} in ${lender.name}, please wait for approval.`
+    );
+});
+
+router.post("/approve/:id", async (req, res) => {
+  const { copies } = req.body;
+  const { error } = validateApproval(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  let isApproved = await prisma.interLibrary.findFirst({
+    where: { AND: [{ id: req.params.id }, { status: "PENDING" }] },
+  });
+  if (!isApproved)
+    return res
+      .status(400)
+      .send(`The inter library transaction is not pending!`);
+
+  let lender = await prisma.interLibrary.findFirst({
+    where: {
+      AND: [{ id: req.params.id }, { lenderId: req.user.institutionId }],
+    },
+  });
+  if (!lender) return res.status(400).send(`You are not requested this book`);
+
+  const records = await prisma.bookCopy.findMany({
+    where: {
+      id: {
+        in: req.body.copies,
+      },
+      bookId: isApproved.bookId,
+      status: "AVAILABLE",
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (records.length !== copies.length)
+    return res
+      .status(400)
+      .send(
+        `One of the copies you provided is not Available, try again but change the provided copies!`
+      );
+
+  await prisma.$transaction([
+    prisma.interLibrary.update({
+      where: { id: req.params.id },
+      data: {
+        status: "APPROVED",
+        copies,
+      },
+    }),
+    prisma.bookCopy.updateMany({
+      where: { id: { in: copies } },
+      data: { status: "REQUESTED" },
+    }),
+  ]);
+  let book = await prisma.book.findFirst({ where: { id: isApproved.bookId } });
+  res
+    .status(200)
+    .send(
+      `${copies.length} books of ${book.title} with author: ${book.author}, publisher: ${book.publisher} approved successfully, go and take them!`
+    );
+});
+
 router.get("/rejected", async (req, res) => {
   const interLibrary = await prisma.interLibrary.findFirst({
     where: {
@@ -63,96 +187,69 @@ router.get("/rejected", async (req, res) => {
   res.status(200).send(interLibrary);
 });
 
-router.post("/", async (req, res) => {
-  const { error } = validate(req.body);
+router.post("/send/:id", async (req, res) => {
+  const { error } = validateSend(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const borrower = await prisma.institution.findFirst({
-    where: { id: req.body.borrowerId },
-  });
-  if (!borrower) return res.status(400).send("Borrower not found");
-
-  const lender = await prisma.institution.findFirst({
-    where: { id: req.user.institutionId },
-  });
-  if (!lender) return res.status(400).send("Lender not found");
-
-  if (lender.id === borrower.id)
-    return res
-      .status(400)
-      .send("The borrower and lender are the same, try again");
-
-  let copy = await prisma.bookCopy.findFirst({
-    where: { id: req.body.copyId },
-  });
-  if (!copy)
-    return res
-      .status(400)
-      .send(
-        `Copy with ID: ${req.body.copyId} does not exist, add it to the database.`
-      );
-
-  let isPending = await prisma.interLibrary.findFirst({
-    where: { AND: [{ bookId: req.body.bookId }, { status: "PENDING" }] },
-  });
-  if (isPending)
-    return res
-      .status(400)
-      .send(`Another library has already requested for the book`);
-
-  let isAvailable = await prisma.bookCopy.findFirst({
-    where: { id: req.body.copyId, status: "AVAILABLE" },
-  });
-  if (!isAvailable)
-    return res.status(400).send(`This book is Available to issue!`);
-
-  req.body.status = "PENDING";
-  await prisma.interLibrary.create({
-    data: req.body,
-  });
-
-  res.status(200).send("Request sent successfully");
-});
-
-router.post("/approve/:id", async (req, res) => {
-  const { error } = validateApproval(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
-
-  let isApproved = await prisma.interLibrary.findFirst({
-    where: { AND: [{ id: req.params.id }, { status: "PENDING" }] },
-  });
-  if (!isApproved)
-    return res
-      .status(400)
-      .send(`The book is not found or already CHECKED OUT!`);
-
-  let lender = await prisma.interLibrary.findFirst({
+  const transaction = await prisma.interLibrary.findFirst({
     where: {
-      AND: [{ id: req.params.id }, { lenderId: req.user.institutionId }],
+      id: req.params.id,
+      status: "APPROVED",
+      lenderId: req.user.institutionId,
     },
   });
-  if (!lender)
-    return res.status(400).send(`You are not the lender of this book`);
+  if (!transaction)
+    return res
+      .status(400)
+      .send(`There is not an Approved inter library transaction.`);
+
+  const copies = transaction.copies;
+  const dueDate = new Date(req.body.dueDate);
+  const doneAt = new Date(transaction.updatedAt);
+
+  if (dueDate < doneAt)
+    return res
+      .status(400)
+      .send(`The due date should be greater than the date of approval!`);
 
   await prisma.$transaction([
     prisma.interLibrary.update({
       where: { id: req.params.id },
+      data: { status: "RECEIVED", dueDate: req.body.dueDate },
+    }),
+    prisma.bookCopy.updateMany({
+      where: {
+        id: {
+          in: copies,
+        },
+      },
       data: {
-        status: "APPROVED",
-        dueDate: req.body.dueDate,
+        status: "CHECKEDOUT",
       },
     }),
-    prisma.bookCopy.update({
-      where: { id: isApproved.bookId },
-      data: { status: "CHECKEDOUT" },
-    }),
   ]);
-  let book = await prisma.book.findFirst({ where: { id: isApproved.bookId } });
+
+  const book = await prisma.book.findFirst({
+    where: { id: transaction.bookId },
+    select: { title: true },
+  });
+  const borrower = await prisma.institution.findFirst({
+    where: { id: transaction.borrowerId },
+    select: { name: true },
+  });
+  const lender = await prisma.institution.findFirst({
+    where: { id: transaction.lenderId },
+    select: { name: true },
+  });
 
   res
     .status(200)
     .send(
-      `${book.title} with author: ${book.author}, publisher: ${book.publisher} requested successfully!`
+      `${borrower.name}, you have received ${copies.length} books of ${
+        book.title
+      } from ${lender.name}, please return it before ${new Date(
+        transaction.dueDate
+      ).toDateString()}`
     );
 });
 
@@ -160,32 +257,33 @@ router.post("/reject/:id", async (req, res) => {
   const { error } = validateRejection(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  let isApproved = await prisma.interLibrary.findFirst({
-    where: { AND: [{ id: req.params.id }, { status: "PENDING" }] },
+  let transaction = await prisma.interLibrary.findFirst({
+    where: { id: req.params.id, lenderId: req.user.institutionId },
   });
-
-  if (!isApproved)
+  if (!transaction)
     return res
       .status(400)
-      .send(`The book is not found or already CHECKED OUT!`);
+      .send(`There is no active inter library transaction!`);
 
-  let lender = await prisma.interLibrary.findFirst({
-    where: { AND: [{ id: req.params.id }, { lenderId: req.body.lenderId }] },
-  });
-
-  if (!lender)
-    return res.status(400).send(`You are not the lender of this book`);
+  const copies = transaction.copies;
 
   await prisma.$transaction([
     prisma.interLibrary.update({
-      where: { id: req.params.id },
+      where: {
+        id: req.params.id,
+      },
       data: {
         status: "REJECTED",
+        reason: req.body.reason,
       },
     }),
-    prisma.bookCopy.update({
-      where: { id: isApproved.bookId },
-      data: { status: "AVAILABLE" },
+    prisma.bookCopy.updateMany({
+      where: {
+        id: { in: copies },
+      },
+      data: {
+        status: "AVAILABLE",
+      },
     }),
   ]);
 
@@ -196,72 +294,116 @@ router.post("/return/:id", async (req, res) => {
   const { error } = validateReturn(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const borrower = await prisma.interLibrary.findFirst({
-    where: { borrowerId: req.body.borrowerId },
+  const returned = await prisma.interLibrary.findFirst({
+    where: {
+      id: req.params.id,
+      status: "RETURNED",
+      lenderId: req.user.institutionId,
+    },
   });
-  if (!borrower)
-    return res
-      .status(404)
-      .send(`Borrower not found or not the appropriate borrower of the book!`);
-
-  const copy = await prisma.bookCopy.findFirst({
-    where: { id: req.body.copyId },
-  });
-  if (!copy) return res.status(404).send(`Book copy not found!`);
-
-  if (copy.status !== "CHECKEDOUT")
+  console.log(returned);
+  if (returned)
     return res
       .status(400)
-      .send(`This book is not issued, it is ${copy.status}`);
+      .send(`This transaction is already ${returned.status}.`);
+
+  const borrower = await prisma.institution.findFirst({
+    where: { email: req.body.email },
+    select: { id: true },
+  });
+  if (!borrower) return res.status(404).send(`Borrower not found!`);
+
+  const transaction = await prisma.interLibrary.findFirst({
+    where: { lenderId: req.user.institutionId, id: req.params.id },
+  });
+  if (!transaction)
+    return res
+      .status(404)
+      .send(`You are not the appropriate lender of the book!`);
+
+  const copiesFromUser = req.body.copies;
+  const copiesFromDB = transaction.copies;
+
+  const returnedBooksCount = await prisma.bookCopy.count({
+    where: {
+      id: {
+        in: copiesFromDB,
+      },
+      status: "AVAILABLE",
+      bookId: transaction.bookId,
+    },
+  });
+
+  let status = "";
+  const totalCopies = copiesFromDB.length;
+  const totalReturnedCopies = returnedBooksCount + copiesFromUser.length;
+
+  if (totalReturnedCopies === totalCopies) {
+    status = "RETURNED";
+  } else {
+    status = "PARTIALLY_RETURNED";
+  }
+
+  console.log(status);
 
   await prisma.$transaction([
     prisma.interLibrary.update({
       where: { id: req.params.id },
       data: {
-        status: "RETURNED",
+        status,
         returnDate: new Date(),
       },
     }),
 
-    prisma.bookCopy.update({
-      where: { id: req.body.copyId },
+    prisma.bookCopy.updateMany({
+      where: { id: { in: copiesFromUser } },
       data: { status: "AVAILABLE" },
     }),
   ]);
 
-  let book = await prisma.book.findFirst({ where: { id: copy.bookId } });
+  let book = await prisma.book.findFirst({ where: { id: transaction.bookId } });
 
-  res.status(200).send(`${book.title} was successfully returned`);
+  res
+    .status(200)
+    .send(
+      `${copiesFromUser.length} copies of ${book.title} was successfully returned`
+    );
 });
 
 function validate(request) {
   const schema = Joi.object({
     lenderId: Joi.string().uuid().required(),
-    borrowerId: Joi.string().uuid().required(),
     bookId: Joi.string().uuid().required(),
+    quantity: Joi.number().positive().required(),
   });
   return schema.validate(request);
 }
 
 function validateApproval(request) {
   const schema = Joi.object({
-    lenderId: Joi.string().uuid().required(),
-    dueDate: Joi.date().iso().required(),
+    copies: Joi.array().items(Joi.string()).required(),
   });
   return schema.validate(request);
 }
 
 function validateRejection(request) {
   const schema = Joi.object({
-    lenderId: Joi.string().uuid().required(),
+    reason: Joi.string().min(5),
   });
   return schema.validate(request);
 }
 
+function validateSend(req) {
+  const schema = Joi.object({
+    dueDate: Joi.date().iso().required(),
+  });
+  return schema.validate(req);
+}
+
 function validateReturn(request) {
   const schema = Joi.object({
-    copyId: Joi.string().uuid().required(),
-    borrowerId: Joi.string().uuid().required(),
+    email: Joi.string().email(),
+    copies: Joi.array().items(Joi.string()).required(),
   });
   return schema.validate(request);
 }
