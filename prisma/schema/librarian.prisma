@@ -15,11 +15,13 @@ model Librarian {
   createdAt      DateTime        @default(now()) @db.Timestamp(6)
   updatedAt      DateTime        @updatedAt @db.Timestamp(6)
   managedLibrary Library?        @relation("LibraryManager")
-  libraries      Library[]       @relation("LibraryLibrarians")
-  acquisition    Acquisition[]   @relation("librarian")
-  institution    Institution?    @relation("InstitutionLibrarians", fields: [institutionId], references: [id], onDelete: Restrict)
-  librarian      Circulation[]   @relation("circulation")
-  reservation    Reservation[]   @relation("FromReservation")
+
+  reports     Report[]      @relation("Reports")
+  libraries   Library[]     @relation("LibraryLibrarians")
+  acquisition Acquisition[] @relation("librarian")
+  institution Institution?  @relation("InstitutionLibrarians", fields: [institutionId], references: [id], onDelete: Restrict)
+  librarian   Circulation[] @relation("circulation")
+  reservation Reservation[] @relation("FromReservation")
 
   @@map("librarians")
 }
