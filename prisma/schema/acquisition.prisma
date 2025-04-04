@@ -5,6 +5,7 @@ model Acquisition {
   librarianId String
   doneOn      DateTime  @default(now())
   libraryId   String
+  bookCode    String
   supplierId  String
   book        Book      @relation("Acquisition1", fields: [bookId], references: [id], onDelete: Cascade)
   Library     Library   @relation("acquisition3", fields: [libraryId], references: [id])
