@@ -19,7 +19,12 @@ const students = require("../routes/students");
 
 module.exports = function (app) {
   // app.use(user);
-  app.use(cors());
+  app.use(
+    cors({
+      origin: "http://localhost:3002", // cyangwa aho frontend yawe iri
+      exposedHeaders: ["x-auth-token"],
+    })
+  );
   app.use(express.json());
   app.use(trimmer);
   app.use("/books", books);
