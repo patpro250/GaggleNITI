@@ -1,12 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const { faker } = require("@faker-js/faker");
 const bcrypt = require("bcrypt");
 
-const prisma = new PrismaClient();
+const prisma = require("../routes/prismaClient");
 
 async function seedLibrarians() {
   console.log("🌱 Seeding librarians...");
-  let password = await bcrypt.hash('@Gaggle2025', 10);
+  let password = await bcrypt.hash("@Gaggle2025", 10);
 
   const librarians = Array.from({ length: 10 }).map(() => ({
     librarianId: faker.string.uuid(),
@@ -29,7 +28,7 @@ async function seedLibrarians() {
     ]),
     gender: faker.helpers.arrayElement(["F", "M", "O"]),
     phoneNumber: faker.phone.number(),
-    password: password, 
+    password: password,
     role: faker.helpers.arrayElement([
       "DIRECTOR",
       "ASSISTANT",
@@ -55,7 +54,7 @@ async function seedLibrarians() {
     ]),
     permissions: faker.helpers.arrayElements(
       ["READ", "WRITE", "DELETE", "MANAGE_USERS", "SYSTEM_ADMIN"],
-      faker.number.int({ min: 1, max: 3 }) 
+      faker.number.int({ min: 1, max: 3 })
     ),
     joined: faker.date.past(),
   }));

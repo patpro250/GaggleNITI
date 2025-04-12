@@ -2,12 +2,12 @@ const express = require("express");
 const Joi = require("joi");
 const router = express.Router();
 const _ = require("lodash");
+const permission = require("../middleware/auth/permissions");
 
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("./prismaClient");
 const generateStudentCode = require("../routes/lib/generateStudentCode");
 
-router.get("/", async (req, res) => {
+router.get("/", permission(["READ"]), async (req, res) => {
   let { cursor, limit, q, sort, status } = req.query;
   limit = parseInt(limit) || 10;
   if (limit > 50) limit = 50;
@@ -89,6 +89,49 @@ router.post("/", async (req, res) => {
     );
 });
 
+router.put("/promote", async (req, res) => {
+  const { error } = validatePromotion(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  const { maxLowLevel, maxHighLevel, excludedCodes } = req.body;
+  const students = await prisma.student.findMany({
+    where: {
+      institutionId: req.user.institutionId,
+      NOT: {
+        code: { in: excludedCodes },
+      },
+    },
+    select: { id: true, className: true, code: true },
+  });
+
+  if (students.length === 0)
+    return res.status(404).send("No students found in this institution.");
+
+  const updates = students
+    .map((student) => {
+      const classNumber = extractClassNumber(student.className);
+      if (classNumber !== null) {
+        let maxClass = classNumber <= maxLowLevel ? maxLowLevel : maxHighLevel;
+        if (classNumber < maxClass) {
+          const newClassName = student.className.replace(
+            classNumber,
+            classNumber + 1
+          );
+          return prisma.student.update({
+            where: { id: student.id },
+            data: { className: newClassName },
+          });
+        }
+      }
+      return null;
+    })
+    .filter(Boolean);
+
+  await prisma.$transaction(updates);
+
+  res.status(200).send(`${updates.length} successfully promoted!`);
+});
+
 router.put("/:id", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -163,6 +206,20 @@ function validate(student) {
   });
 
   return schema.validate(student);
+}
+
+function validatePromotion(promote) {
+  let schema = Joi.object({
+    maxLowLevel: Joi.number().integer().min(1).required(),
+    maxHighLevel: Joi.number().integer().min(1).required(),
+    excludedCodes: Joi.array().items(Joi.string()),
+  });
+  return schema.validate(promote);
+}
+
+function extractClassNumber(className) {
+  const match = className.match(/\d+/);
+  return match ? parseInt(match[0]) : null;
 }
 
 module.exports = router;

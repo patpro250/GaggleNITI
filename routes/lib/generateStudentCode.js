@@ -1,5 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../prismaClient");
 
 module.exports = async function (firstName, lastName) {
   let uniqueString;
@@ -11,7 +10,9 @@ module.exports = async function (firstName, lastName) {
     const randomNumber = Math.floor(Math.random() * 1000) + 1;
     uniqueString = `${firstInitial}${lastInitial}${randomNumber}`;
 
-    const existingRecord = await prisma.student.findUnique({where: {code: uniqueString}});
+    const existingRecord = await prisma.student.findUnique({
+      where: { code: uniqueString },
+    });
     exists = existingRecord;
   }
   return uniqueString;

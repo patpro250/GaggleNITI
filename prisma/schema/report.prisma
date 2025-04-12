@@ -1,0 +1,23 @@
+model Report {
+    id          String     @id @default(uuid())
+    librarianId String
+    type        ReportType @default(FULL)
+    from        DateTime
+    to          DateTime
+    doneOn      DateTime   @default(now())
+
+    librarian Librarian @relation("Reports", fields: [librarianId], references: [librarianId])
+
+    @@map("reports")
+}
+
+enum ReportType {
+    FULL
+    CIRCULATION
+    BOOKS
+    RESERVATIONS
+    MEMBERS
+    STUDENTS
+    INTER_LIBRARY
+    ACQUISITIONS
+}

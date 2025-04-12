@@ -1,0 +1,46 @@
+model PricingPlan {
+    id            String     @id @default(uuid())
+    name          String     @unique
+    price         Decimal
+    duration      Int
+    features      String
+    discount      Decimal?
+    freeTrialDays Int        @default(0)
+    createdAt     DateTime   @default(now())
+    updatedAt     DateTime   @updatedAt
+    purchases     Purchase[]
+    payments      Payment[]
+}
+
+model Payment {
+    id            String        @id @default(uuid())
+    institutionId String
+    planId        String
+    amount        Decimal
+    currency      String        @default("RWF")
+    status        PaymentStatus
+    method        String
+    doneAt        DateTime      @default(now())
+    PricingPlan   PricingPlan   @relation(fields: [planId], references: [id])
+    institution   Institution   @relation(fields: [institutionId], references: [id])
+    purchases     Purchase[]
+}
+
+model Purchase {
+    id            String      @id @default(uuid())
+    institutionId String
+    planId        String
+    paymentId     String?
+    purchasedAt   DateTime    @default(now())
+    expiresAt     DateTime
+    isTrial       Boolean     @default(false)
+    PricingPlan   PricingPlan @relation(fields: [planId], references: [id])
+    Payment       Payment?    @relation(fields: [paymentId], references: [id])
+    institution   Institution @relation(fields: [institutionId], references: [id])
+}
+
+enum PaymentStatus {
+    PENDING
+    SUCCESS
+    FAILED
+}

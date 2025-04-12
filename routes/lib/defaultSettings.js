@@ -4,7 +4,7 @@ function institutionSettings() {
       circulation: {
         maxLoanPeriod: 14,
         maxRenewals: 3,
-        lateFeePerDay: 0.5,
+        lateFeePerDay: 100,
         reserveBook: true,
         overdueGracePeriod: 0,
       },
@@ -16,12 +16,6 @@ function institutionSettings() {
       acquisitions: {
         budgetLimit: 0,
         purchaseRequestsAllowed: true,
-      },
-      libraryLayout: {
-        seatingCapacity: 0,
-        studyAreas: 0,
-        meetingRooms: 0,
-        quietArea: true,
       },
       userPermissions: {
         borrowerLimit: 3,
@@ -35,8 +29,8 @@ function institutionSettings() {
       },
       condition: {
         notNew: 30,
-        old: 10
-      }
+        old: 10,
+      },
     },
   };
 }

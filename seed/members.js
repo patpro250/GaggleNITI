@@ -1,12 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const { faker } = require("@faker-js/faker");
 const bcrypt = require("bcrypt");
 
-const prisma = new PrismaClient();
+const prisma = require("../routes/prismaClient");
 
 async function seedMembers() {
   console.log("Seeding members...");
-  let password = await bcrypt.hash('@Gaggle2025', 10);
+  let password = await bcrypt.hash("@Gaggle2025", 10);
 
   const members = Array.from({ length: 10 }).map(() => ({
     id: faker.string.uuid(),

@@ -11,8 +11,7 @@ dotenv.config();
 const { complexityOptions } = require("../routes/lib/member");
 const router = express.Router();
 
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("./prismaClient");
 
 const institutionSettings = require("../routes/lib/defaultSettings");
 const permission = require("../middleware/auth/permissions");
@@ -20,6 +19,55 @@ const permission = require("../middleware/auth/permissions");
 router.get("/", async (req, res) => {
   const institutions = await prisma.institution.findMany();
   res.status(200).send(institutions);
+});
+
+router.get("/trending", async (req, res) => {
+  const trendingInstitutions = await prisma.institution.findMany({
+    orderBy: { rating: "desc" },
+    take: 10,
+    select: {
+      id: true,
+      name: true,
+      address: true,
+      type: true,
+    },
+  });
+
+  res.status(200).send(trendingInstitutions);
+});
+
+router.get("/dashboard", permission(["DIRECTOR"]), async (req, res) => {
+  const data = {
+    totalLibrarians: 0,
+    totalStudents: 0,
+    totalBooks: 0,
+    totalLibraries: 0,
+    totalIssuedBooks: 0,
+    totalAvailableBooks: 0,
+    mostBorrowedBook: "English",
+    weeklyBorrowedBooks: 0,
+  };
+  res.send(data);
+});
+
+router.get("/is-taken", async (req, res) => {
+  const { name } = req.query;
+  if (!name) return res.status(400).send("Provide a name of institution!");
+  let taken = await prisma.institution.findFirst({ where: { name: name } });
+  if (taken)
+    return res.status(400).send(`${name} is already taken, try another name!`);
+  res.status(200).send("Okay");
+});
+
+router.get("/settings", permission(["DIRECTOR"]), async (req, res) => {
+  const institution = await prisma.institution.findUnique({
+    where: { id: req.user.institutionId },
+  });
+  if (!institution)
+    return res
+      .status(404)
+      .send(`Institution with ID: ${req.params.id} not found`);
+  res.status(200).send(institution.settings);
 });
 
 router.get("/:id", async (req, res) => {
@@ -111,6 +159,22 @@ router.put("/:id", permission(["DIRECTOR"]), async (req, res) => {
       .status(404)
       .send(`Institution with ID: ${req.params.id} not found`);
 
+  const checkIfTaken = await prisma.institution.findFirst({
+    where: {
+      OR: [
+        { email: req.body.email },
+        { phone: req.body.phone },
+        { name: req.body.name },
+      ],
+    },
+  });
+  if (checkIfTaken)
+    return res
+      .status(400)
+      .send(
+        `The updated fields are already taken by another institution, try another new name.`
+      );
+
   await prisma.institution.update({
     where: { id: req.params.id },
     data: req.body,
@@ -158,7 +222,17 @@ function validate(institution) {
     email: Joi.string().email({ minDomainSegments: 2 }).required(),
     status: Joi.string(),
     established: Joi.date(),
-    type: Joi.string().required(),
+    type: Joi.string()
+      .valid(
+        "UNIVERSITY",
+        "COLLEGE",
+        "SCHOOL",
+        "PUBLIC_LIBRARY",
+        "PRIVATE_LIBRARY",
+        "NON_PROFIT",
+        "OTHER"
+      )
+      .required(),
     password: passwordComplexity(complexityOptions),
   });
   return schema.validate(institution);

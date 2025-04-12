@@ -3,18 +3,21 @@ model Member {
   firstName      String
   lastName       String
   email          String         @unique
+  profile        String?
   dateOfBirth    DateTime
   phone          String
   gender         Gender
+  fine           Float?
   address        Json
   memberShipType MembershipType
   status         MemberStatus   @default(ACTIVE)
-  profile        Json
   createdAt      DateTime       @default(now()) @db.Timestamp(6)
   updatedAt      DateTime       @updatedAt @db.Timestamp(6)
   password       String
+  favoriteBook   FavoriteBook[] @relation("memberInFavoriteBook")
   reservation    Reservation[]  @relation("Reservation")
   member         Circulation[]  @relation("incirculation")
+  BookRequest    BookRequest[]  @relation("User")
 
   @@index([email])
   @@index([firstName, lastName])

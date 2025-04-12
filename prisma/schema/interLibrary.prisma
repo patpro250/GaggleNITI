@@ -2,13 +2,16 @@ model InterLibrary {
   id         String             @id @default(uuid())
   lenderId   String
   borrowerId String
+  copies     String[]
   bookId     String
+  quantity   Int
   borrowDate DateTime           @default(now())
   returnDate DateTime?
   updatedAt  DateTime           @updatedAt @db.Timestamp(6)
   dueDate    DateTime?
-  status     interLibraryStatus
-  book       BookCopy           @relation("InterLibrarybookCopy", fields: [bookId], references: [id])
+  reason     String?
+  status     interLibraryStatus @default(PENDING)
+  book       Book               @relation("interLibrary", fields: [bookId], references: [id])
   borrower   Institution        @relation("InterLibraryBorrowerId", fields: [borrowerId], references: [id])
   lender     Institution        @relation("InterLibraryLender", fields: [lenderId], references: [id])
 }
@@ -16,6 +19,8 @@ model InterLibrary {
 enum interLibraryStatus {
   PENDING
   APPROVED
+  RECEIVED
   REJECTED
   RETURNED
+  PARTIALLY_RETURNED
 }

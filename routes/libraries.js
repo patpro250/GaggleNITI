@@ -1,11 +1,11 @@
 const express = require("express");
 const Joi = require("joi");
 const router = express.Router();
+const LibraryType = require("./libraryType");
 
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("./prismaClient");
 
-const permission = require('../middleware/auth/permissions');
+const permission = require("../middleware/auth/permissions");
 
 router.get("/", async (req, res) => {
   let { cursor, limit, q, sort } = req.query;
@@ -27,7 +27,7 @@ router.get("/", async (req, res) => {
     cursor: cursor ? { id: cursor } : undefined,
     orderBy,
     include: {
-      librarian: true,
+      librarians: true,
     },
   });
 
@@ -45,7 +45,7 @@ router.get("/:id", async (req, res) => {
   res.status(200).send(library);
 });
 
-router.use(permission(['DIRECTOR']));
+router.use(permission(["DIRECTOR"]));
 
 router.post("/", async (req, res) => {
   const { error } = validate(req.body);
@@ -53,7 +53,9 @@ router.post("/", async (req, res) => {
 
   let exists = await prisma.library.findFirst({
     where: {
-      AND: [{ name: req.body.name }, { institutionId: req.user.institutionId }],
+      institutionId: req.user.institutionId,
+      name: req.body.name,
+      type: req.body.type,
     },
   });
   if (exists)
@@ -69,11 +71,7 @@ router.post("/", async (req, res) => {
       name: req.body.name,
       shelvesNo: req.body.shelvesNo,
       type: req.body.type,
-      institution: {
-        connect: {
-          id: req.user.institutionId,
-        },
-      },
+      institutionId: req.user.institutionId,
     },
   });
 
@@ -114,7 +112,9 @@ function validate(library) {
     name: Joi.string().required().min(3).max(50),
     directorId: Joi.string().uuid(),
     shelvesNo: Joi.number().required(),
-    type: Joi.string().required(),
+    type: Joi.string()
+      .valid(...Object.values(LibraryType))
+      .required(),
   });
   return schema.validate(library);
 }

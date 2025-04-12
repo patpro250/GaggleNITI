@@ -3,7 +3,7 @@ const error = require("../middleware/error");
 const trimmer = require("../middleware/trimmer");
 const cors = require("cors");
 const books = require("../routes/books");
-const bookcopies = require("../routes/bookcopies");
+const bookCopies = require("../routes/bookCopies");
 const institutions = require("../routes/institutions");
 const members = require("../routes/members");
 const librarians = require("../routes/librarians");
@@ -16,15 +16,10 @@ const auth = require("../routes/auth");
 const user = require("../middleware/auth/user");
 const libraries = require("../routes/libraries");
 const students = require("../routes/students");
-const verify = require("../routes/verifyInstitutionName");
+
 module.exports = function (app) {
   // app.use(user);
-  app.use(
-    cors({
-      origin: "http://localhost:3002",
-      exposedHeaders: ["x-auth-token"],
-    })
-  );
+  app.use(cors());
   app.use(express.json());
   app.use(trimmer);
   app.use("/books", books);
@@ -40,6 +35,5 @@ module.exports = function (app) {
   app.use("/auth", auth);
   app.use("/libraries", libraries);
   app.use("/students", students);
-  app.use("/verify", verify);
   app.use(error);
 };

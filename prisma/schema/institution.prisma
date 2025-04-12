@@ -1,26 +1,29 @@
 model Institution {
-  id           String         @id @default(uuid())
+  id           String          @id @default(uuid())
   name         String
   address      String
-  phone        String
+  phone        String          @unique
   openingHours String?
-  email        String         @unique
-  status       Status         @default(ACTIVE)
-  joinedAt     DateTime       @default(now())
-  rating       Float          @default(0.0)
+  email        String          @unique
+  status       Status          @default(ACTIVE)
+  joinedAt     DateTime        @default(now())
+  rating       Float           @default(0.0)
   password     String
   settings     Json?
-  type         String
-  createdAt    DateTime       @default(now()) @db.Timestamp(6)
-  updatedAt    DateTime       @updatedAt @db.Timestamp(6)
-  acquisition  Acquisition[]  @relation("acquisition")
+  type         InstitutionType
+  createdAt    DateTime        @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime        @updatedAt @db.Timestamp(6)
+
   borrower     InterLibrary[] @relation("InterLibraryBorrowerId")
   lender       InterLibrary[] @relation("InterLibraryLender")
   book         Book[]         @relation("Book")
   librarians   Librarian[]    @relation("InstitutionLibrarians")
-  library      Library[]      @relation("institution")
+  library      Library[]      @relation("Library")
   reservation  Reservation[]  @relation("fromReservationToinstitution")
   Student      Student[]      @relation("Student")
+  Payment      Payment[]
+  Purchase     Purchase[]
+  AcademicYear AcademicYear[]
 
   @@index([name, email, address, phone])
   @@map("institutions")
@@ -30,4 +33,14 @@ enum Status {
   CLOSED
   ACTIVE
   UNDERRENOVATION
+}
+
+enum InstitutionType {
+  UNIVERSITY
+  COLLEGE
+  SCHOOL
+  PUBLIC_LIBRARY
+  PRIVATE_LIBRARY
+  NON_PROFIT
+  OTHER
 }

@@ -5,20 +5,23 @@ model Librarian {
   firstName      String
   lastName       String
   email          String          @unique
-  status         LibrarianStatus @default(ACTIVE)
+  profile        String?
+  status         LibrarianStatus @default(PENDING)
   gender         Gender
-  phoneNumber    String
+  phone          String
   password       String          @db.VarChar(2055)
-  role           Role
+  role           Role?
   permissions    Permission[]
   createdAt      DateTime        @default(now()) @db.Timestamp(6)
   updatedAt      DateTime        @updatedAt @db.Timestamp(6)
   managedLibrary Library?        @relation("LibraryManager")
-  libraries      Library[]       @relation("LibraryLibrarians")
-  acquisition    Acquisition[]   @relation("librarian")
-  institution    Institution?    @relation("InstitutionLibrarians", fields: [institutionId], references: [id], onDelete: Restrict)
-  librarian      Circulation[]   @relation("circulation")
-  reservation    Reservation[]   @relation("FromReservation")
+
+  reports     Report[]      @relation("Reports")
+  libraries   Library[]     @relation("LibraryLibrarians")
+  acquisition Acquisition[] @relation("librarian")
+  institution Institution?  @relation("InstitutionLibrarians", fields: [institutionId], references: [id], onDelete: Restrict)
+  librarian   Circulation[] @relation("circulation")
+  reservation Reservation[] @relation("FromReservation")
 
   @@map("librarians")
 }
@@ -73,5 +76,6 @@ enum LibrarianStatus {
   PROBATION
   RESIGNED
   TRANSFERRED
+  REJECTED
   DECEASED
 }

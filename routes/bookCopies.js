@@ -1,84 +1,84 @@
 const express = require("express");
 const Joi = require("joi");
 const router = express.Router();
-const { PrismaClient } = require("@prisma/client");
 
 const permission = require("../middleware/auth/permissions");
 
-const prisma = new PrismaClient();
+const prisma = require("./prismaClient");
 
-router.get('/dashboard', permission(['READ']), async (req, res) => {
+router.get("/dashboard", permission(["READ"]), async (req, res) => {
   let libraryId = req.user.libraryId;
   const totalBooks = await prisma.bookCopy.count({
-    where: { libraryId }
+    where: { libraryId },
   });
 
   const issued = await prisma.bookCopy.count({
-    where: { status: 'CHECKEDOUT', libraryId }
+    where: { status: "CHECKEDOUT", libraryId },
   });
 
   const available = await prisma.bookCopy.count({
-    where: { status: 'AVAILABLE', libraryId }
+    where: { status: "AVAILABLE", libraryId },
   });
 
   const returned = await prisma.circulation.count({
-    where: { returnDate: { not: null }, bookCopy: { libraryId } }
+    where: { returnDate: { not: null }, bookCopy: { libraryId } },
   });
 
   const newBooks = await prisma.bookCopy.count({
-    where: { condition: 'NEW', libraryId }
+    where: { condition: "NEW", libraryId },
   });
 
   const goodBooks = await prisma.bookCopy.count({
-    where: { condition: 'GOOD', libraryId }
+    where: { condition: "GOOD", libraryId },
   });
 
   const damagedBooks = await prisma.bookCopy.count({
-    where: { condition: 'DAMAGED', libraryId }
+    where: { condition: "DAMAGED", libraryId },
   });
 
   const onHold = await prisma.bookCopy.count({
-    where: { status: 'ONHOLD', libraryId }
+    where: { status: "ONHOLD", libraryId },
   });
 
   const reserved = await prisma.bookCopy.count({
-    where: { status: 'RESERVED', libraryId }
+    where: { status: "RESERVED", libraryId },
   });
 
   const inArchives = await prisma.bookCopy.count({
-    where: { status: 'INARCHIVES', libraryId }
+    where: { status: "INARCHIVES", libraryId },
   });
 
   const processing = await prisma.bookCopy.count({
-    where: { status: 'PROCESSING', libraryId }
+    where: { status: "PROCESSING", libraryId },
   });
 
   const missing = await prisma.bookCopy.count({
-    where: { status: 'MISSING', libraryId }
+    where: { status: "MISSING", libraryId },
   });
 
   const restrictedAccess = await prisma.bookCopy.count({
-    where: { status: 'RESTRICTEDACCESS', libraryId }
+    where: { status: "RESTRICTEDACCESS", libraryId },
   });
 
   const booksThisYear = await prisma.bookCopy.count({
     where: {
       dateOfAcquisition: { gte: new Date(new Date().getFullYear(), 0, 1) },
-      libraryId
-    }
+      libraryId,
+    },
   });
 
   const booksThisMonth = await prisma.bookCopy.count({
     where: {
-      dateOfAcquisition: { gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) },
-      libraryId
-    }
+      dateOfAcquisition: {
+        gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+      },
+      libraryId,
+    },
   });
 
   const inTransit = await prisma.bookCopy.count({
-    where: { status: 'INTRANSIT', libraryId }
+    where: { status: "INTRANSIT", libraryId },
   });
-
 
   const stats = {
     totalBooks,
@@ -101,40 +101,48 @@ router.get('/dashboard', permission(['READ']), async (req, res) => {
   res.status(200).send(stats);
 });
 
-router.get("/", permission(['READ']), async (req, res) => {
+router.get("/", permission(["READ"]), async (req, res) => {
   let { cursor, limit, sort } = req.query;
   limit = parseInt(limit) || 10;
 
   if (limit > 50) limit = 50;
-  const orderBy = sort === 'asc' ? { dateOfAcquisition: 'asc' } : { dateOfAcquisition: 'desc' };
+  const orderBy =
+    sort === "asc"
+      ? { dateOfAcquisition: "asc" }
+      : { dateOfAcquisition: "desc" };
 
   const copies = await prisma.bookCopy.findMany({
     take: limit,
     skip: cursor ? 1 : 0,
     cursor: cursor ? { id: cursor } : undefined,
-    orderBy
+    orderBy,
   });
 
-  const nextCursor = copies.length === limit ? copies[copies.length - 1].id : null;
+  const nextCursor =
+    copies.length === limit ? copies[copies.length - 1].id : null;
   res.status(200).send({ nextCursor, copies });
 });
 
-router.get('/:id', permission(['READ']), async (req, res) => {
-  const bookCopy = await prisma.bookCopy.findUnique({ where: { id: req.params.id } })
+router.get("/:id", permission(["READ"]), async (req, res) => {
+  const bookCopy = await prisma.bookCopy.findUnique({
+    where: { id: req.params.id },
+  });
   if (!bookCopy) return res.status(404).send("BookCopy not found");
   res.status(200).send(bookCopy);
 });
 
-router.post("/", permission(['ADD_COPY']), async (req, res) => {
+router.post("/", permission(["ADD_COPY"]), async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  let library = await prisma.library.findFirst({ where: { id: req.body.libraryId } });
+  let library = await prisma.library.findFirst({
+    where: { id: req.body.libraryId },
+  });
   if (!library) return res.status(404).send("Library not found");
 
   let book = await prisma.book.findFirst({ where: { id: req.body.bookId } });
   if (!book) return res.status(404).send("Book not found");
-  
+
   await prisma.bookCopy.create({
     data: req.body,
   });
@@ -142,17 +150,19 @@ router.post("/", permission(['ADD_COPY']), async (req, res) => {
   res.status(201).send(`${req.body.bookId} bookCopy Is Created`);
 });
 
-router.put("/archive/:id", permission(['ARCHIVE']), async (req, res) => {
-  const bookcopy = await prisma.bookCopy.findUnique({ where: { id: req.params.id }, });
+router.put("/archive/:id", permission(["ARCHIVE"]), async (req, res) => {
+  const bookcopy = await prisma.bookCopy.findUnique({
+    where: { id: req.params.id },
+  });
   if (!bookcopy) {
     return res.status(404).send("BookCopy not found");
-  } else if (bookcopy.status === 'INARCHIVES') {
+  } else if (bookcopy.status === "INARCHIVES") {
     return res.status(404).send("BookCopy is already archived");
   }
 
   await prisma.bookCopy.update({
     where: { id: req.params.id },
-    data: { status: 'INARCHIVES' }
+    data: { status: "INARCHIVES" },
   });
 
   res.status(200).send(`${bookcopy.code} Archived Successfully!`);

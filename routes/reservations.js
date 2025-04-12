@@ -1,29 +1,60 @@
 const express = require("express");
 const Joi = require("joi");
 const _ = require("lodash");
-const { PrismaClient } = require("@prisma/client");
+const isMember = require("../middleware/auth/member");
+const permission = require("../middleware/auth/permissions");
 
 const router = express.Router();
-const prisma = new PrismaClient();
+const prisma = require("./prismaClient");
 
-router.get("/", async (req, res) => {
+router.get("/", permission(["CIRCULATION_MANAGER"]), async (req, res) => {
   const { status } = req.query;
-  let reservations;
-  if (status) {
-    if (!["PENDING", "REJECTED", "APPROVED"].includes(status))
-      return res.status(400).send("Invalid status query parameter!");
-    reservations = await prisma.reservation.findMany({
-      where: { status: status },
-    });
-  } else {
-    reservations = await prisma.reservation.findMany();
+  const { libraryId } = req.user;
+
+  if (status && !["PENDING", "REJECTED", "APPROVED"].includes(status)) {
+    return res.status(400).send("Invalid status query parameter!");
   }
+
+  const reservations = await prisma.reservation.findMany({
+    where: {
+      libraryId,
+      ...(status && { status }),
+    },
+  });
 
   res.status(200).send(reservations);
 });
 
+router.get("/my-reservations", isMember, async (req, res) => {
+  const memberId = req.user.id;
 
-router.get("/:id", async (req, res) => {
+  const pendingReservations = await prisma.reservation.findMany({
+    where: { memberId },
+    orderBy: { status: "asc" },
+    include: {
+      bookCopy: {
+        include: {
+          book: true,
+        },
+      },
+      institution: true,
+    },
+  });
+
+  const formattedReservations = pendingReservations.map((entry) => {
+    return {
+      reservationId: entry.id,
+      bookTitle: entry.bookCopy.book.title,
+      reservedFrom: entry.institution.name,
+      reservationDate: entry.doneOn.toISOString().split("T")[0],
+      dueDate: entry.dueDate ? entry.dueDate.toISOString().split("T")[0] : null,
+      status: "Pending",
+    };
+  });
+  res.status(200).send(formattedReservations);
+});
+
+router.get("/:id", permission(["CIRCULATION_MANAGER"]), async (req, res) => {
   let reservation = await prisma.reservation.findUnique({
     where: { id: req.params.id },
     include: { bookCopy: true, member: true, institution: true },
@@ -40,11 +71,14 @@ router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(404).send(error.details[0].message);
 
-  const institution = await prisma.institution.findUnique({ where: { id: req.body.institutionId }, });
+  const institution = await prisma.institution.findUnique({
+    where: { id: req.body.institutionId },
+  });
   if (!institution) return res.status(404).send("Institution not found!");
 
   let settings = institution.settings.circulation;
-  if (!settings.reserveBook) return res.status(400).send("Reservations are disabled!");
+  if (!settings.reserveBook)
+    return res.status(400).send("Reservations are disabled!");
 
   let isAvailable = await prisma.bookCopy.findUnique({
     where: { id: req.body.copyId },
@@ -58,11 +92,11 @@ router.post("/", async (req, res) => {
     },
   });
 
-  const book = await prisma.bookCopy.findFirst({ where: { id: req.body.copyId } });
+  const bookCopy = await prisma.bookCopy.findFirst({
+    where: { id: req.body.copyId },
+  });
   if (!isAvailable)
-    return res
-      .status(400)
-      .send(`This book is ${book.status}!`);
+    return res.status(400).send(`This book is ${bookCopy.status}!`);
 
   const member = await prisma.member.findUnique({
     where: { id: req.body.memberId },
