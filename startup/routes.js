@@ -16,42 +16,29 @@ const auth = require("../routes/auth");
 const user = require("../middleware/auth/user");
 const libraries = require("../routes/libraries");
 const students = require("../routes/students");
-const payments = require("../routes/payments");
-const plans = require("../routes/plans");
-const purchases = require("../routes/purchases");
-const academicYears = require("../routes/academicYears");
-const semesters = require("../routes/semesters");
-const reports = require("../routes/reports");
-const favorites = require("../routes/favorites");
-const search = require("../routes/search");
-const catalog = require("../routes/catalogs");
 
 module.exports = function (app) {
-  app.use(cors());
-  app.use(user);
+  // app.use(user);
+  app.use(
+    cors({
+      origin: "http://localhost:3002", // cyangwa aho frontend yawe iri
+      exposedHeaders: ["x-auth-token"],
+    })
+  );
   app.use(express.json());
   app.use(trimmer);
   app.use("/books", books);
   app.use("/institutions", institutions);
-  app.use("/book-copies", bookCopies);
+  app.use("/bookcopies", bookcopies);
   app.use("/members", members);
   app.use("/librarians", librarians);
   app.use("/suppliers", suppliers);
   app.use("/acquisitions", acquisitions);
   app.use("/circulations", circulations);
   app.use("/reservations", reservations);
-  app.use("/inter-library", interLibrary);
+  app.use("/interlibrary", interLibrary);
   app.use("/auth", auth);
   app.use("/libraries", libraries);
   app.use("/students", students);
-  app.use("/payments", payments);
-  app.use("/plans", plans);
-  app.use("/purchases", purchases);
-  app.use("/academic-years", academicYears);
-  app.use("/semesters", semesters);
-  app.use("/reports", reports);
-  app.use("/favorites", favorites);
-  app.use("/search", search);
-  app.use("/catalog", catalog);
   app.use(error);
 };

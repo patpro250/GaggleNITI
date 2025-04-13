@@ -81,9 +81,20 @@ router.get("/:id", async (req, res) => {
   res.status(200).send(institution);
 });
 
-router.put("/settings", permission(["DIRECTOR"]), async (req, res) => {
+router.get("/:id/settings", permission(["DIRECTOR"]), async (req, res) => {
   const institution = await prisma.institution.findUnique({
-    where: { id: req.user.institutionId },
+    where: { id: req.params.id },
+  });
+  if (!institution)
+    return res
+      .status(404)
+      .send(`Institution with ID: ${req.params.id} not found`);
+  res.status(200).send(institution.settings);
+});
+
+router.put("/:id/settings", permission(["DIRECTOR"]), async (req, res) => {
+  const institution = await prisma.institution.findUnique({
+    where: { id: req.params.id },
     select: { settings: true },
   });
   if (!institution)
@@ -184,9 +195,7 @@ router.put("/deactivate/:id", permission(["DIRECTOR"]), async (req, res) => {
     where: { id: req.user.institutionId },
     data: { status: "CLOSED" },
   });
-  res
-    .status(200)
-    .send(`${institution.name} is ${institution.status} successfully!`);
+  res.status(200).send(`${institution.name} closed successfully!`);
 });
 
 router.delete("/:id", permission(["SYSTEM_ADMIN"]), async (req, res) => {
