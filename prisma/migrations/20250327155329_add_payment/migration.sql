@@ -2,7 +2,7 @@
 CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'SUCCESS', 'FAILED');
 
 -- AlterEnum
-ALTER TYPE "Condition" ADD VALUE 'OLD';
+
 
 -- CreateTable
 CREATE TABLE "PricingPlan" (

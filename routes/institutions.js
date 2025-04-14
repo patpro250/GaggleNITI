@@ -131,7 +131,10 @@ router.post("/", async (req, res) => {
   const defaults = institutionSettings();
   req.body.settings = defaults.settings;
 
-  if (exists) return res.status(400).send(`${req.body.name} already exists!`);
+  if (exists)
+    return res
+      .status(400)
+      .json({ message: `${req.body.name} already exists!` });
   req.body.password = await bcrypt.hash(req.body.password, 10);
   const institution = await prisma.institution.create({
     data: req.body,

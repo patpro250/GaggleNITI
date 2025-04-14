@@ -16,6 +16,7 @@ const auth = require("../routes/auth");
 const user = require("../middleware/auth/user");
 const libraries = require("../routes/libraries");
 const students = require("../routes/students");
+const verifyInstitutionName = require("../routes/verifyInstitutionName");
 
 module.exports = function (app) {
   // app.use(user);
@@ -29,7 +30,7 @@ module.exports = function (app) {
   app.use(trimmer);
   app.use("/books", books);
   app.use("/institutions", institutions);
-  app.use("/bookcopies", bookcopies);
+  app.use("/bookcopies", bookCopies);
   app.use("/members", members);
   app.use("/librarians", librarians);
   app.use("/suppliers", suppliers);
@@ -40,5 +41,6 @@ module.exports = function (app) {
   app.use("/auth", auth);
   app.use("/libraries", libraries);
   app.use("/students", students);
+  app.use("/verify", verifyInstitutionName);
   app.use(error);
 };

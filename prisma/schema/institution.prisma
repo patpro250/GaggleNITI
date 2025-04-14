@@ -10,7 +10,7 @@ model Institution {
   rating       Float           @default(0.0)
   password     String
   settings     Json?
-  type         InstitutionType
+  type         InstitutionType @default(SCHOOL) 
   createdAt    DateTime        @default(now()) @db.Timestamp(6)
   updatedAt    DateTime        @updatedAt @db.Timestamp(6)
 
