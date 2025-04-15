@@ -52,6 +52,11 @@ router.get("/", async (req, res) => {
     skip: cursor ? 1 : 0,
     cursor: cursor ? { id: cursor } : undefined,
     orderBy,
+    select: {
+      title: true,
+      author: true,
+      id: true,
+    }
   });
 
   const nextCursor =

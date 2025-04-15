@@ -4,6 +4,7 @@ model PricingPlan {
     price         Decimal
     duration      Int
     features      String
+    status        PlanStatus @default(ACTIVE)
     discount      Decimal?
     freeTrialDays Int        @default(0)
     createdAt     DateTime   @default(now())
@@ -43,4 +44,10 @@ enum PaymentStatus {
     PENDING
     SUCCESS
     FAILED
+}
+
+enum PlanStatus {
+    ACTIVE
+    INACTIVE
+    COMING_SOON
 }

@@ -6,7 +6,8 @@ module.exports = function (req, res, next) {
   if (
     req.path.startsWith("/auth") ||
     req.path.startsWith("/suppliers") ||
-    req.path.startsWith("/catalog") ||
+    (req.path.startsWith("/plans") && (req.method === "GET") && (req.path !== '/plans/current')) ||
+    (req.path.startsWith("/catalog") && (req.method === "GET")) ||
     (req.path === "/institutions" && req.method === "POST")
   )
     return next();

@@ -4,6 +4,7 @@ const _ = require("lodash");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const IsUser = require("../middleware/auth/user");
+const { loginLimiter } = require("../middleware/limiter");
 
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
@@ -25,6 +26,8 @@ router.get("/librarians/me", IsUser, async (req, res) => {
   if (!librarian) return res.status(404).send(`Librarian not found`);
   res.status(200).send(librarian);
 });
+
+router.use(loginLimiter);
 
 router.post("/members", async (req, res) => {
   const { error } = validate(req.body);
