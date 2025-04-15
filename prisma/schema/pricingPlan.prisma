@@ -20,7 +20,7 @@ model Payment {
     amount        Decimal
     currency      String        @default("RWF")
     status        PaymentStatus
-    method        String
+    method        PaymentMethod @default(MOBILE_MONEY)
     doneAt        DateTime      @default(now())
     PricingPlan   PricingPlan   @relation(fields: [planId], references: [id])
     institution   Institution   @relation(fields: [institutionId], references: [id])
@@ -50,4 +50,13 @@ enum PlanStatus {
     ACTIVE
     INACTIVE
     COMING_SOON
+}
+
+enum PaymentMethod {
+    CREDIT_CARD
+    DEBIT_CARD
+    PAYPAL
+    BANK_TRANSFER
+    MOBILE_MONEY
+    CASH
 }
