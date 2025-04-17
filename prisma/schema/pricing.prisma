@@ -15,17 +15,19 @@ model PricingPlan {
 }
 
 model Payment {
-    id            String        @id @default(uuid())
-    institutionId String
-    planId        String
-    amount        Decimal
-    currency      String        @default("RWF")
-    status        PaymentStatus
-    method        PaymentMethod @default(MOBILE_MONEY)
-    doneAt        DateTime      @default(now())
-    PricingPlan   PricingPlan   @relation(fields: [planId], references: [id])
-    institution   Institution   @relation(fields: [institutionId], references: [id])
-    purchases     Purchase[]
+    id               String        @id @default(uuid())
+    institutionId    String
+    planId           String
+    amount           Decimal
+    phoneNumber      String?
+    confirmationCode String?
+    currency         String        @default("RWF")
+    status           PaymentStatus
+    method           PaymentMethod @default(MOBILE_MONEY)
+    doneAt           DateTime      @default(now())
+    PricingPlan      PricingPlan   @relation(fields: [planId], references: [id])
+    institution      Institution   @relation(fields: [institutionId], references: [id])
+    purchases        Purchase[]
 }
 
 model Purchase {
@@ -45,6 +47,7 @@ enum PaymentStatus {
     PENDING
     SUCCESS
     FAILED
+    REJECTED
 }
 
 enum PlanStatus {

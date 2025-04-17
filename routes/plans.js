@@ -5,13 +5,8 @@ const router = express.Router();
 const Joi = require("joi");
 
 router.get("/", async (req, res) => {
-  const plans = await prisma.pricingPlan.findMany();
+  const plans = await prisma.pricingPlan.findMany({ where: { status: 'ACTIVE' } });
   res.status(200).send(plans);
-});
-
-router.get("/current", permission(["DIRECTOR"]), async (req, res) => {
-  const { institution } = req.user;
-  res.status(200).send(institution);
 });
 
 router.post('/', permission(['SYSTEM_ADMIN']), async (req, res) => {
@@ -74,7 +69,8 @@ function validatePlan(plan) {
     price: Joi.number().precision(2).required(),
     duration: Joi.number().integer().min(1).required(),
     features: Joi.array().items(Joi.string()).min(1).required(),
-    discount: Joi.number().precision(2).max(0.9).min(0).optional()
+    discount: Joi.number().precision(2).max(0.9).min(0).optional(),
+    limitations: Joi.object().required()
   });
   return schema.validate(plan);
 }
