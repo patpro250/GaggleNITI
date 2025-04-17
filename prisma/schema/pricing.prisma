@@ -5,6 +5,7 @@ model PricingPlan {
     duration      Int
     features      String
     status        PlanStatus @default(ACTIVE)
+    limitations   Json
     discount      Decimal?
     freeTrialDays Int        @default(0)
     createdAt     DateTime   @default(now())
