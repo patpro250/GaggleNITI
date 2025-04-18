@@ -71,10 +71,22 @@ router.post("/librarians", async (req, res) => {
         `The director of your institution has rejected your account creation.!`
       );
 
+  const activePurchase = await prisma.purchase.findFirst({ where: { institutionId: librarian.institutionId, status: 'ACTIVE' } });
+  if (!activePurchase) return res.status(400).send("Your institution has no active subscription!");
+
+  const plan = await prisma.pricingPlan.findFirst({ where: { id: activePurchase.planId } });
+  if (!plan) return res.status(400).send("Failed to get plan!");
+
   const isValid = await bcrypt.compare(req.body.password, librarian.password);
   if (!isValid) return res.status(400).send("Invalid email or password");
 
   const payload = _.omit(librarian, ["password"]);
+
+  payload.plan = plan.name;
+  payload.limitations = plan.limitations;
+  payload.purchaseStatus = activePurchase.status;
+  payload.expirationDate = activePurchase.expiresAt;
+
   const token = jwt.sign(payload, process.env.JWT_KEY);
 
   res
@@ -92,10 +104,22 @@ router.post("/director", async (req, res) => {
   });
   if (!institution) return res.status(400).send("Invalid email or password");
 
+  const activePurchase = await prisma.purchase.findFirst({ where: { institutionId: institution.id, status: 'ACTIVE' } });
+  if (!activePurchase) return res.status(400).send("Your institution has no active subscription!");
+
+  const plan = await prisma.pricingPlan.findFirst({ where: { id: activePurchase.planId } });
+  if (!plan) return res.status(400).send("Failed to get plan!");
+
   const isValid = await bcrypt.compare(req.body.password, institution.password);
   if (!isValid) return res.status(400).send("Invalid email or password");
 
   let payload = _.omit(institution, ["password", "settings"]);
+
+  payload.plan = plan.name;
+  payload.limitations = plan.limitations;
+  payload.purchaseStatus = activePurchase.status;
+  payload.expirationDate = activePurchase.expiresAt;
+
   payload.institutionId = payload.id;
   const token = jwt.sign(payload, process.env.JWT_KEY);
 
