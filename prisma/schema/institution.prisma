@@ -6,7 +6,6 @@ model Institution {
   openingHours String?
   email        String          @unique
   status       Status          @default(ACTIVE)
-  joinedAt     DateTime        @default(now())
   rating       Float           @default(0.0)
   password     String
   settings     Json?

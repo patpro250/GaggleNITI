@@ -8,7 +8,8 @@ module.exports = function (req, res, next) {
     req.path.startsWith("/suppliers") ||
     (req.path.startsWith("/plans") && (req.method === "GET") && (req.path !== '/plans/current')) ||
     (req.path.startsWith("/catalog") && (req.method === "GET")) ||
-    (req.path === "/institutions" && req.method === "POST")
+    (req.path === "/institutions" && req.method === "POST") ||
+    (req.path === "/system-admin" && req.method === "POST")
   )
     return next();
   const token = req.header("x-auth-token");

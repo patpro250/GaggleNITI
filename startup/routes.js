@@ -20,6 +20,10 @@ const auth = require("../routes/auth");
 const user = require("../middleware/auth/user");
 const libraries = require("../routes/libraries");
 const students = require("../routes/students");
+const catalog = require("../routes/catalogs");
+const plans = require("../routes/plans");
+const payments = require("../routes/payments");
+const purchases = require("../routes/purchases");
 
 module.exports = function (app) {
   app.use(user);
@@ -29,6 +33,12 @@ module.exports = function (app) {
       exposedHeaders: ["x-auth-token"],
     })
   );
+  // app.use(
+  //   cors({
+  //     origin: "*",
+  //     exposedHeaders: ["x-auth-token"],
+  //   })
+  // );
   app.use(helmet());
   app.use(express.json());
   app.use(trimmer);
@@ -47,5 +57,9 @@ module.exports = function (app) {
   app.use("/auth", auth);
   app.use("/libraries", libraries);
   app.use("/students", students);
+  app.use("/catalog", catalog);
+  app.use("/plans", plans);
+  app.use("/payments", payments);
+  app.use("/purchases", purchases);
   app.use(error);
 };

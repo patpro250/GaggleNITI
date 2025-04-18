@@ -18,7 +18,7 @@ router.post('/', permission(['SYSTEM_ADMIN']), async (req, res) => {
       name: req.body.name,
     }
   });
-  if (exists) return res.status(400).send(`This plan already exists`);
+  if (exists) return res.status(400).send(`${exists.name} plan already exists`);
 
   await prisma.pricingPlan.create({ data: req.body });
   res.status(201).send(`${req.body.name} plan is created`);
@@ -68,7 +68,7 @@ function validatePlan(plan) {
     name: Joi.string().required(),
     price: Joi.number().precision(2).required(),
     duration: Joi.number().integer().min(1).required(),
-    features: Joi.array().items(Joi.string()).min(1).required(),
+    features: Joi.string().required(),
     discount: Joi.number().precision(2).max(0.9).min(0).optional(),
     limitations: Joi.object().required()
   });

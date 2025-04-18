@@ -101,6 +101,7 @@ router.post("/", async (req, res) => {
 
   const salt = await bcrypt.genSalt(10);
   req.body.password = await bcrypt.hash(req.body.password, salt);
+  req.body.status = "PENDING";
 
   await prisma.librarian.create({ data: req.body });
 
@@ -111,30 +112,13 @@ router.post("/", async (req, res) => {
     );
 });
 
-router.post("/approve", async (req, res) => {
+router.post("/approve/:librarianId", async (req, res) => {
   const institutionId = req.user.institutionId;
   const { error } = validateApproval(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const exists = await prisma.librarian.findFirst({
-    where: {
-      librarianId: req.body.librarianId,
-      institutionId,
-      status: "PENDING",
-    },
-  });
-  if (!exists)
-    return res
-      .status(404)
-      .send(`There is no Pending librarian in your institution.`);
-
-  const library = await prisma.library.findFirst({
-    where: { id: req.body.libraryId, institutionId },
-  });
-  if (!library)
-    return res
-      .status(404)
-      .send(`The library doesn't exist in your institution!`);
+  const isPending = await prisma.librarian.findFirst({ where: { institutionId, status: "PENDING", librarianId: req.params.librarianId } });
+  if (!isPending) return res.status(404).send(`Librarian is not found or already approved!`);
 
   let { role } = req.body;
   req.body.permissions = rolePermissions[role];
@@ -146,13 +130,15 @@ router.post("/approve", async (req, res) => {
   };
 
   await prisma.librarian.update({
-    where: { librarianId: req.body.librarianId },
+    where: { librarianId: req.params.librarianId },
     data: approval,
   });
   res
     .status(200)
     .send(
-      `Dear ${exists.firstName} ${exists.lastName}, you have been approved by your institution director, you can now login to the system.`
+      `${isPending.firstName} ${isPending.lastName
+      }, have been approved to join your institution, ${isPending.gender === "F" ? "she" : "he"
+      } can now login to the system.`
     );
 });
 
@@ -258,6 +244,31 @@ function validate(librarian) {
     gender: Joi.string().valid("F", "M", "O").required(),
     institutionId: Joi.string().required(),
     profile: Joi.string().uri(),
+    role: Joi.string()
+      .valid(
+        "DIRECTOR",
+        "MANAGER",
+        "ASSISTANT",
+        "CATALOGER",
+        "REFERENCE_LIBRARIAN",
+        "CIRCULATION_LIBRARIAN",
+        "ARCHIVIST",
+        "DIGITAL_LIBRARIAN",
+        "ACQUISITIONS_LIBRARIAN",
+        "YOUTH_LIBRARIAN",
+        "LAW_LIBRARIAN",
+        "MEDICAL_LIBRARIAN",
+        "SCHOOL_LIBRARIAN",
+        "PUBLIC_SERVICES_LIBRARIAN",
+        "INTERLIBRARY_LOAN_LIBRARIAN",
+        "RESEARCH_LIBRARIAN",
+        "SERIALS_LIBRARIAN",
+        "SPECIAL_COLLECTIONS_LIBRARIAN",
+        "TECHNICAL_LIBRARIAN",
+        "EVENTS_COORDINATOR",
+        "VOLUNTEER_COORDINATOR"
+      )
+      .required(),
   });
 
   return schema.validate(librarian);
@@ -265,11 +276,9 @@ function validate(librarian) {
 
 function validateApproval(req) {
   const schema = Joi.object({
-    librarianId: Joi.string().uuid().required(),
     role: Joi.string()
       .valid(...Object.values(Role))
       .required(),
-    libraryId: Joi.string().uuid().required(),
   });
 
   return schema.validate(req);
