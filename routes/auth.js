@@ -59,17 +59,8 @@ router.post("/librarians", async (req, res) => {
   });
   if (!librarian) return res.status(400).send("Invalid email or password");
 
-  if (librarian.status === "PENDING")
-    return res
-      .status(400)
-      .send(`Your account is still ${librarian.status}, wait for approval!`);
-
-  if (librarian.status === "REJECTED")
-    return res
-      .status(400)
-      .send(
-        `The director of your institution has rejected your account creation.!`
-      );
+  if (librarian.status !== "ACTIVE")
+    return res.status(400).send(`Your account is ${librarian.status}!`);
 
   const activePurchase = await prisma.purchase.findFirst({ where: { institutionId: librarian.institutionId, status: 'ACTIVE' } });
   if (!activePurchase) return res.status(400).send("Your institution has no active subscription!");
