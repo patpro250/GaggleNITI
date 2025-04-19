@@ -25,5 +25,6 @@ model Book {
   favoriteBook FavoriteBook[] @relation("bookInFavoriteBook")
   institution  Institution?   @relation("Book", fields: [institutionId], references: [id], onDelete: Cascade)
 
+  @@index([institutionId, genre])
   @@map("books")
 }

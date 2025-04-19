@@ -5,6 +5,7 @@ const cors = require("cors");
 const { limiter } = require("../middleware/limiter");
 const helmet = require("helmet");
 const hpp = require("hpp");
+const cookieParser = require("cookie-parser");
 
 const books = require("../routes/books");
 const bookCopies = require("../routes/bookCopies");
@@ -26,11 +27,13 @@ const payments = require("../routes/payments");
 const purchases = require("../routes/purchases");
 
 module.exports = function (app) {
+  app.use(cookieParser());
   app.use(user);
   app.use(
     cors({
       origin: "http://localhost:3002",
       exposedHeaders: ["x-auth-token"],
+      credentials: true
     })
   );
   // app.use(

@@ -31,6 +31,39 @@ router.get("/analytics", async (req, res) => {
   res.status(200).send({ total, active, inactive, suspended, onLeave });
 });
 
+router.get('/overview', async (req, res) => {
+  const { institutionId, libraryId } = req.user;
+  console.log(prisma);
+  const totalBooks = await prisma.book.count({
+    where: { institutionId },
+  });
+
+  const totalStudents = await prisma.student.count({
+    where: { institutionId },
+  });
+  const booksCirculated = await prisma.circulation.count({
+    where: { libraryId, returnDate: null },
+  });
+
+  const overdueBooks = await prisma.circulation.count({
+    where: { libraryId, dueDate: { gt: new Date() } },
+  });
+
+  const interLibraryRequests = await prisma.interLibrary.count({
+    where: { lenderId: institutionId, status: 'PENDING' },
+  });
+
+  const schoolStats = {
+    totalBooks: totalBooks.toLocaleString(),
+    totalStudents: totalStudents.toLocaleString(),
+    booksCirculated: booksCirculated.toLocaleString(),
+    overdueBooks: overdueBooks.toLocaleString(),
+    interLibraryRequests: interLibraryRequests.toLocaleString(),
+  };
+
+  res.status(200).send(schoolStats);
+});
+
 router.get("/", async (req, res) => {
   const librarians = await prisma.librarian.findMany({
     where: { institutionId: req.user.institutionId },
@@ -129,10 +162,17 @@ router.post("/approve/:librarianId", async (req, res) => {
     libraryId: req.body.libraryId,
   };
 
-  await prisma.librarian.update({
-    where: { librarianId: req.params.librarianId },
-    data: approval,
-  });
+  const library = await prisma.library.findFirst({ where: { institutionId } });
+  if (!library) res.status(400).send(`Library not found`);
+
+  await prisma.$transaction([
+    prisma.librarian.update({
+      where: { librarianId: req.params.librarianId },
+      data: approval,
+    }),
+    prisma.library.update({ where: { id: library.id }, data: { managerId: isPending.librarianId } })
+  ]);
+
   res
     .status(200)
     .send(

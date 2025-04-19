@@ -27,7 +27,7 @@ router.get("/librarians/me", IsUser, async (req, res) => {
   res.status(200).send(librarian);
 });
 
-router.use(loginLimiter);
+// router.use(loginLimiter);
 
 router.post("/members", async (req, res) => {
   const { error } = validate(req.body);
@@ -68,6 +68,9 @@ router.post("/librarians", async (req, res) => {
   const plan = await prisma.pricingPlan.findFirst({ where: { id: activePurchase.planId } });
   if (!plan) return res.status(400).send("Failed to get plan!");
 
+  const library = await prisma.library.findFirst({ where: { institutionId: librarian.institutionId } });
+  if (!library) res.status(400).send(`Can't find library`);
+
   const isValid = await bcrypt.compare(req.body.password, librarian.password);
   if (!isValid) return res.status(400).send("Invalid email or password");
 
@@ -77,6 +80,7 @@ router.post("/librarians", async (req, res) => {
   payload.limitations = plan.limitations;
   payload.purchaseStatus = activePurchase.status;
   payload.expirationDate = activePurchase.expiresAt;
+  payload.libraryId = library.id;
 
   const token = jwt.sign(payload, process.env.JWT_KEY);
 

@@ -159,6 +159,15 @@ router.post("/", async (req, res) => {
 
   if (!purchase) return res.status(400).send("Failed to create free trial!");
 
+  const library = await prisma.library.create({
+    data: {
+      name: `Main Library`,
+      institutionId: institution.id,
+      shelvesNo: 10
+    }
+  });
+  if (!library) return res.status(400).send("Failed to create library!");
+
   let payload = _.omit(institution, ["password", "settings", "rating", "openingHours"]);
 
   payload.plan = cheapestPlan.name;
