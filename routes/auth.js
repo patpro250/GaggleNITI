@@ -27,7 +27,7 @@ router.get("/librarians/me", IsUser, async (req, res) => {
   res.status(200).send(librarian);
 });
 
-// router.use(loginLimiter);
+router.use(loginLimiter);
 
 router.post("/members", async (req, res) => {
   const { error } = validate(req.body);
@@ -85,8 +85,15 @@ router.post("/librarians", async (req, res) => {
   const token = jwt.sign(payload, process.env.JWT_KEY);
 
   res
+    .cookie('librarian_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'None',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/'
+    })
+    .header('x-auth-token', token)
     .status(200)
-    .header("x-auth-token", token)
     .send(`Welcome back ${librarian.lastName}`);
 });
 
