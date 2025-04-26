@@ -27,7 +27,7 @@ router.get("/librarians/me", IsUser, async (req, res) => {
   res.status(200).send(librarian);
 });
 
-// router.use(loginLimiter);
+router.use(loginLimiter);
 
 router.post("/members", async (req, res) => {
   const { error } = validate(req.body);
