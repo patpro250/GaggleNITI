@@ -33,7 +33,7 @@ router.get("/analytics", async (req, res) => {
 
 router.get('/overview', async (req, res) => {
   const { institutionId, libraryId } = req.user;
-  console.log(prisma);
+
   const totalBooks = await prisma.book.count({
     where: { institutionId },
   });
