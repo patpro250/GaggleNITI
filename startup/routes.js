@@ -36,12 +36,6 @@ module.exports = function (app) {
       credentials: true
     })
   );
-  // app.use(
-  //   cors({
-  //     origin: "*",
-  //     exposedHeaders: ["x-auth-token"],
-  //   })
-  // );
   app.use(helmet());
   app.use(express.json());
   app.use(trimmer);
