@@ -28,7 +28,6 @@ const purchases = require("../routes/purchases");
 
 module.exports = function (app) {
   app.use(cookieParser());
-  app.use(user);
   app.use(
     cors({
       origin: "http://localhost:3002",
@@ -36,6 +35,7 @@ module.exports = function (app) {
       credentials: true
     })
   );
+  app.use(user);
   app.use(helmet());
   app.use(express.json());
   app.use(trimmer);
