@@ -1,10 +1,8 @@
 const express = require("express");
 const Joi = require("joi");
-const now = require("../routes/lib/now");
 
 const prisma = require("./prismaClient");
 const permission = require("../middleware/auth/permissions");
-const { tr } = require("@faker-js/faker");
 
 const router = express.Router();
 router.use(permission(["CIRCULATION_MANAGER"]));
@@ -245,8 +243,7 @@ router.post("/send/:id", async (req, res) => {
   res
     .status(200)
     .send(
-      `${borrower.name}, you have received ${copies.length} books of ${
-        book.title
+      `${borrower.name}, you have received ${copies.length} books of ${book.title
       } from ${lender.name}, please return it before ${new Date(
         transaction.dueDate
       ).toDateString()}`

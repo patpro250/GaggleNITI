@@ -2,6 +2,11 @@ const express = require("express");
 const error = require("../middleware/error");
 const trimmer = require("../middleware/trimmer");
 const cors = require("cors");
+const { limiter } = require("../middleware/limiter");
+const helmet = require("helmet");
+const hpp = require("hpp");
+const cookieParser = require("cookie-parser");
+
 const books = require("../routes/books");
 const bookCopies = require("../routes/bookCopies");
 const institutions = require("../routes/institutions");
@@ -16,17 +21,26 @@ const auth = require("../routes/auth");
 const user = require("../middleware/auth/user");
 const libraries = require("../routes/libraries");
 const students = require("../routes/students");
+const catalog = require("../routes/catalogs");
+const plans = require("../routes/plans");
+const payments = require("../routes/payments");
+const purchases = require("../routes/purchases");
 
 module.exports = function (app) {
-  // app.use(user);
+  app.use(cookieParser());
   app.use(
     cors({
-      origin: "http://localhost:3002", // cyangwa aho frontend yawe iri
+      origin: "http://localhost:3002",
       exposedHeaders: ["x-auth-token"],
+      credentials: true
     })
   );
+  app.use(user);
+  app.use(helmet());
   app.use(express.json());
   app.use(trimmer);
+  app.use(limiter);
+  app.use(hpp());
   app.use("/books", books);
   app.use("/institutions", institutions);
   app.use("/bookcopies", bookCopies);
@@ -40,5 +54,9 @@ module.exports = function (app) {
   app.use("/auth", auth);
   app.use("/libraries", libraries);
   app.use("/students", students);
+  app.use("/catalog", catalog);
+  app.use("/plans", plans);
+  app.use("/payments", payments);
+  app.use("/purchases", purchases);
   app.use(error);
 };

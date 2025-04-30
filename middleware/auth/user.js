@@ -6,11 +6,15 @@ module.exports = function (req, res, next) {
   if (
     req.path.startsWith("/auth") ||
     req.path.startsWith("/suppliers") ||
-    req.path.startsWith("/catalog") ||
-    (req.path === "/institutions" && req.method === "POST")
-  )
+    (req.path.startsWith("/plans") && req.method === "GET" && req.path !== "/plans/current") ||
+    (req.path.startsWith("/catalog") && (req.method === "GET" || req.method === 'POST')) ||
+    (req.path === "/institutions" && req.method === "POST") ||
+    (req.path === "/system-admin" && req.method === "POST")
+  ) {
     return next();
-  const token = req.header("x-auth-token");
+  }
+
+  const token = req.cookies?.librarian_token || req.header("x-auth-token");
   if (!token) return res.status(401).send("Access denied. No token provided");
 
   try {

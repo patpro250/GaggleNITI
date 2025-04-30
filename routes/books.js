@@ -159,6 +159,20 @@ router.get("/popular", async (req, res) => {
   res.status(200).send(popularBooks);
 });
 
+router.get('/most-borrowed', async (req, res) => {
+  const mostBorrowed = await prisma.book.findMany({
+    include: {
+      bookCopy: {
+        select: {
+          circulation: true
+        },
+      }
+    },
+    take: 5
+  });
+  res.status(200).send(mostBorrowed);
+});
+
 router.get("/newest", async (req, res) => {
   const newestBook = await prisma.bookCopy.findFirst({
     where: { libraryId: req.user.libraryId },

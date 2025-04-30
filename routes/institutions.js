@@ -131,14 +131,52 @@ router.post("/", async (req, res) => {
   const defaults = institutionSettings();
   req.body.settings = defaults.settings;
 
-  if (exists) return res.status(400).send(`${req.body.name} already exists!`);
+  if (exists)
+    return res
+      .status(400)
+      .json({ message: `${req.body.name} already exists!` });
   req.body.password = await bcrypt.hash(req.body.password, 10);
   const institution = await prisma.institution.create({
     data: req.body,
   });
 
-  let payload = _.omit(institution, ["password", "settings"]);
+  const cheapestPlan = await prisma.pricingPlan.findFirst({
+    orderBy: {
+      price: 'asc'
+    }, take: 1
+  });
+
+  if (!cheapestPlan) return res.status(400).send("Failed to get plan!");
+
+  const purchase = await prisma.purchase.create({
+    data: {
+      institutionId: institution.id,
+      planId: cheapestPlan.id,
+      isTrial: true,
+      expiresAt: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)),
+    }
+  });
+
+  if (!purchase) return res.status(400).send("Failed to create free trial!");
+
+  const library = await prisma.library.create({
+    data: {
+      name: `Main Library`,
+      institutionId: institution.id,
+      shelvesNo: 10
+    }
+  });
+  if (!library) return res.status(400).send("Failed to create library!");
+
+  let payload = _.omit(institution, ["password", "settings", "rating", "openingHours"]);
+
+  payload.plan = cheapestPlan.name;
+  payload.limitations = cheapestPlan.limitations;
+  payload.purchaseStatus = purchase.status;
+  payload.expirationDate = purchase.expiresAt;
   payload.institutionId = payload.id;
+  payload.isTrial = purchase.isTrial;
+
   const token = jwt.sign(payload, process.env.JWT_KEY);
 
   res
@@ -221,7 +259,6 @@ function validate(institution) {
     openingHours: Joi.string(),
     email: Joi.string().email({ minDomainSegments: 2 }).required(),
     status: Joi.string(),
-    established: Joi.date(),
     type: Joi.string()
       .valid(
         "UNIVERSITY",

@@ -31,6 +31,39 @@ router.get("/analytics", async (req, res) => {
   res.status(200).send({ total, active, inactive, suspended, onLeave });
 });
 
+router.get('/overview', async (req, res) => {
+  const { institutionId, libraryId } = req.user;
+
+  const totalBooks = await prisma.book.count({
+    where: { institutionId },
+  });
+
+  const totalStudents = await prisma.student.count({
+    where: { institutionId },
+  });
+  const booksCirculated = await prisma.circulation.count({
+    where: { libraryId, returnDate: null },
+  });
+
+  const overdueBooks = await prisma.circulation.count({
+    where: { libraryId, dueDate: { gt: new Date() } },
+  });
+
+  const interLibraryRequests = await prisma.interLibrary.count({
+    where: { lenderId: institutionId, status: 'PENDING' },
+  });
+
+  const schoolStats = {
+    totalBooks: totalBooks.toLocaleString(),
+    totalStudents: totalStudents.toLocaleString(),
+    booksCirculated: booksCirculated.toLocaleString(),
+    overdueBooks: overdueBooks.toLocaleString(),
+    interLibraryRequests: interLibraryRequests.toLocaleString(),
+  };
+
+  res.status(200).send(schoolStats);
+});
+
 router.get("/", async (req, res) => {
   const librarians = await prisma.librarian.findMany({
     where: { institutionId: req.user.institutionId },
@@ -101,6 +134,7 @@ router.post("/", async (req, res) => {
 
   const salt = await bcrypt.genSalt(10);
   req.body.password = await bcrypt.hash(req.body.password, salt);
+  req.body.status = "PENDING";
 
   await prisma.librarian.create({ data: req.body });
 
@@ -111,30 +145,13 @@ router.post("/", async (req, res) => {
     );
 });
 
-router.post("/approve", async (req, res) => {
+router.post("/approve/:librarianId", async (req, res) => {
   const institutionId = req.user.institutionId;
   const { error } = validateApproval(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const exists = await prisma.librarian.findFirst({
-    where: {
-      librarianId: req.body.librarianId,
-      institutionId,
-      status: "PENDING",
-    },
-  });
-  if (!exists)
-    return res
-      .status(404)
-      .send(`There is no Pending librarian in your institution.`);
-
-  const library = await prisma.library.findFirst({
-    where: { id: req.body.libraryId, institutionId },
-  });
-  if (!library)
-    return res
-      .status(404)
-      .send(`The library doesn't exist in your institution!`);
+  const isPending = await prisma.librarian.findFirst({ where: { institutionId, status: "PENDING", librarianId: req.params.librarianId } });
+  if (!isPending) return res.status(404).send(`Librarian is not found or already approved!`);
 
   let { role } = req.body;
   req.body.permissions = rolePermissions[role];
@@ -145,14 +162,23 @@ router.post("/approve", async (req, res) => {
     libraryId: req.body.libraryId,
   };
 
-  await prisma.librarian.update({
-    where: { librarianId: req.body.librarianId },
-    data: approval,
-  });
+  const library = await prisma.library.findFirst({ where: { institutionId } });
+  if (!library) res.status(400).send(`Library not found`);
+
+  await prisma.$transaction([
+    prisma.librarian.update({
+      where: { librarianId: req.params.librarianId },
+      data: approval,
+    }),
+    prisma.library.update({ where: { id: library.id }, data: { managerId: isPending.librarianId } })
+  ]);
+
   res
     .status(200)
     .send(
-      `Dear ${exists.firstName} ${exists.lastName}, you have been approved by your institution director, you can now login to the system.`
+      `${isPending.firstName} ${isPending.lastName
+      }, have been approved to join your institution, ${isPending.gender === "F" ? "she" : "he"
+      } can now login to the system.`
     );
 });
 
@@ -258,6 +284,31 @@ function validate(librarian) {
     gender: Joi.string().valid("F", "M", "O").required(),
     institutionId: Joi.string().required(),
     profile: Joi.string().uri(),
+    role: Joi.string()
+      .valid(
+        "DIRECTOR",
+        "MANAGER",
+        "ASSISTANT",
+        "CATALOGER",
+        "REFERENCE_LIBRARIAN",
+        "CIRCULATION_LIBRARIAN",
+        "ARCHIVIST",
+        "DIGITAL_LIBRARIAN",
+        "ACQUISITIONS_LIBRARIAN",
+        "YOUTH_LIBRARIAN",
+        "LAW_LIBRARIAN",
+        "MEDICAL_LIBRARIAN",
+        "SCHOOL_LIBRARIAN",
+        "PUBLIC_SERVICES_LIBRARIAN",
+        "INTERLIBRARY_LOAN_LIBRARIAN",
+        "RESEARCH_LIBRARIAN",
+        "SERIALS_LIBRARIAN",
+        "SPECIAL_COLLECTIONS_LIBRARIAN",
+        "TECHNICAL_LIBRARIAN",
+        "EVENTS_COORDINATOR",
+        "VOLUNTEER_COORDINATOR"
+      )
+      .required(),
   });
 
   return schema.validate(librarian);
@@ -265,11 +316,9 @@ function validate(librarian) {
 
 function validateApproval(req) {
   const schema = Joi.object({
-    librarianId: Joi.string().uuid().required(),
     role: Joi.string()
       .valid(...Object.values(Role))
       .required(),
-    libraryId: Joi.string().uuid().required(),
   });
 
   return schema.validate(req);
