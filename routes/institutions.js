@@ -163,7 +163,8 @@ router.post("/", async (req, res) => {
     data: {
       name: `Main Library`,
       institutionId: institution.id,
-      shelvesNo: 10
+      shelvesNo: 10,
+      type: 'ACADEMIC'
     }
   });
   if (!library) return res.status(400).send("Failed to create library!");
