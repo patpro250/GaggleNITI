@@ -29,7 +29,7 @@ module.exports = function (app) {
   app.use(trimmer);
   app.use("/books", books);
   app.use("/institutions", institutions);
-  app.use("/bookcopies", bookcopies);
+  app.use("/bookcopies", bookCopies);
   app.use("/members", members);
   app.use("/librarians", librarians);
   app.use("/suppliers", suppliers);
