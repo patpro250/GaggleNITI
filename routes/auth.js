@@ -138,7 +138,7 @@ router.post('/admin', async (req, res) => {
   payload.permissions = ['SYSTEM_ADMIN'];
   const token = jwt.sign(payload, process.env.JWT_KEY);
 
-  res.status(200).header("x-auth-token", token).send(`Welcome back ${admin.lastName}`);
+  res.status(200).header("x-auth-token", token).send(payload);
 });
 
 function validate(req) {
