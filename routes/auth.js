@@ -47,7 +47,7 @@ router.post("/members", async (req, res) => {
   res
     .status(200)
     .header("x-auth-token", token)
-    .send(`Welcome back ${member.lastName}!`);
+    .send(payload);
 });
 
 router.post("/librarians", async (req, res) => {
@@ -121,7 +121,7 @@ router.post("/director", async (req, res) => {
   res
     .status(200)
     .header("x-auth-token", token)
-    .send(`Welcome back ${institution.name}!`);
+    .send(payload);
 });
 
 router.post('/admin', async (req, res) => {
