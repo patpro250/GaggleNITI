@@ -11,24 +11,82 @@ const permission = require("../middleware/auth/permissions");
 
 router.use(permission(["DIRECTOR"]));
 
-router.get("/analytics", async (req, res) => {
-  const { institutionId } = req.user.institutionId;
-  const total = await prisma.librarian.count({
-    where: { institutionId },
+// router.get("/analytics", async (req, res) => {
+//   const { institutionId } = req.user.institutionId;
+//   const total = await prisma.librarian.count({
+//     where: { institutionId },
+//   });
+//   const active = await prisma.librarian.count({
+//     where: { institutionId, status: "ACTIVE" },
+//   });
+//   const inactive = await prisma.librarian.count({
+//     where: { institutionId, status: "INACTIVE" },
+//   });
+//   const suspended = await prisma.librarian.count({
+//     where: { institutionId, status: "SUSPENDED" },
+//   });
+//   const onLeave = await prisma.librarian.count({
+//     where: { institutionId, status: "ON_LEAVE" },
+//   });
+//   res.status(200).send({ total, active, inactive, suspended, onLeave });
+// });
+
+router.get('/analytics', async (req, res) => {
+  const { libraryId } = req.user;
+
+  const topBooksRaw = await prisma.book.findMany({
+    where: {
+      bookCopy: {
+        some: {
+          circulation: {
+            some: {
+              libraryId,
+            },
+          },
+        },
+      },
+    },
+    select: {
+      title: true,
+      bookCopy: {
+        select: {
+          circulation: {
+            where: { libraryId },
+            select: { id: true },
+          },
+        },
+      },
+    },
   });
-  const active = await prisma.librarian.count({
-    where: { institutionId, status: "ACTIVE" },
+
+  const topBooksData = topBooksRaw
+    .map(book => ({
+      bookTitle: book.title,
+      borrowedCount: book.bookCopy.reduce((acc, copy) => acc + copy.circulation.length, 0),
+    }))
+    .sort((a, b) => b.borrowedCount - a.borrowedCount)
+    .slice(0, 5);
+
+  const borrowingTrendsRaw = await prisma.$queryRaw`
+  SELECT 
+    TO_CHAR("lendDate", 'Mon') AS month,
+    COUNT(*) AS "borrowedBooks"
+  FROM "circulations"
+  WHERE "libraryId" = ${libraryId}
+  GROUP BY 1
+  ORDER BY DATE_TRUNC('month', MIN("lendDate"))
+`;
+
+  const borrowingTrendsData = borrowingTrendsRaw.map(row => ({
+    month: row.month,
+    borrowedBooks: Number(row.borrowedBooks),
+  }));
+
+
+  res.status(200).send({
+    topBooksData,
+    borrowingTrendsData,
   });
-  const inactive = await prisma.librarian.count({
-    where: { institutionId, status: "INACTIVE" },
-  });
-  const suspended = await prisma.librarian.count({
-    where: { institutionId, status: "SUSPENDED" },
-  });
-  const onLeave = await prisma.librarian.count({
-    where: { institutionId, status: "ON_LEAVE" },
-  });
-  res.status(200).send({ total, active, inactive, suspended, onLeave });
 });
 
 router.get('/overview', async (req, res) => {
