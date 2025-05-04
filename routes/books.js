@@ -219,6 +219,7 @@ router.post("/", permission(["MANAGE_BOOKS"]), async (req, res) => {
       edition: req.body.edition,
     },
   });
+  
   if (exists)
     return res
       .status(400)
@@ -267,9 +268,9 @@ function validate(book) {
       .required(),
     edition: Joi.string().max(20),
     numberOfPages: Joi.number().min(5).max(10000).required(),
-    shelfLocation: Joi.string().required(),
     callNo: Joi.string().min(3).max(20),
     barCode: Joi.string().max(15),
+    genre: Joi.string(),
     ddcCode: Joi.string().max(15),
   });
   return schema.validate(book);
