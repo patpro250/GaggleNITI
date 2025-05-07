@@ -79,7 +79,7 @@ router.post("/", async (req, res) => {
   let code = await generateStudentCode(req.body.firstName, req.body.lastName);
   req.body.code = code;
   req.body.className = _.toUpper(req.body.className);
-  req.body.institutionId = req.user.id;
+  req.body.institutionId = req.user.institutionId;
 
   student = await prisma.student.create({ data: req.body });
   res
