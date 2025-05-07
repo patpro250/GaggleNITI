@@ -259,7 +259,7 @@ function validate(book) {
     title: Joi.string().required().min(3),
     author: Joi.string().required().min(3),
     publisher: Joi.string().required().min(2),
-    published: Joi.date().required(),
+    published: Joi.date(),
     firstAcquisition: Joi.date().required(),
     isbn: Joi.string().min(10),
     placeOfPublication: Joi.string(),
