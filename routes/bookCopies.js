@@ -173,7 +173,9 @@ function validate(bookCopy) {
     bookId: Joi.string().required(),
     condition: Joi.string(),
     dateOfAcquisition: Joi.date(),
+    callNo: Joi.string().min(3).max(20),
     libraryId: Joi.string().required(),
+    barCode: Joi.string().max(15),
     code: Joi.string().required(),
   });
 

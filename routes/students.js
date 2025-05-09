@@ -58,11 +58,7 @@ router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  let student = await prisma.student.findFirst({
-    where: {
-      OR: [{ email: req.body.email }, { studentCard: req.body.studentCard }],
-    },
-  });
+  let student = await prisma.student.findFirst({ where: { className: req.body.className, firstName: req.body.firstName, lastName: req.body.lastName } });
   if (student)
     return res
       .status(400)
@@ -158,7 +154,7 @@ router.put("/:id", async (req, res) => {
         },
       ],
     },
-  });g/schools/dashboard
+  }); g / schools / dashboard
 
   if (exists)
     return res
