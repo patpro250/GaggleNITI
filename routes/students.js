@@ -158,7 +158,7 @@ router.put("/:id", async (req, res) => {
         },
       ],
     },
-  });
+  });g/schools/dashboard
 
   if (exists)
     return res
@@ -192,7 +192,7 @@ function validate(student) {
       .min(10)
       .pattern(/^\+?[1-9]\d{1,14}$/)
       .required(),
-    email: Joi.string().email().required(),
+    email: Joi.string().email(),
     studentCard: Joi.string().min(3),
     className: Joi.string()
       .custom((value, helpers) => {
