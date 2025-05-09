@@ -1,5 +1,5 @@
 model Book {
-  id                 String   @id @default(uuid())
+  id                 String    @id @default(uuid())
   title              String
   author             String
   publisher          String
@@ -9,11 +9,10 @@ model Book {
   language           String
   edition            String?
   numberOfPages      Int
-  callNo             String?
-  barCode            String?
+  lccCode            String?
   ddcCode            String?
-  createdAt          DateTime @default(now()) @db.Timestamp(6)
-  updatedAt          DateTime @updatedAt @db.Timestamp(6)
+  createdAt          DateTime  @default(now()) @db.Timestamp(6)
+  updatedAt          DateTime  @updatedAt @db.Timestamp(6)
   institutionId      String
   genre              String?
   placeOfPublication String?

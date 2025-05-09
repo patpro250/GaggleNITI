@@ -6,6 +6,8 @@ model BookCopy {
   condition         Condition      @default(NEW)
   dateOfAcquisition DateTime
   code              String?
+  barCode           String?
+  callNo            String?
   book              Book           @relation("BookCopy", fields: [bookId], references: [id])
   circulation       Circulation[]  @relation("BookCopy")
   bookR             Library        @relation("BookCopy", fields: [libraryId], references: [id])
