@@ -159,7 +159,7 @@ router.post("/", permission(["ADD_COPY"]), async (req, res) => {
     },
   });
 
-  res.status(201).send(`${req.body.bookId} bookCopy Is Created`);
+  res.status(201).send(`Book copy created successfully`);
 });
 
 router.put("/archive/:id", permission(["ARCHIVE"]), async (req, res) => {
