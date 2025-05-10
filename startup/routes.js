@@ -35,8 +35,8 @@ module.exports = function (app) {
       credentials: true
     })
   );
-  app.use(user);
   app.use(helmet());
+  app.use(user);
   app.use(express.json());
   app.use(trimmer);
   app.use(limiter);
