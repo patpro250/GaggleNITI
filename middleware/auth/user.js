@@ -2,8 +2,31 @@ const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 dotenv.config();
 
+const openRoutes = [
+  { path: '/auth' },
+  { path: '/institutions/verify' },
+  { path: '/suppliers' },
+  { path: '/plans', methods: ['GET'], exclude: ['/plans/current'] },
+  { path: '/catalog', methods: ['GET', 'POST'] },
+  { path: '/institutions', methods: ['POST'] },
+  { path: '/system-admin', methods: ['POST'] },
+  { path: '/librarians', methods: ['POST'] }
+];
+
+function isOpenRoute(req) {
+  return openRoutes.some(route => {
+    if (!req.path.startsWith(route.path)) return false;
+    if (route.methods && !route.methods.includes(req.method)) return false;
+
+    if (route.exclude && route.exclude.includes(req.path)) return false;
+
+    return true;
+  });
+}
+
 module.exports = function (req, res, next) {
   if (
+<<<<<<< HEAD
     req.path.startsWith("/auth") ||
     req.path.startsWith("/suppliers") ||
     (req.path.startsWith("/plans") &&
@@ -14,6 +37,9 @@ module.exports = function (req, res, next) {
     (req.path === "/institutions" && req.method === "POST") ||
     (req.path === "/system-admin" && req.method === "POST") ||
     (req.path === "/librarians" && req.method === "POST")
+=======
+    isOpenRoute(req)
+>>>>>>> 2be6a0e64493e701a1249e8a38f2109b93d4c3c2
   ) {
     return next();
   }

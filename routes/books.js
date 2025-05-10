@@ -217,6 +217,7 @@ router.post("/", permission(["MANAGE_BOOKS"]), async (req, res) => {
     where: {
       institutionId: req.user.institutionId,
       edition: req.body.edition,
+      title: req.body.title
     },
   });
   
@@ -268,8 +269,7 @@ function validate(book) {
       .required(),
     edition: Joi.string().max(20),
     numberOfPages: Joi.number().min(5).max(10000).required(),
-    callNo: Joi.string().min(3).max(20),
-    barCode: Joi.string().max(15),
+    lccCode: Joi.string().min(4).max(50),
     genre: Joi.string(),
     ddcCode: Joi.string().max(15),
   });

@@ -16,6 +16,22 @@ const prisma = require("./prismaClient");
 const institutionSettings = require("../routes/lib/defaultSettings");
 const permission = require("../middleware/auth/permissions");
 
+router.post("/verify", async (req, res) => {
+  const { name } = req.body;
+  const name__exist = await prisma.institution.findFirst({
+    where: {
+      name: {
+        equals: name,
+        mode: "insensitive",
+      },
+    },
+  });
+
+  if (!name__exist)
+    return res.status(200).json({ message: `✅  ${name} is available` });
+  res.status(404).json({ message: `${name} is not available` });
+});
+
 router.get("/", async (req, res) => {
   const institutions = await prisma.institution.findMany();
   res.status(200).send(institutions);

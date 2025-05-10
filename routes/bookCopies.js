@@ -136,7 +136,7 @@ router.post("/", permission(["ADD_COPY"]), async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   let library = await prisma.library.findFirst({
-    where: { id: req.body.libraryId },
+    where: { id: req.user.libraryId },
   });
   if (!library) return res.status(404).send("Library not found");
 
@@ -171,9 +171,10 @@ router.put("/archive/:id", permission(["ARCHIVE"]), async (req, res) => {
 function validate(bookCopy) {
   const schema = Joi.object({
     bookId: Joi.string().required(),
-    condition: Joi.string(),
+    condition: Joi.string().valid("NEW", "GOOD", "DAMAGED", "OLD"),
     dateOfAcquisition: Joi.date(),
-    libraryId: Joi.string().required(),
+    callNo: Joi.string().min(3).max(20),
+    barCode: Joi.string().max(15),
     code: Joi.string().required(),
   });
 
