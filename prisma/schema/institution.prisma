@@ -2,6 +2,7 @@ model Institution {
   id           String          @id @default(uuid())
   name         String
   address      String
+  code         String?
   phone        String          @unique
   openingHours String?
   email        String          @unique
@@ -9,17 +10,16 @@ model Institution {
   rating       Float           @default(0.0)
   password     String
   settings     Json?
-  type         InstitutionType @default(SCHOOL) 
+  type         InstitutionType @default(SCHOOL)
   createdAt    DateTime        @default(now()) @db.Timestamp(6)
   updatedAt    DateTime        @updatedAt @db.Timestamp(6)
-
-  borrower     InterLibrary[] @relation("InterLibraryBorrowerId")
-  lender       InterLibrary[] @relation("InterLibraryLender")
-  book         Book[]         @relation("Book")
-  librarians   Librarian[]    @relation("InstitutionLibrarians")
-  library      Library[]      @relation("Library")
-  reservation  Reservation[]  @relation("fromReservationToinstitution")
-  Student      Student[]      @relation("Student")
+  borrower     InterLibrary[]  @relation("InterLibraryBorrowerId")
+  lender       InterLibrary[]  @relation("InterLibraryLender")
+  book         Book[]          @relation("Book")
+  librarians   Librarian[]     @relation("InstitutionLibrarians")
+  library      Library[]       @relation("Library")
+  reservation  Reservation[]   @relation("fromReservationToinstitution")
+  Student      Student[]       @relation("Student")
   Payment      Payment[]
   Purchase     Purchase[]
   AcademicYear AcademicYear[]

@@ -146,6 +146,7 @@ router.post("/", async (req, res) => {
 
   const defaults = institutionSettings();
   req.body.settings = defaults.settings;
+  req.body.code = await generateInstitutionCode(req.body.name);
 
   if (exists)
     return res
@@ -290,6 +291,29 @@ function validate(institution) {
     password: passwordComplexity(complexityOptions),
   });
   return schema.validate(institution);
+}
+
+async function generateInstitutionCode(institutionName) {
+  const words = institutionName.split(' ');
+  const prefix = words.length > 1
+    ? words[0][0].toUpperCase() + words[1][0].toUpperCase()
+    : institutionName.slice(0, 2).toUpperCase();
+
+  let uniqueCode = "";
+  let isUnique = false;
+
+  while (!isUnique) {
+    const randomNumber = Math.floor(1000 + Math.random() * 9000);
+    uniqueCode = `${prefix}${randomNumber}`;
+
+    const existing = await prisma.institution.findFirst({
+      where: { code: uniqueCode }
+    });
+
+    if (!existing) isUnique = true;
+  }
+
+  return uniqueCode;
 }
 
 module.exports = router;
