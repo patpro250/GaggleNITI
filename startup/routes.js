@@ -25,6 +25,7 @@ const catalog = require("../routes/catalogs");
 const plans = require("../routes/plans");
 const payments = require("../routes/payments");
 const purchases = require("../routes/purchases");
+const verifyInstitutionName = require("../routes/verifyInstitutionName");
 
 module.exports = function (app) {
   app.use(cookieParser());
@@ -32,7 +33,7 @@ module.exports = function (app) {
     cors({
       origin: "http://localhost:3002",
       exposedHeaders: ["x-auth-token"],
-      credentials: true
+      credentials: true,
     })
   );
   app.use(user);
@@ -58,5 +59,6 @@ module.exports = function (app) {
   app.use("/plans", plans);
   app.use("/payments", payments);
   app.use("/purchases", purchases);
+  app.use("/verify", verifyInstitutionName);
   app.use(error);
 };
