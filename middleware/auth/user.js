@@ -3,15 +3,14 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const openRoutes = [
-  { path: "/auth" },
-  { path: "/institutions/verify" },
-  { path: "/plans", methods: ["POST"] },
-  { path: "/suppliers" },
-  { path: "/plans", methods: ["GET"], exclude: ["/plans/current"] },
-  { path: "/catalog", methods: ["GET", "POST"] },
-  { path: "/institutions", methods: ["POST"] },
-  { path: "/system-admin", methods: ["POST"] },
-  { path: "/librarians", methods: ["POST"] },
+  { path: '/auth' },
+  { path: '/institutions/verify' },
+  { path: '/suppliers' },
+  { path: '/plans', methods: ['GET'], exclude: ['/plans/current'] },
+  { path: '/catalog', methods: ['GET', 'POST'] },
+  { path: '/institutions', methods: ['POST'] },
+  { path: '/system-admin', methods: ['POST'] },
+  { path: '/librarians', methods: ['POST'] }
 ];
 
 function isOpenRoute(req) {
@@ -26,7 +25,22 @@ function isOpenRoute(req) {
 }
 
 module.exports = function (req, res, next) {
-  if (isOpenRoute(req)) {
+  if (
+<<<<<<< HEAD
+    req.path.startsWith("/auth") ||
+    req.path.startsWith("/suppliers") ||
+    (req.path.startsWith("/plans") &&
+      req.method === "GET" &&
+      req.path !== "/plans/current") ||
+    (req.path.startsWith("/catalog") &&
+      (req.method === "GET" || req.method === "POST")) ||
+    (req.path === "/institutions" && req.method === "POST") ||
+    (req.path === "/system-admin" && req.method === "POST") ||
+    (req.path === "/librarians" && req.method === "POST")
+=======
+    isOpenRoute(req)
+>>>>>>> 2be6a0e64493e701a1249e8a38f2109b93d4c3c2
+  ) {
     return next();
   }
 

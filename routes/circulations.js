@@ -182,7 +182,7 @@ router.post("/lend/student", async (req, res) => {
   if (!librarian) return res.status(404).send(`Librarian not found`);
 
   let copy = await prisma.bookCopy.findFirst({
-    where: { id: req.body.copyId },
+    where: { code: req.body.copyId },
   });
   if (!copy)
     return res
@@ -569,7 +569,7 @@ function validateReturn(returnData) {
 
 function validateStudentBorrow(body) {
   const schema = Joi.object({
-    copyId: Joi.string().required(),
+    code: Joi.string().min(3).required(),
     studentCode: Joi.string().required(),
     dueDate: Joi.date().required(),
   });

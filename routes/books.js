@@ -38,6 +38,22 @@ router.get("/", permission(["READ"]), async (req, res) => {
   res.status(200).send({ nextCursor, books });
 });
 
+router.get('/suggestions', async (req, res) => {
+  const institutionId = req.user.institutionId;
+
+  const { query } = req.query;
+  if (!query) return res.status(400).json({ error: "Query is required" });
+  
+  const books = await prisma.book.findMany({
+    where: {title: {contains: query, mode: 'insensitive'}, institutionId},
+    select: {title: true, id: true},
+    take: 5
+  });
+
+  res.status(200).send(books);
+
+});
+
 router.get("/institution", permission(["DIRECTOR"]), async (req, res) => {
   const institutionId = req.user.institutionId;
 
@@ -220,7 +236,7 @@ router.post("/", permission(["MANAGE_BOOKS"]), async (req, res) => {
       title: req.body.title
     },
   });
-  
+
   if (exists)
     return res
       .status(400)
