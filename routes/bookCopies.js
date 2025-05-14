@@ -143,6 +143,9 @@ router.post("/", permission(["ADD_COPY"]), async (req, res) => {
   let book = await prisma.book.findFirst({ where: { id: req.body.bookId } });
   if (!book) return res.status(404).send("Book not found");
 
+  const exists = await prisma.bookCopy.findFirst({ where: { barCode: req.body.barCode, code: req.body.code } });
+  if (exists) return res.status(400).send(`The book copy with barcode: ${exists.barCode} and code: ${exists.code} already exists, try a new code.`)
+
   await prisma.bookCopy.create({
     data: {
       condition: req.body.condition,
