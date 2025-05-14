@@ -3,19 +3,18 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const openRoutes = [
-  { path: '/auth' },
-  { path: '/plans', methods: ['POST'] },
-  { path: '/institutions/verify' },
-  { path: '/suppliers' },
-  { path: '/plans', methods: ['GET'], exclude: ['/plans/current'] },
-  { path: '/catalog', methods: ['GET', 'POST'] },
-  { path: '/institutions', methods: ['POST'] },
-  { path: '/system-admin', methods: ['POST'] },
-  { path: '/librarians', methods: ['POST'] }
+  { path: "/auth" },
+  { path: "/institutions/verify" },
+  { path: "/suppliers" },
+  { path: "/plans", methods: ["GET"], exclude: ["/plans/current"] },
+  { path: "/catalog", methods: ["GET", "POST"] },
+  { path: "/institutions", methods: ["POST"] },
+  { path: "/system-admin", methods: ["POST"] },
+  { path: "/librarians", methods: ["POST"] },
 ];
 
 function isOpenRoute(req) {
-  return openRoutes.some(route => {
+  return openRoutes.some((route) => {
     if (!req.path.startsWith(route.path)) return false;
     if (route.methods && !route.methods.includes(req.method)) return false;
 
@@ -26,9 +25,7 @@ function isOpenRoute(req) {
 }
 
 module.exports = function (req, res, next) {
-  if (
-    isOpenRoute(req)
-  ) {
+  if (isOpenRoute(req)) {
     return next();
   }
 
