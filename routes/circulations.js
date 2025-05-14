@@ -222,33 +222,30 @@ router.post("/lend/student", async (req, res) => {
   await prisma.$transaction([
     prisma.circulation.create({
       data: {
-        copyId: req.body.copyId,
+        copyId: copy.id,
         studentId: student.id,
         librarianIdNo: req.user.librarianId,
-        dueDate: req.body.dueDate,
+        dueDate: new Date(req.body.dueDate),
         libraryId: req.user.libraryId,
       },
     }),
-
     prisma.bookCopy.update({
-      where: { id: req.body.copyId },
+      where: { id: copy.id },
       data: {
         status: "CHECKEDOUT",
       },
     }),
   ]);
 
+
   let book = await prisma.book.findFirst({ where: { id: copy.bookId } });
 
   res
     .status(200)
     .send(
-      `${librarian.firstName} ${librarian.lastName} you have lent '${
-        book.title
-      }' with author: ${book.author}, publisher: ${book.publisher}, code: ${
-        copy.code
-      }, call number: ${book.callNo} to ${student.firstName} ${
-        student.lastName
+      `${librarian.firstName} ${librarian.lastName} you have lent '${book.title
+      }' with author: ${book.author}, publisher: ${book.publisher}, code: ${copy.code
+      }, call number: ${book.callNo || 'N/A'} to ${student.firstName} ${student.lastName
       }. On ${now()}`
     );
 });
@@ -308,12 +305,9 @@ router.post("/return/student", async (req, res) => {
   res
     .status(200)
     .send(
-      `${code.firstName} ${code.lastName}, you have successfully returned '${
-        book.title
-      }' with author: ${book.author}, publisher: ${book.publisher}, code: ${
-        copy.code
-      }, call number: ${book.callNo} to ${librarian.firstName} ${
-        librarian.lastName
+      `${code.firstName} ${code.lastName}, you have successfully returned '${book.title
+      }' with author: ${book.author}, publisher: ${book.publisher}, code: ${copy.code
+      }, call number: ${book.callNo} to ${librarian.firstName} ${librarian.lastName
       }. On ${now()}`
     );
 });
@@ -377,12 +371,9 @@ router.post("/lend", async (req, res) => {
   res
     .status(200)
     .send(
-      `${librarian.firstName} ${librarian.lastName} you have lent '${
-        book.title
-      }' with author: ${book.author}, publisher: ${book.publisher}, code: ${
-        copy.code
-      }, call number: ${book.callNo} to ${userId.firstName} ${
-        userId.lastName
+      `${librarian.firstName} ${librarian.lastName} you have lent '${book.title
+      }' with author: ${book.author}, publisher: ${book.publisher}, code: ${copy.code
+      }, call number: ${book.callNo} to ${userId.firstName} ${userId.lastName
       }. On ${now()}`
     );
 });
@@ -446,12 +437,9 @@ router.post("/return", async (req, res) => {
   res
     .status(200)
     .send(
-      `${member.firstName} ${
-        member.lastName
-      }, you have successfully returned '${book.title}' with author: ${
-        book.author
-      }, publisher: ${book.publisher}, code: ${copy.code}, call number: ${
-        book.callNo
+      `${member.firstName} ${member.lastName
+      }, you have successfully returned '${book.title}' with author: ${book.author
+      }, publisher: ${book.publisher}, code: ${copy.code}, call number: ${book.callNo
       } to ${librarian.firstName} ${librarian.lastName}. On ${now()}`
     );
 });
