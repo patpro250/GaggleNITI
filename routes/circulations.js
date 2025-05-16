@@ -254,10 +254,17 @@ router.post("/return/student", async (req, res) => {
   const { error } = validateStudentReturn(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
+  const copy = await prisma.bookCopy.findFirst({where: {code: req.body.code, status: 'CHECKEDOUT'}});
+  if (!copy) return res.status(400).send('The book copy is not issued or not in your library!');
+
+  const student = await prisma.student.findFirst({where: {code: req.body.studentCode}});
+  if (!student) res.status(400).send('No student found in your School');
+
   const isIssued = await prisma.circulation.findFirst({
     where: {
       copyId: req.body.copyId,
       returnDate: null,
+      studentId: student.id
     },
   });
   if (!isIssued)
@@ -276,10 +283,6 @@ router.post("/return/student", async (req, res) => {
       .status(404)
       .status(`Student with code ${req.body.studentCode} not found!`);
 
-  const student = await prisma.circulation.findFirst({
-    where: { studentId: code.id },
-  });
-  if (!student) return res.status(404).send("Student didn't borrow!");
 
   await prisma.$transaction([
     prisma.circulation.update({
@@ -297,9 +300,6 @@ router.post("/return/student", async (req, res) => {
     }),
   ]);
 
-  let copy = await prisma.bookCopy.findFirst({
-    where: { id: isIssued.copyId },
-  });
   let book = await prisma.book.findFirst({ where: { id: copy.bookId } });
 
   res
@@ -567,7 +567,7 @@ function validateStudentBorrow(body) {
 
 function validateStudentReturn(body) {
   const schema = Joi.object({
-    copyId: Joi.string().required(),
+    code: Joi.string().min(3).required(),
     studentCode: Joi.string().required(),
   });
 
