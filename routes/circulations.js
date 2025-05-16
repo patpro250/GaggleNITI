@@ -182,7 +182,7 @@ router.post("/lend/student", async (req, res) => {
   if (!librarian) return res.status(404).send(`Librarian not found`);
 
   let copy = await prisma.bookCopy.findFirst({
-    where: { code: req.body.copyId },
+    where: { code: req.body.code },
   });
   if (!copy)
     return res
@@ -192,7 +192,7 @@ router.post("/lend/student", async (req, res) => {
       );
 
   let isAvailable = await prisma.bookCopy.findFirst({
-    where: { id: req.body.copyId, status: "AVAILABLE" },
+    where: { id: copy.id, status: "AVAILABLE" },
   });
   if (!isAvailable)
     return res
