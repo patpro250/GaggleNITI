@@ -197,7 +197,7 @@ router.post("/lend/student", async (req, res) => {
   if (!isAvailable)
     return res
       .status(400)
-      .send(`This book is already ${copy.status}, you can't issue it!`);
+      .send(`This book is already ${copy.status}!`);
 
   let institution = await prisma.institution.findFirst({
     where: { id: req.user.institutionId },
