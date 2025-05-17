@@ -38,15 +38,70 @@ router.get("/", permission(["READ"]), async (req, res) => {
   res.status(200).send({ nextCursor, books });
 });
 
+router.get('/overview', async (req, res) => {
+  const libraryId = req.user.libraryId;
+  if (!libraryId) return res.status(400).send('No Library Provided!');
+
+  const totalBooks = await prisma.book.count({
+    where: { institutionId: req.user.institutionId }
+  });
+
+  const available = await prisma.bookCopy.count({
+    where: { status: 'AVAILABLE', libraryId }
+  });
+
+  const checkedOut = await prisma.bookCopy.count({
+    where: { status: 'CHECKEDOUT', libraryId }
+  });
+
+  const reserved = await prisma.bookCopy.count({
+    where: { status: 'RESERVED', libraryId }
+  });
+
+  const missing = await prisma.bookCopy.count({
+    where: { status: 'MISSING', libraryId }
+  });
+
+  const damaged = await prisma.bookCopy.count({
+    where: { condition: 'DAMAGED', libraryId }
+  });
+
+  const newBooks = await prisma.bookCopy.count({
+    where: { condition: 'NEW', libraryId }
+  });
+
+  const oldBooks = await prisma.bookCopy.count({
+    where: { condition: 'OLD', libraryId }
+  });
+
+  const archived = await prisma.bookCopy.count({
+    where: { status: 'INARCHIVES', libraryId }
+  });
+
+  const bookStats = {
+    totalBooks: totalBooks.toLocaleString(),
+    available: available.toLocaleString(),
+    checkedOut: checkedOut.toLocaleString(),
+    reserved: reserved.toLocaleString(),
+    missing: missing.toLocaleString(),
+    damaged: damaged.toLocaleString(),
+    new: newBooks.toLocaleString(),
+    old: oldBooks.toLocaleString(),
+    archived: archived.toLocaleString()
+  };
+
+  res.status(200).send(bookStats);
+});
+
 router.get('/suggestions', async (req, res) => {
   const institutionId = req.user.institutionId;
 
   const { query } = req.query;
   if (!query) return res.status(400).json({ error: "Query is required" });
-  
+
   const books = await prisma.book.findMany({
-    where: {title: {contains: query, mode: 'insensitive'}, institutionId},
-    select: {title: true, id: true},
+    where: { title: { contains: query, mode: 'insensitive' }, institutionId },
+    select: { title: true, id: true },
     take: 5
   });
 
