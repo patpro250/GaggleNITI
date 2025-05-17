@@ -51,6 +51,23 @@ router.get("/", permission(["READ"]), async (req, res) => {
   res.status(200).send(borrowing);
 });
 
+router.get('/overview', async (req, res) => {
+  const { libraryId } = req.user;
+
+  const borrowed = await prisma.circulation.count({ where: { libraryId } });
+  const returned = await prisma.circulation.count({ where: { returnDate: { not: null }, libraryId } });
+  const loans = await prisma.circulation.count({ where: { returnDate: null, libraryId } });
+  const overdue = await prisma.circulation.count({ where: { dueDate: { lt: new Date() }, returnDate: null, libraryId } });
+
+  const circulationStats = {
+    borrowed: borrowed.toLocaleString(),
+    returned: returned.toLocaleString(),
+    loans: loans.toLocaleString(),
+    overdue: overdue.toLocaleString()
+  };
+  res.status(200).send(circulationStats);
+});
+
 router.get("/current-loans", async (req, res) => {
   const memberId = req.user.id;
 
