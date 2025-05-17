@@ -134,6 +134,7 @@ router.get("/", async (req, res) => {
       status: true,
       librarianId: true,
       profile: true,
+      createdAt: true
     },
   });
   res.status(200).send(librarians);

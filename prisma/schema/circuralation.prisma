@@ -5,6 +5,7 @@ model Circulation {
   studentId     String?
   librarianIdNo String
   libraryId     String
+  fine          Decimal?
   returnDate    DateTime?
   lendDate      DateTime  @default(now())
   dueDate       DateTime
