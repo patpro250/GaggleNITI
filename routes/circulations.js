@@ -254,63 +254,44 @@ router.post("/return/student", async (req, res) => {
   const { error } = validateStudentReturn(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const copy = await prisma.bookCopy.findFirst({where: {code: req.body.code, status: 'CHECKEDOUT'}});
-  if (!copy) return res.status(400).send('The book copy is not issued or not in your library!');
+  const copy = await prisma.bookCopy.findFirst({
+    where: { code: req.body.code, status: "CHECKEDOUT" },
+  });
+  if (!copy) return res.status(400).send("The book copy is not issued or not in your library!");
 
-  const student = await prisma.student.findFirst({where: {code: req.body.studentCode}});
-  if (!student) res.status(400).send('No student found in your School');
+  const student = await prisma.student.findFirst({
+    where: { code: req.body.studentCode, institutionId: req.user.institutionId },
+  });
+  if (!student) return res.status(400).send("No student found in your School");
 
   const isIssued = await prisma.circulation.findFirst({
-    where: {
-      copyId: req.body.copyId,
-      returnDate: null,
-      studentId: student.id
-    },
+    where: { copyId: copy.id, returnDate: null, studentId: student.id },
   });
-  if (!isIssued)
-    return res.status(400).send(`This copy is not issued, please lend it!`);
+  if (!isIssued) return res.status(400).send("This copy is not issued, please lend it!");
 
-  let librarian = await prisma.librarian.findUnique({
+  const librarian = await prisma.librarian.findUnique({
     where: { librarianId: req.user.librarianId },
   });
-  if (!librarian) return res.status(404).send(`Librarian not found!`);
-
-  let code = await prisma.student.findFirst({
-    where: { code: req.body.studentCode },
-  });
-  if (!code)
-    return res
-      .status(404)
-      .status(`Student with code ${req.body.studentCode} not found!`);
-
+  if (!librarian) return res.status(404).send("Librarian not found!");
 
   await prisma.$transaction([
     prisma.circulation.update({
       where: { id: isIssued.id },
-      data: {
-        returnDate: new Date(),
-      },
+      data: { returnDate: new Date() },
     }),
-
     prisma.bookCopy.update({
-      where: { id: req.body.copyId },
-      data: {
-        status: "AVAILABLE",
-      },
+      where: { id: copy.id },
+      data: { status: "AVAILABLE" },
     }),
   ]);
 
-  let book = await prisma.book.findFirst({ where: { id: copy.bookId } });
+  const book = await prisma.book.findFirst({ where: { id: copy.bookId } });
 
-  res
-    .status(200)
-    .send(
-      `${code.firstName} ${code.lastName}, you have successfully returned '${book.title
-      }' with author: ${book.author}, publisher: ${book.publisher}, code: ${copy.code
-      }, call number: ${book.callNo} to ${librarian.firstName} ${librarian.lastName
-      }. On ${now()}`
-    );
+  res.status(200).send(
+    `${student.firstName} ${student.lastName}, you have successfully returned '${book.title}' by ${book.author}, published by ${book.publisher}, code: ${copy.code}, call number: ${book.callNo} to ${librarian.firstName} ${librarian.lastName}. On ${new Date().toLocaleString()}`
+  );
 });
+
 
 router.post("/lend", async (req, res) => {
   const { error } = validate(req.body);
