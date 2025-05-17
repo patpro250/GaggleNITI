@@ -18,6 +18,7 @@ const permission = require("../middleware/auth/permissions");
 
 router.post("/verify", async (req, res) => {
   const { name } = req.body;
+
   const name__exist = await prisma.institution.findFirst({
     where: {
       name: {
@@ -159,8 +160,9 @@ router.post("/", async (req, res) => {
 
   const cheapestPlan = await prisma.pricingPlan.findFirst({
     orderBy: {
-      price: 'asc'
-    }, take: 1
+      price: "asc",
+    },
+    take: 1,
   });
 
   if (!cheapestPlan) return res.status(400).send("Failed to get plan!");
@@ -170,8 +172,8 @@ router.post("/", async (req, res) => {
       institutionId: institution.id,
       planId: cheapestPlan.id,
       isTrial: true,
-      expiresAt: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)),
-    }
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    },
   });
 
   if (!purchase) return res.status(400).send("Failed to create free trial!");
@@ -181,12 +183,17 @@ router.post("/", async (req, res) => {
       name: `Main Library`,
       institutionId: institution.id,
       shelvesNo: 10,
-      type: 'ACADEMIC'
-    }
+      type: "ACADEMIC",
+    },
   });
   if (!library) return res.status(400).send("Failed to create library!");
 
-  let payload = _.omit(institution, ["password", "settings", "rating", "openingHours"]);
+  let payload = _.omit(institution, [
+    "password",
+    "settings",
+    "rating",
+    "openingHours",
+  ]);
 
   payload.plan = cheapestPlan.name;
   payload.limitations = cheapestPlan.limitations;
@@ -294,10 +301,11 @@ function validate(institution) {
 }
 
 async function generateInstitutionCode(institutionName) {
-  const words = institutionName.split(' ');
-  const prefix = words.length > 1
-    ? words[0][0].toUpperCase() + words[1][0].toUpperCase()
-    : institutionName.slice(0, 2).toUpperCase();
+  const words = institutionName.split(" ");
+  const prefix =
+    words.length > 1
+      ? words[0][0].toUpperCase() + words[1][0].toUpperCase()
+      : institutionName.slice(0, 2).toUpperCase();
 
   let uniqueCode = "";
   let isUnique = false;
@@ -307,7 +315,7 @@ async function generateInstitutionCode(institutionName) {
     uniqueCode = `${prefix}${randomNumber}`;
 
     const existing = await prisma.institution.findFirst({
-      where: { code: uniqueCode }
+      where: { code: uniqueCode },
     });
 
     if (!existing) isUnique = true;
