@@ -33,7 +33,7 @@ router.get('/library/overview', async (req, res) => {
     inactiveMembers: inactiveMembers.toLocaleString(),
     overdueMembers: overdueMembers.toLocaleString(),
     membersWithFines: membersWithFines.toLocaleString(),
-    totalFines: `$${totalFines._sum.fine?.toFixed(2) || "0.00"}`
+    totalFines: `${totalFines._sum.fine?.toFixed(2) || "0.00"}`
   };
 
   res.status(200).send(membersStats);
