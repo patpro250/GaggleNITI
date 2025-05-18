@@ -45,6 +45,28 @@ router.get("/", permission(["READ"]), async (req, res) => {
   res.status(200).send({ nextCursor, students });
 });
 
+router.get('/overview', async (req, res) => {
+  const totalStudents = await prisma.student.count({ where: { institutionId: req.user.institutionId } });
+  const activeStudents = await prisma.student.count({ where: { status: 'ACTIVE', institutionId: req.user.institutionId } });
+  const inactiveStudents = totalStudents - activeStudents;
+  const studentsWithOverdueBooks = await prisma.circulation.count({ where: { dueDate: { lt: new Date() }, returnDate: null, studentId: { not: null } } });
+  const studentsWithFines = await prisma.circulation.count({ where: { libraryId: req.user.libraryId, fine: { gt: 0 } } });
+  const totalFines = await prisma.circulation.aggregate({ _sum: { fine: true }, where: { libraryId: req.user.libraryId } });
+  const studentsWhoLostBooks = await prisma.circulation.count({ where: { studentId: { not: null }, bookCopy: { status: 'LOST' } } });
+
+  const studentsStats = {
+    totalStudents: totalStudents.toLocaleString(),
+    activeStudents: activeStudents.toLocaleString(),
+    inactiveStudents: inactiveStudents.toLocaleString(),
+    studentsWithOverdueBooks: studentsWithOverdueBooks.toLocaleString(),
+    studentsWithFines: studentsWithFines.toLocaleString(),
+    totalFines: totalFines._sum.fine?.toFixed(2) || "0.00",
+    studentsWhoLostBooks: studentsWhoLostBooks.toLocaleString()
+  };
+
+  res.status(200).send(studentsStats);
+});
+
 router.get("/:id", async (req, res) => {
   const student = await prisma.student.findUnique({
     where: { id: req.params.id },

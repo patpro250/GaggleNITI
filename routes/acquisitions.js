@@ -36,6 +36,31 @@ router.get("/", permission(["READ"]), async (req, res) => {
   res.send({ nextCursor, acquisitions });
 });
 
+router.get('/overview', async (req, res) => {
+  const { libraryId } = req.user;
+  const suppliersGrouped = await prisma.acquisition.groupBy({
+    by: ['supplierId'],
+    where: { libraryId }
+  });
+  const totalSuppliers = suppliersGrouped.length;
+  const totalAcquired = await prisma.acquisition.count({ where: { libraryId } });
+  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const acquiredThisMonth = await prisma.acquisition.count({
+    where: {
+      libraryId,
+      doneOn: { gte: startOfMonth }
+    }
+  });
+
+  const suppliersStats = {
+    totalSuppliers: totalSuppliers.toLocaleString(),
+    totalAcquired: totalAcquired.toLocaleString(),
+    acquiredThisMonth: acquiredThisMonth.toLocaleString()
+  };
+
+  res.status(200).send(suppliersStats);
+});
+
 router.get("/:id", permission(["READ"]), async (req, res) => {
   const acquisition = await prisma.acquisition.findFirst({
     where: {

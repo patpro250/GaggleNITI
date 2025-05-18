@@ -13,6 +13,32 @@ const permission = require("../middleware/auth/permissions");
 
 const prisma = require("./prismaClient");
 
+router.get('/library/overview', async (req, res) => {
+  const { libraryId } = req.user;
+  const uniqueMembers = await prisma.circulation.findMany({
+    where: { userId: { not: null }, libraryId },
+    distinct: ['userId']
+  });
+
+  const totalMembers = uniqueMembers.length;
+  const activeMembers = await prisma.circulation.count({ where: { returnDate: null, userId: { not: null }, libraryId } });
+  const inactiveMembers = totalMembers - activeMembers;
+  const overdueMembers = await prisma.circulation.count({ where: { dueDate: { lt: new Date() }, returnDate: null, libraryId, userId: { not: null } } });
+  const membersWithFines = await prisma.circulation.count({ where: { userId: { not: null }, fine: { gt: 0 } } });
+  const totalFines = await prisma.circulation.aggregate({ _sum: { fine: true }, where: { userId: { not: null }, libraryId } });
+
+  const membersStats = {
+    totalMembers: totalMembers.toLocaleString(),
+    activeMembers: activeMembers.toLocaleString(),
+    inactiveMembers: inactiveMembers.toLocaleString(),
+    overdueMembers: overdueMembers.toLocaleString(),
+    membersWithFines: membersWithFines.toLocaleString(),
+    totalFines: `${totalFines._sum.fine?.toFixed(2) || "0.00"}`
+  };
+
+  res.status(200).send(membersStats);
+});
+
 router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -34,7 +60,6 @@ router.post("/", async (req, res) => {
     .send(`${req.body.firstName} ${req.body.lastName} created successfully`);
 });
 
-router.use(isMember);
 router.get("/", async (req, res) => {
   let members = await prisma.member.findMany();
   members = members.map((member) => _.omit(member, ["password"]));
