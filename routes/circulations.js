@@ -244,6 +244,7 @@ router.post("/lend/student", async (req, res) => {
         librarianIdNo: req.user.librarianId,
         dueDate: new Date(req.body.dueDate),
         libraryId: req.user.libraryId,
+        comment: req.body.comment
       },
     }),
     prisma.bookCopy.update({
@@ -558,6 +559,7 @@ function validateStudentBorrow(body) {
     code: Joi.string().min(3).required(),
     studentCode: Joi.string().required(),
     dueDate: Joi.date().required(),
+    comment: Joi.string().min(3).max(250)
   });
 
   return schema.validate(body);
