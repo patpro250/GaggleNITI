@@ -159,12 +159,14 @@ router.get("/pending", async (req, res) => {
 });
 
 router.get("/:id", async (req, res) => {
-  const librarian = await prisma.librarian.findUnique({
+  const librarian = await prisma.librarian.findFirst({
     where: { librarianId: req.params.id },
     include: { institution: true },
   });
   if (!librarian) return res.status(404).send("Librarian not found!");
-  res.status(200).send(librarian);
+
+  const librarianWithoutPassword = _.omit(librarian, ["password"]);
+  res.status(200).send(librarianWithoutPassword);
 });
 
 router.post("/create", async (req, res) => {
@@ -248,10 +250,8 @@ router.post("/approve/:librarianId", async (req, res) => {
   res
     .status(200)
     .send(
-      `${isPending.firstName} ${
-        isPending.lastName
-      }, have been approved to join your institution, ${
-        isPending.gender === "F" ? "she" : "he"
+      `${isPending.firstName} ${isPending.lastName
+      }, have been approved to join your institution, ${isPending.gender === "F" ? "she" : "he"
       } can now login to the system.`
     );
 });
