@@ -136,7 +136,7 @@ router.get("/", async (req, res) => {
       status: true,
       librarianId: true,
       profile: true,
-      createdAt: true
+      createdAt: true,
     },
   });
   res.status(200).send(librarians);
@@ -167,7 +167,7 @@ router.get("/:id", async (req, res) => {
   res.status(200).send(librarian);
 });
 
-router.post("/", async (req, res) => {
+router.post("/create", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -208,6 +208,7 @@ router.post("/", async (req, res) => {
 
 router.post("/approve/:librarianId", async (req, res) => {
   const institutionId = req.user.institutionId;
+  console.log(institutionId);
   const { error } = validateApproval(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 

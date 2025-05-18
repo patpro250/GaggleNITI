@@ -10,7 +10,7 @@ const openRoutes = [
   { path: "/catalog", methods: ["GET", "POST"] },
   { path: "/institutions", methods: ["POST"] },
   { path: "/system-admin", methods: ["POST"] },
-  { path: "/librarians", methods: ["POST"] },
+  { path: "/librarians/create", methods: ["POST"] },
 ];
 
 function isOpenRoute(req) {
