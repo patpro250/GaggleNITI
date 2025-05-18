@@ -31,7 +31,7 @@ router.use(permission(["DIRECTOR"]));
 //   res.status(200).send({ total, active, inactive, suspended, onLeave });
 // });
 
-router.get('/analytics', async (req, res) => {
+router.get("/analytics", async (req, res) => {
   const { libraryId } = req.user;
 
   const topBooksRaw = await prisma.book.findMany({
@@ -60,9 +60,12 @@ router.get('/analytics', async (req, res) => {
   });
 
   const topBooksData = topBooksRaw
-    .map(book => ({
+    .map((book) => ({
       bookTitle: book.title,
-      borrowedCount: book.bookCopy.reduce((acc, copy) => acc + copy.circulation.length, 0),
+      borrowedCount: book.bookCopy.reduce(
+        (acc, copy) => acc + copy.circulation.length,
+        0
+      ),
     }))
     .sort((a, b) => b.borrowedCount - a.borrowedCount)
     .slice(0, 5);
@@ -77,11 +80,10 @@ router.get('/analytics', async (req, res) => {
   ORDER BY DATE_TRUNC('month', MIN("lendDate"))
 `;
 
-  const borrowingTrendsData = borrowingTrendsRaw.map(row => ({
+  const borrowingTrendsData = borrowingTrendsRaw.map((row) => ({
     month: row.month,
     borrowedBooks: Number(row.borrowedBooks),
   }));
-
 
   res.status(200).send({
     topBooksData,
@@ -89,7 +91,7 @@ router.get('/analytics', async (req, res) => {
   });
 });
 
-router.get('/overview', async (req, res) => {
+router.get("/overview", async (req, res) => {
   const { institutionId, libraryId } = req.user;
 
   const totalBooks = await prisma.book.count({
@@ -108,7 +110,7 @@ router.get('/overview', async (req, res) => {
   });
 
   const interLibraryRequests = await prisma.interLibrary.count({
-    where: { lenderId: institutionId, status: 'PENDING' },
+    where: { lenderId: institutionId, status: "PENDING" },
   });
 
   const schoolStats = {
@@ -208,8 +210,15 @@ router.post("/approve/:librarianId", async (req, res) => {
   const { error } = validateApproval(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const isPending = await prisma.librarian.findFirst({ where: { institutionId, status: "PENDING", librarianId: req.params.librarianId } });
-  if (!isPending) return res.status(404).send(`Librarian is not found or already approved!`);
+  const isPending = await prisma.librarian.findFirst({
+    where: {
+      institutionId,
+      status: "PENDING",
+      librarianId: req.params.librarianId,
+    },
+  });
+  if (!isPending)
+    return res.status(404).send(`Librarian is not found or already approved!`);
 
   let { role } = req.body;
   req.body.permissions = rolePermissions[role];
@@ -228,14 +237,19 @@ router.post("/approve/:librarianId", async (req, res) => {
       where: { librarianId: req.params.librarianId },
       data: approval,
     }),
-    prisma.library.update({ where: { id: library.id }, data: { managerId: isPending.librarianId } })
+    prisma.library.update({
+      where: { id: library.id },
+      data: { managerId: isPending.librarianId },
+    }),
   ]);
 
   res
     .status(200)
     .send(
-      `${isPending.firstName} ${isPending.lastName
-      }, have been approved to join your institution, ${isPending.gender === "F" ? "she" : "he"
+      `${isPending.firstName} ${
+        isPending.lastName
+      }, have been approved to join your institution, ${
+        isPending.gender === "F" ? "she" : "he"
       } can now login to the system.`
     );
 });
