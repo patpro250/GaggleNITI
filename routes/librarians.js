@@ -210,7 +210,6 @@ router.post("/create", async (req, res) => {
 
 router.post("/approve/:librarianId", async (req, res) => {
   const institutionId = req.user.institutionId;
-  console.log(institutionId);
   const { error } = validateApproval(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -358,31 +357,6 @@ function validate(librarian) {
     gender: Joi.string().valid("F", "M", "O").required(),
     institutionId: Joi.string().required(),
     profile: Joi.string().uri(),
-    role: Joi.string()
-      .valid(
-        "DIRECTOR",
-        "MANAGER",
-        "ASSISTANT",
-        "CATALOGER",
-        "REFERENCE_LIBRARIAN",
-        "CIRCULATION_LIBRARIAN",
-        "ARCHIVIST",
-        "DIGITAL_LIBRARIAN",
-        "ACQUISITIONS_LIBRARIAN",
-        "YOUTH_LIBRARIAN",
-        "LAW_LIBRARIAN",
-        "MEDICAL_LIBRARIAN",
-        "SCHOOL_LIBRARIAN",
-        "PUBLIC_SERVICES_LIBRARIAN",
-        "INTERLIBRARY_LOAN_LIBRARIAN",
-        "RESEARCH_LIBRARIAN",
-        "SERIALS_LIBRARIAN",
-        "SPECIAL_COLLECTIONS_LIBRARIAN",
-        "TECHNICAL_LIBRARIAN",
-        "EVENTS_COORDINATOR",
-        "VOLUNTEER_COORDINATOR"
-      )
-      .required(),
   });
 
   return schema.validate(librarian);

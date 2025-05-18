@@ -3,6 +3,7 @@ const languageCodes = require("./lib/languages");
 const router = express.Router();
 const Joi = require("joi");
 const isMember = require("../middleware/auth/member");
+const { startOfMonth, startOfYear, subYears, subMonths, endOfYear } = require("date-fns");
 
 const permission = require("../middleware/auth/permissions");
 
@@ -46,6 +47,8 @@ router.get('/overview', async (req, res) => {
     where: { institutionId: req.user.institutionId }
   });
 
+  const totalCopies = await prisma.bookCopy.count({ where: { libraryId } });
+
   const available = await prisma.bookCopy.count({
     where: { status: 'AVAILABLE', libraryId }
   });
@@ -66,12 +69,35 @@ router.get('/overview', async (req, res) => {
     where: { condition: 'DAMAGED', libraryId }
   });
 
-  const newBooks = await prisma.bookCopy.count({
+  // Check for new arrivals
+  const threeMonthsAgoStart = startOfMonth(subMonths(new Date(), 3));
+  const today = new Date();
+
+  const newBooks = await prisma.book.count({
+    where: {
+      institutionId: req.user.institutionId,
+      createdAt: {
+        gte: threeMonthsAgoStart,
+        lte: today,
+      },
+    },
+  });
+
+  const newBookCopies = await prisma.bookCopy.count({
     where: { condition: 'NEW', libraryId }
   });
 
-  const oldBooks = await prisma.bookCopy.count({
-    where: { condition: 'OLD', libraryId }
+  // Calculate old books
+  const tenYearsAgoStart = startOfYear(subYears(new Date(), 10));
+  const tenYearsAgoEnd = endOfYear(subYears(new Date(), 10));
+
+  const oldBooks = await prisma.book.count({
+    where: {
+      firstAcquisition: {
+        gte: tenYearsAgoStart,
+        lte: tenYearsAgoEnd,
+      },
+    },
   });
 
   const archived = await prisma.bookCopy.count({
@@ -81,12 +107,14 @@ router.get('/overview', async (req, res) => {
   const bookStats = {
     totalBooks: totalBooks.toLocaleString(),
     available: available.toLocaleString(),
+    totalCopies: totalCopies.toLocaleString(),
     checkedOut: checkedOut.toLocaleString(),
     reserved: reserved.toLocaleString(),
     missing: missing.toLocaleString(),
     damaged: damaged.toLocaleString(),
     new: newBooks.toLocaleString(),
     old: oldBooks.toLocaleString(),
+    newBookCopies: newBookCopies.toLocaleString(),
     archived: archived.toLocaleString()
   };
 

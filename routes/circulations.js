@@ -7,6 +7,7 @@ const router = express.Router();
 const permission = require("../middleware/auth/permissions");
 
 const prisma = require("./prismaClient");
+const { id } = require("date-fns/locale");
 
 router.get("/", permission(["READ"]), async (req, res) => {
   const { year } = req.query;
@@ -512,6 +513,23 @@ router.put("/reject/:id", async (req, res) => {
     .send(`Book copy with ID: ${isPending.id} has been rejected successfully!`);
 });
 
+router.put('/renew/student', async (req, res) => {
+  const { libraryId } = req.user;
+
+  const { error } = validateStudentRenew(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  const copy = await prisma.bookCopy.findFirst({ where: { code: req.body.code, libraryId, status: 'CHECKEDOUT' } });
+  if (!copy) return res.status(400).send(`There is no Checked out book copy in your library with the given code`);
+
+  const isRenewable = await prisma.circulation.findFirst({ where: { libraryId, copyId: copy.id } });
+  if (!isRenewable) return res.status(400).send(`Can't renew the circulation!`);
+
+  await prisma.circulation.update({ where: { id: isRenewable.id }, data: { dueDate: new Date(req.body.dueDate) } });
+  res.status(200).send(`The book copy with code: ${copy.code} is renewed successfully and will be returned on ${new Date(req.body.dueDate).toLocaleDateString()}`);
+
+});
+
 router.put("/renew/:id", async (req, res) => {
   let isPending = await prisma.circulation.findFirst({
     where: { id: req.params.id, returnDate: null },
@@ -569,6 +587,15 @@ function validateStudentReturn(body) {
   const schema = Joi.object({
     code: Joi.string().min(3).required(),
     studentCode: Joi.string().required(),
+  });
+
+  return schema.validate(body);
+}
+
+function validateStudentRenew(body) {
+  const schema = Joi.object({
+    code: Joi.string().min(3).required(),
+    dueDate: Joi.date().required(),
   });
 
   return schema.validate(body);
