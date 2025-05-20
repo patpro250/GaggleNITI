@@ -206,7 +206,7 @@ router.post("/lend/student", async (req, res) => {
     return res
       .status(400)
       .send(
-        `Copy with ID: ${req.body.copyId} does not exist, add it to your School Library.`
+        `Copy with code: ${req.body.code} does not exist, add it to your School Library.`
       );
 
   let isAvailable = await prisma.bookCopy.findFirst({

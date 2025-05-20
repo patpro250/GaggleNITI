@@ -39,6 +39,33 @@ router.get("/", permission(["READ"]), async (req, res) => {
   res.status(200).send({ nextCursor, books });
 });
 
+router.get('/schools', async (req, res) => {
+  const { libraryId } = req.user;
+
+  const books = await prisma.book.findMany({
+    include: {
+      bookCopy: {
+        where: { libraryId },
+      },
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  const formattedBooks = books.map((book) => ({
+    id: book.id,
+    title: book.title,
+    author: book.author,
+    publisher: book.publisher,
+    genre: book.genre,
+    language: book.language,
+    totalCopies: book.bookCopy.length,
+    dateAquired: book.firstAcquisition,
+    availableCopies: book.bookCopy.filter((copy) => copy.status === "AVAILABLE").length,
+  }));
+
+  res.status(200).send(formattedBooks);
+});
+
 router.get('/overview', async (req, res) => {
   const libraryId = req.user.libraryId;
   if (!libraryId) return res.status(400).send('No Library Provided!');
