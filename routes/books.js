@@ -40,7 +40,7 @@ router.get("/", permission(["READ"]), async (req, res) => {
 });
 
 router.get('/schools', async (req, res) => {
-  const { libraryId } = req.user;
+  const { libraryId, institutionId } = req.user;
 
   const books = await prisma.book.findMany({
     include: {
@@ -48,6 +48,7 @@ router.get('/schools', async (req, res) => {
         where: { libraryId },
       },
     },
+    where: { institutionId },
     orderBy: { createdAt: 'desc' }
   });
 
