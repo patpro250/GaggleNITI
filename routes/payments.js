@@ -58,14 +58,30 @@ router.post("/momo", async (req, res) => {
   res.status(200).send("Payment submitted. Awaiting confirmation.");
 });
 
-router.patch('/confirm/:paymentId', permission(["SYSTEM_ADMIN"]), async (req, res) => {
+router.patch('/approve/:paymentId', permission(["SYSTEM_ADMIN"]), async (req, res) => {
   const paymentId = req.params.paymentId;
 
-    const payment = await prisma.payment.findFirst({
-      where: { id: paymentId, status: { not: "PENDING" } },
-    });
-    if (!payment)
-      return res.status(404).send(`Payment not found or already confirmed!`);
+  const payment = await prisma.payment.findFirst({
+    where: { id: paymentId, status: { not: "PENDING" } },
+  });
+  if (!payment)
+    return res.status(404).send(`Payment not found or already confirmed!`);
+
+  const paymentCode = generateConfirmationCode(institution.name);
+  await prisma.payment.update({ where: { id: paymentId }, data: { status: 'APPROVED', confirmationCode: paymentCode, phoneNumber: req.body.paymentCode } });
+
+  res.status(200).send(`You have approved a payment with code ${paymentCode}`);
+});
+
+router.patch('/confirm', permission(["SYSTEM_ADMIN"]), async (req, res) => {
+  const { error } = validatePaymentConfirmation(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  const payment = await prisma.payment.findFirst({
+    where: { confirmationCode: req.body.code, status: "APPROVED" },
+  });
+  if (!payment)
+    return res.status(404).send(`Payment not found!`);
 
   const now = new Date();
   var expiresAt;
@@ -74,24 +90,24 @@ router.patch('/confirm/:paymentId', permission(["SYSTEM_ADMIN"]), async (req, re
     where: {
       institutionId: payment.institutionId,
       expiresAt: { gte: now },
-    }
+    },
   });
 
   if (activePurchase) {
     const timeLeft = activePurchase.expiresAt - now;
-    const newExpiryDate = new Date(now.getTime() + timeLeft + (30 * 24 * 60 * 60 * 1000));
+    const newExpiryDate = new Date(
+      now.getTime() + timeLeft + 30 * 24 * 60 * 60 * 1000
+    );
     expiresAt = newExpiryDate;
   } else {
-    expiresAt = now + (30 * 24 * 60 * 60 * 1000);
+    expiresAt = now + 30 * 24 * 60 * 60 * 1000;
   }
 
-  const institution = await prisma.institution.findFirst({ where: { id: payment.institutionId }, select: { name: true } });
-  const paymentCode = generateConfirmationCode(institution.name);
-
-  if (!paymentCode) return res.status(400).send(`Failed to generate payment code!`);
-
   await prisma.$transaction([
-    prisma.payment.update({ where: { id: paymentId }, data: { status: 'SUCCESS', confirmationCode: paymentCode } }),
+    prisma.payment.update({
+      where: { id: payment.id },
+      data: { status: "SUCCESS" },
+    }),
     prisma.purchase.create({
       data: {
         institutionId: payment.institutionId,
@@ -99,12 +115,13 @@ router.patch('/confirm/:paymentId', permission(["SYSTEM_ADMIN"]), async (req, re
         amount: payment.amount,
         currency: payment.currency,
         expiresAt,
-      }
-    })
+      },
+    }),
   ]);
 
-  res.status(200).send(paymentCode);
+  res.status(200).send(`You have confirmed the payment, you can now login!`)
 });
+
 
 function validatePaymentRequest(request) {
   const schema = Joi.object({
