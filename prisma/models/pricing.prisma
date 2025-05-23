@@ -49,6 +49,7 @@ enum PaymentStatus {
     SUCCESS
     FAILED
     REJECTED
+    APPROVED
 }
 
 enum PlanStatus {
