@@ -139,11 +139,12 @@ router.post("/", async (req, res) => {
     where: {
       OR: [
         { email: req.body.email },
-        { phone: req.body.phone },
-        { name: req.body.name },
-      ],
-    },
+        { phone: req.body.phone }
+      ]
+    }
   });
+
+  console.log(exists);
 
   const defaults = institutionSettings();
   req.body.settings = defaults.settings;
