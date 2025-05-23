@@ -159,12 +159,14 @@ router.get("/pending", async (req, res) => {
 });
 
 router.get("/:id", async (req, res) => {
-  const librarian = await prisma.librarian.findUnique({
+  const librarian = await prisma.librarian.findFirst({
     where: { librarianId: req.params.id },
     include: { institution: true },
   });
   if (!librarian) return res.status(404).send("Librarian not found!");
-  res.status(200).send(librarian);
+
+  const librarianWithoutPassword = _.omit(librarian, ["password"]);
+  res.status(200).send(librarianWithoutPassword);
 });
 
 router.post("/create", async (req, res) => {
@@ -208,7 +210,6 @@ router.post("/create", async (req, res) => {
 
 router.post("/approve/:librarianId", async (req, res) => {
   const institutionId = req.user.institutionId;
-  console.log(institutionId);
   const { error } = validateApproval(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -248,10 +249,8 @@ router.post("/approve/:librarianId", async (req, res) => {
   res
     .status(200)
     .send(
-      `${isPending.firstName} ${
-        isPending.lastName
-      }, have been approved to join your institution, ${
-        isPending.gender === "F" ? "she" : "he"
+      `${isPending.firstName} ${isPending.lastName
+      }, have been approved to join your institution, ${isPending.gender === "F" ? "she" : "he"
       } can now login to the system.`
     );
 });
@@ -358,31 +357,6 @@ function validate(librarian) {
     gender: Joi.string().valid("F", "M", "O").required(),
     institutionId: Joi.string().required(),
     profile: Joi.string().uri(),
-    role: Joi.string()
-      .valid(
-        "DIRECTOR",
-        "MANAGER",
-        "ASSISTANT",
-        "CATALOGER",
-        "REFERENCE_LIBRARIAN",
-        "CIRCULATION_LIBRARIAN",
-        "ARCHIVIST",
-        "DIGITAL_LIBRARIAN",
-        "ACQUISITIONS_LIBRARIAN",
-        "YOUTH_LIBRARIAN",
-        "LAW_LIBRARIAN",
-        "MEDICAL_LIBRARIAN",
-        "SCHOOL_LIBRARIAN",
-        "PUBLIC_SERVICES_LIBRARIAN",
-        "INTERLIBRARY_LOAN_LIBRARIAN",
-        "RESEARCH_LIBRARIAN",
-        "SERIALS_LIBRARIAN",
-        "SPECIAL_COLLECTIONS_LIBRARIAN",
-        "TECHNICAL_LIBRARIAN",
-        "EVENTS_COORDINATOR",
-        "VOLUNTEER_COORDINATOR"
-      )
-      .required(),
   });
 
   return schema.validate(librarian);

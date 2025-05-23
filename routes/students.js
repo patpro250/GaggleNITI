@@ -89,7 +89,7 @@ router.post("/", async (req, res) => {
       );
 
   const institution = await prisma.institution.findFirst({
-    where: { id: req.user.id },
+    where: { id: req.user.institutionId },
   });
   if (!institution)
     return res.status(400).send(`Invalid school assigned to student!`);

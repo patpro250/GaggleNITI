@@ -9,6 +9,7 @@ model Circulation {
   returnDate    DateTime?
   lendDate      DateTime  @default(now())
   dueDate       DateTime
+  comment       String?
   library       Library   @relation("fromLibrary", fields: [libraryId], references: [id])
   bookCopy      BookCopy  @relation("BookCopy", fields: [copyId], references: [id])
   member        Member?   @relation("incirculation", fields: [userId], references: [id])
