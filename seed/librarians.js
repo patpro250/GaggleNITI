@@ -1,69 +1,57 @@
 const { faker } = require("@faker-js/faker");
 const bcrypt = require("bcrypt");
-
 const prisma = require("../routes/prismaClient");
 
 async function seedLibrarians() {
-  console.log("🌱 Seeding librarians...");
-  let password = await bcrypt.hash("@Gaggle2025", 10);
+  console.log("🌱 Seeding one librarian per institution...");
 
-  const librarians = Array.from({ length: 10 }).map(() => ({
-    librarianId: faker.string.uuid(),
-    institutionId: faker.datatype.boolean() ? faker.string.uuid() : null,
-    firstName: faker.person.firstName(),
-    lastName: faker.person.lastName(),
-    email: faker.internet.email(),
-    status: faker.helpers.arrayElement([
-      "ACTIVE",
-      "INACTIVE",
-      "SUSPENDED",
-      "ON_LEAVE",
-      "RETIRED",
-      "TERMINATED",
-      "PENDING",
-      "PROBATION",
-      "RESIGNED",
-      "TRANSFERRED",
-      "DECEASED",
-    ]),
-    gender: faker.helpers.arrayElement(["F", "M", "O"]),
-    phoneNumber: faker.phone.number(),
-    password: password,
-    role: faker.helpers.arrayElement([
-      "DIRECTOR",
-      "ASSISTANT",
-      "CATALOGER",
-      "REFERENCE_LIBRARIAN",
-      "CIRCULATION_LIBRARIAN",
-      "ARCHIVIST",
-      "DIGITAL_LIBRARIAN",
-      "SYSTEMS_LIBRARIAN",
-      "ACQUISITIONS_LIBRARIAN",
-      "YOUTH_LIBRARIAN",
-      "LAW_LIBRARIAN",
-      "MEDICAL_LIBRARIAN",
-      "SCHOOL_LIBRARIAN",
-      "PUBLIC_SERVICES_LIBRARIAN",
-      "INTERLIBRARY_LOAN_LIBRARIAN",
-      "RESEARCH_LIBRARIAN",
-      "SERIALS_LIBRARIAN",
-      "SPECIAL_COLLECTIONS_LIBRARIAN",
-      "TECHNICAL_LIBRARIAN",
-      "EVENTS_COORDINATOR",
-      "VOLUNTEER_COORDINATOR",
-    ]),
-    permissions: faker.helpers.arrayElements(
-      ["READ", "WRITE", "DELETE", "MANAGE_USERS", "SYSTEM_ADMIN"],
-      faker.number.int({ min: 1, max: 3 })
-    ),
-    joined: faker.date.past(),
-  }));
+  const passwordHash = await bcrypt.hash("@Gaggle2025", 10);
 
   try {
+    const institutions = await prisma.institution.findMany({
+      select: { id: true },
+    });
+
+    const librarians = [];
+
+    for (const institution of institutions) {
+      const library = await prisma.library.findFirst({
+        where: {
+          institutionId: institution.id,
+          name: "Main library",
+        },
+        select: { id: true },
+      });
+
+      if (!library) {
+        console.warn(`⚠️ No 'Main library' found for institution ID: ${institution.id}`);
+        continue;
+      }
+
+      librarians.push({
+        institutionId: institution.id,
+        libraryId: library.id,
+        firstName: faker.person.firstName(),
+        lastName: faker.person.lastName(),
+        email: faker.internet.email(),
+        status: "ACTIVE",
+        gender: faker.helpers.arrayElement(["F", "M", "O"]),
+        phone: faker.phone.number(),
+        password: passwordHash,
+        role: 'DIRECTOR',
+        permissions: faker.helpers.arrayElements(
+          ["READ", "WRITE", "DELETE", "MANAGE_USERS", "SYSTEM_ADMIN", "UPDATE"],
+          faker.number.int({ min: 1, max: 3 })
+        ),
+      });
+    }
+
     await prisma.librarian.createMany({ data: librarians });
-    console.log("✅ Seeding completed successfully!");
+    console.log(`✅ Inserted ${librarians.length} librarians (one per institution).`);
   } catch (error) {
-    console.error("❌ Error seeding data:", error);
+    console.error("❌ Error seeding librarians:", error);
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
