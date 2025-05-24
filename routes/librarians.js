@@ -106,7 +106,7 @@ router.get("/overview", async (req, res) => {
   });
 
   const overdueBooks = await prisma.circulation.count({
-    where: { libraryId, dueDate: { gt: new Date() } },
+    where: { libraryId, dueDate: { lt: new Date() }, returnDate: null },
   });
 
   const interLibraryRequests = await prisma.interLibrary.count({

@@ -80,7 +80,7 @@ router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  let student = await prisma.student.findFirst({ where: { className: req.body.className, firstName: req.body.firstName, lastName: req.body.lastName } });
+  let student = await prisma.student.findFirst({ where: { className: req.body.className, firstName: req.body.firstName, lastName: req.body.lastName, institutionId: req.user.institutionId } });
   if (student)
     return res
       .status(400)
@@ -94,7 +94,7 @@ router.post("/", async (req, res) => {
   if (!institution)
     return res.status(400).send(`Invalid school assigned to student!`);
 
-  let code = await generateStudentCode(req.body.firstName, req.body.lastName);
+  let code = await generateStudentCode(req.body.firstName, req.body.lastName, req.user.institutionId);
   req.body.code = code;
   req.body.className = _.toUpper(req.body.className);
   req.body.institutionId = req.user.institutionId;
