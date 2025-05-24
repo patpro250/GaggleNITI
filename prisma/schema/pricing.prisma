@@ -18,7 +18,7 @@ model Payment {
     id               String        @id @default(uuid())
     institutionId    String
     planId           String
-    amount           Decimal
+    amount           Float
     phoneNumber      String?
     confirmationCode String?
     currency         String        @default("RWF")
@@ -35,6 +35,9 @@ model Purchase {
     institutionId String
     planId        String
     paymentId     String?
+    amount         Float?   // optional
+    
+    currency       String?  // optional
     status        PurchaseStatus @default(ACTIVE)
     purchasedAt   DateTime       @default(now())
     expiresAt     DateTime
@@ -46,7 +49,8 @@ model Purchase {
 
 enum PaymentStatus {
     PENDING
-    APPROVED1
+    APPROVED
+    SEEN
     SUCCESS
     FAILED
     REJECTED

@@ -92,8 +92,9 @@ router.patch("/confirm", permission(["SYSTEM_ADMIN"]), async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   const payment = await prisma.payment.findFirst({
-    where: { confirmationCode: req.body.code, status: "SUCCESS" },
+    where: { confirmationCode: req.body.code, status: "APPROVED" },
   });
+
   if (!payment) return res.status(404).send(`Payment not found!`);
 
   const now = new Date();
