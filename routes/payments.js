@@ -49,6 +49,7 @@ router.post("/momo", async (req, res) => {
       institutionId,
       planId: req.body.planId,
       amount: req.body.amount,
+      phoneNumber: req.body.phoneNumber,
       currency: "RWF",
       status: "PENDING",
       method: "MOBILE_MONEY",
@@ -58,30 +59,42 @@ router.post("/momo", async (req, res) => {
   res.status(200).send("Payment submitted. Awaiting confirmation.");
 });
 
-router.patch('/approve/:paymentId', permission(["SYSTEM_ADMIN"]), async (req, res) => {
-  const paymentId = req.params.paymentId;
+router.patch(
+  "/approve/:paymentId",
+  permission(["SYSTEM_ADMIN"]),
+  async (req, res) => {
+    const paymentId = req.params.paymentId;
 
-  const payment = await prisma.payment.findFirst({
-    where: { id: paymentId, status: { not: "PENDING" } },
-  });
-  if (!payment)
-    return res.status(404).send(`Payment not found or already confirmed!`);
+    const payment = await prisma.payment.findFirst({
+      where: { id: paymentId, status: { not: "PENDING" } },
+    });
+    if (!payment)
+      return res.status(404).send(`Payment not found or already confirmed!`);
 
-  const paymentCode = generateConfirmationCode(institution.name);
-  await prisma.payment.update({ where: { id: paymentId }, data: { status: 'APPROVED', confirmationCode: paymentCode, phoneNumber: req.body.paymentCode } });
+    const paymentCode = generateConfirmationCode(institution.name);
+    await prisma.payment.update({
+      where: { id: paymentId },
+      data: {
+        status: "APPROVED",
+        confirmationCode: paymentCode,
+        phoneNumber: req.body.paymentCode,
+      },
+    });
 
-  res.status(200).send(`You have approved a payment with code ${paymentCode}`);
-});
+    res
+      .status(200)
+      .send(`You have approved a payment with code ${paymentCode}`);
+  }
+);
 
-router.patch('/confirm', permission(["SYSTEM_ADMIN"]), async (req, res) => {
+router.patch("/confirm", permission(["SYSTEM_ADMIN"]), async (req, res) => {
   const { error } = validatePaymentConfirmation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   const payment = await prisma.payment.findFirst({
-    where: { confirmationCode: req.body.code, status: "APPROVED" },
+    where: { confirmationCode: req.body.code, status: "SUCCESS" },
   });
-  if (!payment)
-    return res.status(404).send(`Payment not found!`);
+  if (!payment) return res.status(404).send(`Payment not found!`);
 
   const now = new Date();
   var expiresAt;
@@ -119,9 +132,8 @@ router.patch('/confirm', permission(["SYSTEM_ADMIN"]), async (req, res) => {
     }),
   ]);
 
-  res.status(200).send(`You have confirmed the payment, you can now login!`)
+  res.status(200).send(`You have confirmed the payment, you can now login!`);
 });
-
 
 function validatePaymentRequest(request) {
   const schema = Joi.object({
@@ -135,7 +147,7 @@ function validatePaymentRequest(request) {
 
 function validatePaymentConfirmation(request) {
   const schema = Joi.object({
-    code: Joi.string().required()
+    code: Joi.string().required(),
   });
   return schema.validate(request);
 }

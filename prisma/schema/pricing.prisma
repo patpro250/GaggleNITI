@@ -46,10 +46,11 @@ model Purchase {
 
 enum PaymentStatus {
     PENDING
+    APPROVED1
     SUCCESS
     FAILED
     REJECTED
-    APPROVED
+   
 }
 
 enum PlanStatus {
