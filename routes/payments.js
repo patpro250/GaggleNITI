@@ -28,7 +28,9 @@ router.get("/", async (req, res) => {
 });
 
 router.get("/all", permission(["SYSTEM_ADMIN"]), async (req, res) => {
-  const payments = await prisma.payment.findMany({where: {status: {in: ['APPROVED', 'PENDING']}}});
+  const payments = await prisma.payment.findMany({
+    where: { status: { in: ["APPROVED", "PENDING"] } },
+  });
   res.status(200).send(payments);
 });
 
@@ -66,7 +68,7 @@ router.patch(
     const paymentId = req.params.paymentId;
 
     const payment = await prisma.payment.findFirst({
-      where: { id: paymentId, status: { not: "PENDING" } },
+      where: { id: paymentId, status: "PENDING" },
     });
     if (!payment)
       return res.status(404).send(`Payment not found or already confirmed!`);
