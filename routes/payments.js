@@ -28,7 +28,7 @@ router.get("/", async (req, res) => {
 });
 
 router.get("/all", permission(["SYSTEM_ADMIN"]), async (req, res) => {
-  const payments = await prisma.payment.findMany({});
+  const payments = await prisma.payment.findMany({where: {status: {in: ['APPROVED', 'PENDING']}}});
   res.status(200).send(payments);
 });
 
