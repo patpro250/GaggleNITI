@@ -33,7 +33,7 @@ router.get("/all", permission(["SYSTEM_ADMIN"]), async (req, res) => {
 });
 
 router.get("/approved", permission(["SYSTEM_ADMIN"]), async (req, res) => {
-  const payments = await prisma.payment.findMany({ where: { status: 'APPROVED' } });
+  const payments = await prisma.payment.findMany({ where: { status: 'APPROVED' }});
   res.status(200).send(payments);
 });
 
