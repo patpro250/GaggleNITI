@@ -11,6 +11,7 @@ const openRoutes = [
   { path: "/institutions", methods: ["POST"] },
   { path: "/system-admin", methods: ["POST"] },
   { path: "/librarians/create", methods: ["POST"] },
+  { path: "/sysadmin", methods: ["POST"] },
 ];
 
 function isOpenRoute(req) {
