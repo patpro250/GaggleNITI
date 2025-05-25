@@ -7,6 +7,7 @@ const helmet = require("helmet");
 const hpp = require("hpp");
 const cookieParser = require("cookie-parser");
 
+const analytics = require("../routes/analytics");
 const books = require("../routes/books");
 const bookCopies = require("../routes/bookCopies");
 const institutions = require("../routes/institutions");
@@ -59,7 +60,6 @@ module.exports = function (app) {
   app.use("/plans", plans);
   app.use("/payments", payments);
   app.use("/purchases", purchases);
-  app.use("/sysadmin", systemAdmin);
 
   app.use(error);
 };

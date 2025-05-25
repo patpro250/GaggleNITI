@@ -194,7 +194,7 @@ router.post("/lend/student", async (req, res) => {
   const { error } = validateStudentBorrow(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  let librarian = await prisma.librarian.findUnique({
+  let librarian = await prisma.librarian.findFirst({
     where: { librarianId: req.user.librarianId },
   });
   if (!librarian) return res.status(404).send(`Librarian not found`);
@@ -220,7 +220,7 @@ router.post("/lend/student", async (req, res) => {
   let institution = await prisma.institution.findFirst({
     where: { id: req.user.institutionId },
   });
-  const student = await prisma.student.findUnique({
+  const student = await prisma.student.findFirst({
     where: { code: req.body.studentCode },
   });
   if (!student)
