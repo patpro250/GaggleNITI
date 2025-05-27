@@ -145,6 +145,7 @@ function validate(req) {
   const schema = Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().required(),
+    userType: Joi.string()
   });
   return schema.validate(req);
 }
