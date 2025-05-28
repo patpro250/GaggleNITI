@@ -3,53 +3,92 @@ const Joi = require("joi");
 const now = require("../routes/lib/now");
 const _ = require("lodash");
 const router = express.Router();
+const { formatDistanceToNow } = require("date-fns");
+
 
 const permission = require("../middleware/auth/permissions");
 
 const prisma = require("./prismaClient");
-const { id } = require("date-fns/locale");
 
 router.get("/", permission(["READ"]), async (req, res) => {
-  const { year } = req.query;
-
-  let whereCondition = { returnDate: null, libraryId: req.user.libraryId };
-  const institutionType = await prisma.institution.findFirst({
-    where: { id: req.user.institutionId },
-  });
-
-  let academicYear;
-
-  if (institutionType.type === "UNIVERSITY") {
-    academicYear = await prisma.academicYear.findFirst({
-      where: {
-        academicYear: year,
-        institutionId: req.user.institutionId,
+  const circulations = await prisma.circulation.findMany({
+    orderBy: { lendDate: "desc" },
+    include: {
+      bookCopy: {
+        include: {
+          book: true,
+        },
       },
-    });
-  } else {
-    academicYear = await prisma.defaultAcademicYear.findFirst({
-      where: { academicYear: year },
-    });
-  }
-
-  if (!academicYear) return res.status(404).send("Academic Year not found.");
-
-  whereCondition = {
-    ...whereCondition,
-    startDate: { gte: academicYear.startDate },
-    endDate: { lte: academicYear.endDate },
-  };
-
-  const borrowing = await prisma.circulation.findMany({
-    where: whereCondition,
+      member: true,
+      student: true,
+    },
   });
 
-  if (borrowing.length === 0)
-    return res
-      .status(404)
-      .send(`No circulation records found for this academic year.`);
+  const result = circulations.map((c) => {
+    const borrowerName =
+      c.member?.fullName ||
+      `${c.student?.firstName || ""} ${c.student?.lastName || ""}`.trim() ||
+      "Unknown";
 
-  res.status(200).send(borrowing);
+    const book = c.bookCopy?.book;
+    const bookTitle = book?.title || "Unknown Title";
+    const bookCode = c.bookCopy?.code || book?.code || "Unknown Code";
+
+    const timeSinceBorrowing = formatDistanceToNow(new Date(c.lendDate), {
+      addSuffix: false,
+    });
+
+    return {
+      borrowerName,
+      bookTitle,
+      bookCode,
+      timeSinceBorrowing,
+      status: c.returnDate ? "Returned" : "Borrowed",
+      dueDate: c.dueDate.toISOString().split("T")[0],
+      fines: `$${c.fine?.toFixed(2) || "0.00"}`,
+    };
+  });
+  res.status(200).send(result);
+  // const { year } = req.query;
+
+  // let whereCondition = { returnDate: null, libraryId: req.user.libraryId };
+  // const institutionType = await prisma.institution.findFirst({
+  //   where: { id: req.user.institutionId },
+  // });
+
+  // let academicYear;
+
+  // if (institutionType.type === "UNIVERSITY") {
+  //   academicYear = await prisma.academicYear.findFirst({
+  //     where: {
+  //       academicYear: year,
+  //       institutionId: req.user.institutionId,
+  //     },
+  //   });
+  // } else {
+  //   academicYear = await prisma.defaultAcademicYear.findFirst({
+  //     where: { academicYear: year },
+  //   });
+  // }
+
+  // if (!academicYear) return res.status(404).send("Academic Year not found.");
+
+  // whereCondition = {
+  //   ...whereCondition,
+  //   startDate: { gte: academicYear.startDate },
+  //   endDate: { lte: academicYear.endDate },
+  // };
+
+  // const borrowing = await prisma.circulation.findMany({
+  //   where: whereCondition,
+  // });
+
+  // if (borrowing.length === 0)
+  //   return res
+  //     .status(404)
+  //     .send(`No circulation records found for this academic year.`);
+
+  // res.status(200).send(borrowing);
 });
 
 router.get('/overview', async (req, res) => {
@@ -70,7 +109,6 @@ router.get('/overview', async (req, res) => {
 });
 
 router.get("/current-loans", async (req, res) => {
-  const memberId = req.user.id;
 
   const overdueBooks = await prisma.circulation.findMany({
     where: { dueDate: { lt: new Date() }, returnDate: null },

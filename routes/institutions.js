@@ -144,7 +144,6 @@ router.post("/", async (req, res) => {
     }
   });
 
-  console.log(exists);
 
   const defaults = institutionSettings();
   req.body.settings = defaults.settings;

@@ -2,7 +2,7 @@ const express = require("express");
 const error = require("../middleware/error");
 const trimmer = require("../middleware/trimmer");
 const cors = require("cors");
-const { limiter } = require("../middleware/limiter");
+// const { limiter } = require("../middleware/limiter");
 const helmet = require("helmet");
 const hpp = require("hpp");
 const cookieParser = require("cookie-parser");
@@ -41,7 +41,7 @@ module.exports = function (app) {
   app.use(user);
   app.use(express.json());
   app.use(trimmer);
-  app.use(limiter);
+  // app.use(limiter);
   app.use(hpp());
   app.use("/books", books);
   app.use("/institutions", institutions);
