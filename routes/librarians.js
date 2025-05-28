@@ -230,6 +230,7 @@ router.post("/approve/:librarianId", async (req, res) => {
     status: "ACTIVE",
     permissions: req.body.permissions,
     libraryId: req.body.libraryId,
+    role: role
   };
 
   const library = await prisma.library.findFirst({ where: { institutionId } });

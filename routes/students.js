@@ -45,6 +45,11 @@ router.get("/", permission(["READ"]), async (req, res) => {
   res.status(200).send({ nextCursor, students });
 });
 
+router.get('/librarian', async (req, res) => {
+  const students = await prisma.student.findMany({ where: { institutionId: req.user.institutionId } });
+  res.status(200).send(students);
+});
+
 router.get('/overview', async (req, res) => {
   const totalStudents = await prisma.student.count({ where: { institutionId: req.user.institutionId } });
   const activeStudents = await prisma.student.count({ where: { status: 'ACTIVE', institutionId: req.user.institutionId } });
