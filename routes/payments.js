@@ -141,7 +141,7 @@ router.patch("/confirm", permission(["SYSTEM_ADMIN"]), async (req, res) => {
     }),
   ]);
 
-  res.status(200).send(`You have confirmed the payment, you can now login!`);
+  res.status(200).send(`🎉 Thank You for Choosing Nitibook! You can now login!`);
 });
 
 function validatePaymentRequest(request) {
