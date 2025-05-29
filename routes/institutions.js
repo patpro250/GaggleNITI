@@ -88,8 +88,14 @@ router.get("/settings", permission(["DIRECTOR"]), async (req, res) => {
 });
 
 router.get("/:id", async (req, res) => {
-  const institution = await prisma.institution.findUnique({
+  const institution = await prisma.institution.findFirst({
     where: { id: req.params.id },
+    select: {
+      name: true,
+      address: true,
+      phone: true,
+      openingHours: true
+    }
   });
   if (!institution)
     return res

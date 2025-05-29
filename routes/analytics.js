@@ -17,6 +17,36 @@ router.get("/institution/account", async (req, res) => {
   res.status(200).send(response);
 });
 
+router.get("/genres", async (req, res) => {
+  const id = req.user.id;
+  const institutionId = req.user.institutionId;
+  const validId = id || institutionId;
+
+  const genres = await prisma.book.findMany({
+    select: {
+      _count: {
+        select: {
+          bookCopy: true
+        },
+      },
+      genre: true
+    },
+    where: {
+      institutionId: validId,
+      genre: { not: null }
+    },
+    distinct: ['genre']
+  });
+
+  const prettified = genres.map(g => ({
+    genre: g.genre,
+    copies: g._count.bookCopy,
+  }));
+
+  res.status(200).send(prettified);
+
+});
+
 router.get("/Ac", async (req, res) => {
   try {
     const { id } = req.user; // Make sure req.user exists from auth middleware
