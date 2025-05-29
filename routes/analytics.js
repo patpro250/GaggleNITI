@@ -3,9 +3,20 @@ const router = express.Router();
 
 const prisma = require("./prismaClient");
 
-router.get("/", async (req, res) => {
-  res.status(200).send("Testing Analytics panel");
+router.get("/institution/account", async (req, res) => {
+  const { id } = req.user;
+
+  const institution = await prisma.institution.findFirst({ where: { id }, select: { id: true } });
+  if (!institution) return res.status(400).send(`Can't find institution`);
+
+  const totalLibrarians = await prisma.librarian.count({ where: { institutionId: institution.id } });
+  const totalStudents = await prisma.student.count({ where: { institutionId: institution.id } });
+  const totalBooks = await prisma.book.count({ where: { institutionId: institution.id } });
+
+  const response = { totalBooks, totalLibrarians, totalStudents };
+  res.status(200).send(response);
 });
+
 router.get("/Ac", async (req, res) => {
   try {
     const { id } = req.user; // Make sure req.user exists from auth middleware
