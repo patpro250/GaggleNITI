@@ -136,6 +136,22 @@ router.put("/:id/settings", permission(["DIRECTOR"]), async (req, res) => {
   res.status(200).send("Settings updated successfully!");
 });
 
+router.put("/:id/change-password", async (req, res) => {
+  const { error } = validateChangePassword(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  if (!req.body.password) return res.status(400).send(`Please provide a new password!`);
+
+  const institution = await prisma.institution.findFirst({ where: { id: req.params.id } });
+  if (!institution) return res.status(400).send(`Can't find institution!`);
+
+  const salt = await bcrypt.genSalt(10);
+  req.body.password = await bcrypt.hash(req.body.password, salt);
+  await prisma.institution.update({ where: { id: req.params.id }, data: req.body });
+
+  res.status(200).send(`Password changed successfully!`);
+});
+
 router.post("/", async (req, res) => {
   if (!req.body.password) return res.status(400).send("Password is required");
   const { error } = validate(req.body);
@@ -304,6 +320,13 @@ function validate(institution) {
     password: passwordComplexity(complexityOptions),
   });
   return schema.validate(institution);
+}
+
+function validateChangePassword(request) {
+  const schema = Joi.object({
+    password: passwordComplexity(complexityOptions),
+  });
+  return schema.validate(request);
 }
 
 async function generateInstitutionCode(institutionName) {
