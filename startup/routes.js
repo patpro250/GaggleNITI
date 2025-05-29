@@ -61,6 +61,7 @@ module.exports = function (app) {
   app.use("/payments", payments);
   app.use("/purchases", purchases);
   app.use("/analytics", analytics);
+  app.use("/system-admin", systemAdmin);  
 
   app.use(error);
 };
