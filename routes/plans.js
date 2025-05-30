@@ -5,7 +5,7 @@ const router = express.Router();
 const Joi = require("joi");
 
 router.get("/", async (req, res) => {
-  const plans = await prisma.pricingPlan.findMany();
+  const plans = await prisma.pricingPlan.findMany({ where: { status: { not: 'INACTIVE' } } });
   res.status(200).send(plans);
 });
 

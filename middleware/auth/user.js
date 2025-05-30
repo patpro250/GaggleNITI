@@ -6,7 +6,7 @@ const openRoutes = [
   { path: "/auth" },
   { path: "/institutions/verify" },
   { path: "/suppliers" },
-  { path: "/plans", methods: ["GET"], exclude: ["/plans/current"] },
+  { path: "/plans", methods: ["GET", "POST"], exclude: ["/plans/current"] },
   { path: "/catalog", methods: ["GET", "POST"] },
   { path: "/institutions", methods: ["POST"] },
   { path: "/system-admin", methods: ["POST"] },
