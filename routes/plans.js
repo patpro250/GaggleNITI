@@ -70,7 +70,9 @@ function validatePlan(plan) {
     duration: Joi.number().integer().min(1).required(),
     features: Joi.string().required(),
     discount: Joi.number().precision(2).max(0.9).min(0).optional(),
-    limitations: Joi.object().required()
+    tokens: Joi.number().min(5).required(),
+    limitations: Joi.object().required(),
+    status: Joi.string().valid(['ACTIVE', "INACTIVE", "COMMING_SOON"]).required()
   });
   return schema.validate(plan);
 }

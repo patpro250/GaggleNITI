@@ -105,6 +105,9 @@ router.patch("/confirm", permission(["SYSTEM_ADMIN"]), async (req, res) => {
 
   if (!payment) return res.status(404).send(`Payment not found!`);
 
+  const plan = await prisma.pricingPlan.findFirst({ where: { id: payment.planId } });
+  if (!plan) return res.status(400).send(`Can't find plan!`);
+
   const now = new Date();
   var expiresAt;
 
@@ -139,6 +142,16 @@ router.patch("/confirm", permission(["SYSTEM_ADMIN"]), async (req, res) => {
         expiresAt,
       },
     }),
+    prisma.institution.update({
+      where: {
+        id: payment.institutionId
+      },
+      data: {
+        tokens: {
+          increment: plan.tokens
+        }
+      }
+    })
   ]);
 
   res.status(200).send(`🎉 Thank You for Choosing Nitibook! You can now login!`);

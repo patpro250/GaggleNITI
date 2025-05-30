@@ -275,6 +275,26 @@ router.post("/lend/student", circulationPricing, async (req, res) => {
       );
   }
 
+  if (req.user.plan === 'Plus') {
+    await prisma.$transaction([
+      prisma.circulation.create({
+        data: {
+          copyId: copy.id,
+          studentId: student.id,
+          librarianIdNo: req.user.librarianId,
+          dueDate: new Date(req.body.dueDate),
+          libraryId: req.user.libraryId,
+          comment: req.body.comment
+        },
+      }),
+      prisma.bookCopy.update({
+        where: { id: copy.id },
+        data: {
+          status: "CHECKEDOUT",
+        },
+      }),
+    ]);
+  }
   await prisma.$transaction([
     prisma.circulation.create({
       data: {
@@ -340,6 +360,19 @@ router.post("/return/student", circulationPricing, async (req, res) => {
     where: { librarianId: req.user.librarianId },
   });
   if (!librarian) return res.status(404).send("Librarian not found!");
+
+  if (req.user.plan === 'Plus') {
+    await prisma.$transaction([
+      prisma.circulation.update({
+        where: { id: isIssued.id },
+        data: { returnDate: new Date() },
+      }),
+      prisma.bookCopy.update({
+        where: { id: copy.id },
+        data: { status: "AVAILABLE" },
+      }),
+    ]);
+  }
 
   await prisma.$transaction([
     prisma.circulation.update({
@@ -525,6 +558,27 @@ router.post("/approve/:id", async (req, res) => {
   if (!librarian)
     return res.status(404).send(`Librarian ${req.user.librarianId} not found`);
 
+  if (req.user.plan === 'Plus') {
+    await prisma.$transaction([
+      prisma.circulation.create({
+        data: {
+          copyId: isPending.copyId,
+          userId: isPending.userId,
+          librarianIdNo: req.user.librarianId,
+          libraryId: req.user.libraryId,
+          dueDate: req.body.dueDate,
+        },
+      }),
+
+      prisma.bookCopy.update({
+        where: { id: isPending.copyId },
+        data: {
+          status: "CHECKEDOUT",
+        },
+      }),
+    ]);
+  }
+
   await prisma.$transaction([
     prisma.circulation.create({
       data: {
@@ -597,6 +651,12 @@ router.put('/renew/student', circulationPricing, async (req, res) => {
 
   const isRenewable = await prisma.circulation.findFirst({ where: { libraryId, copyId: copy.id } });
   if (!isRenewable) return res.status(400).send(`Can't renew the circulation!`);
+
+  if (req.user.plan === 'Plus') {
+    await prisma.$transaction([
+      prisma.circulation.update({ where: { id: isRenewable.id }, data: { dueDate: new Date(req.body.dueDate) } })
+    ]);
+  }
 
   await prisma.$transaction([
     prisma.institution.update({ where: { id: req.user.institutionId }, data: { tokens: { decrement: 10 } } }),
