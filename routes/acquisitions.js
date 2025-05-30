@@ -16,12 +16,12 @@ router.get("/", permission(["READ"]), async (req, res) => {
   if (limit > 50) limit = 50;
   const acquisitions = await prisma.acquisition.findMany({
     where: {
-      institutionId: req.user.institutionId,
+      libraryId: req.user.libraryId,
     },
     include: {
       book: true,
       librarian: true,
-      institution: true,
+      Library: true,
       supplier: true,
     },
     orderBy,

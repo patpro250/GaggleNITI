@@ -9,6 +9,7 @@ model Institution {
   status       Status          @default(ACTIVE)
   rating       Float           @default(4.0)
   password     String
+  tokens        Int             @default(8000)
   settings     Json?
   type         InstitutionType @default(SCHOOL)
   createdAt    DateTime        @default(now()) @db.Timestamp(6)

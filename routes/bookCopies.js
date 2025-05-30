@@ -3,6 +3,7 @@ const Joi = require("joi");
 const router = express.Router();
 
 const permission = require("../middleware/auth/permissions");
+const booksPricing = require("../middleware/booksPricing");
 
 const prisma = require("./prismaClient");
 
@@ -131,7 +132,7 @@ router.get("/:id", permission(["READ"]), async (req, res) => {
   res.status(200).send(bookCopy);
 });
 
-router.post("/", permission(["ADD_COPY"]), async (req, res) => {
+router.post("/", booksPricing, permission(["ADD_COPY"]), async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -146,21 +147,25 @@ router.post("/", permission(["ADD_COPY"]), async (req, res) => {
   const exists = await prisma.bookCopy.findFirst({ where: { barCode: req.body.barCode, code: req.body.code } });
   if (exists) return res.status(400).send(`The book copy with barcode: ${exists.barCode} and code: ${exists.code} already exists, try a new code.`)
 
-  await prisma.bookCopy.create({
-    data: {
-      condition: req.body.condition,
-      dateOfAcquisition: new Date(req.body.dateOfAcquisition),
-      callNo: req.body.callNo,
-      barCode: req.body.barCode,
-      code: req.body.code,
-      book: {
-        connect: { id: req.body.bookId }
+  await prisma.$transaction([
+    prisma.bookCopy.create({
+      data: {
+        condition: req.body.condition,
+        dateOfAcquisition: new Date(req.body.dateOfAcquisition),
+        callNo: req.body.callNo,
+        barCode: req.body.barCode,
+        code: req.body.code,
+        book: {
+          connect: { id: req.body.bookId }
+        },
+        bookR: {
+          connect: { id: req.user.libraryId }
+        }
       },
-      bookR: {
-        connect: { id: req.user.libraryId }
-      }
-    },
-  });
+    }),
+
+    prisma.institution.update({ where: { id: req.user.institutionId }, data: { tokens: { decrement: 5 } } })
+  ])
 
   res.status(201).send(`Book copy created successfully`);
 });
