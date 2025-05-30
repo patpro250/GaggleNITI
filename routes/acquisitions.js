@@ -38,11 +38,10 @@ router.get("/", permission(["READ"]), async (req, res) => {
 
 router.get('/overview', async (req, res) => {
   const { libraryId } = req.user;
-  const suppliersGrouped = await prisma.acquisition.groupBy({
-    by: ['supplierId'],
-    where: { libraryId }
-  });
-  const totalSuppliers = suppliersGrouped.length;
+  // const suppliersGrouped = await prisma.acquisition.groupBy({
+  //   where: { libraryId }
+  // });
+  // const totalSuppliers = suppliersGrouped.length;
   const totalAcquired = await prisma.acquisition.count({ where: { libraryId } });
   const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   const acquiredThisMonth = await prisma.acquisition.count({
@@ -53,7 +52,7 @@ router.get('/overview', async (req, res) => {
   });
 
   const suppliersStats = {
-    totalSuppliers: totalSuppliers.toLocaleString(),
+    // totalSuppliers: totalSuppliers.toLocaleString(),
     totalAcquired: totalAcquired.toLocaleString(),
     acquiredThisMonth: acquiredThisMonth.toLocaleString()
   };
@@ -132,7 +131,6 @@ function validate(acquisition) {
   const schema = Joi.object({
     bookId: Joi.string().uuid().required(),
     quantity: Joi.number().integer().required(),
-    doneOn: Joi.date().iso().required(),
     supplier: Joi.string().uuid().required(),
     code: Joi.string().required(),
     dateOfAcquisition: Joi.date().iso().required(),
