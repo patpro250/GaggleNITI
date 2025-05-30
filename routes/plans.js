@@ -9,6 +9,14 @@ router.get("/", async (req, res) => {
   res.status(200).send(plans);
 });
 
+router.get("/:id", async (req, res) => {
+  const planId = req.params.id;
+  const plan = await prisma.pricingPlan.findFirst({where: {id: planId}});
+  
+  if (!plan) return res.status(404).send(`Plan not found!`);
+  res.status(200).send(plan);
+});
+
 router.post('/', permission(['SYSTEM_ADMIN']), async (req, res) => {
   const { error } = validatePlan(req.body);
   if (error) return res.status(400).send(error.details[0].message);

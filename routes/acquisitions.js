@@ -103,7 +103,7 @@ router.post("/", permission(["ACQUIRE"]), async (req, res) => {
           connect: { id: req.body.bookId },
         },
         Library: {
-          connect: { id: req.body.libraryId },
+          connect: { id: req.user.libraryId },
         },
         librarian: {
           connect: { librarianId: req.user.librarianId },
@@ -133,9 +133,8 @@ function validate(acquisition) {
     bookId: Joi.string().uuid().required(),
     quantity: Joi.number().integer().required(),
     doneOn: Joi.date().iso().required(),
-    supplierId: Joi.string().uuid().required(),
+    supplier: Joi.string().uuid().required(),
     code: Joi.string().required(),
-    libraryId: Joi.string().uuid().required(),
     dateOfAcquisition: Joi.date().iso().required(),
   });
   return schema.validate(acquisition);

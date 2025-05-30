@@ -6,27 +6,27 @@ model Acquisition {
   doneOn      DateTime  @default(now())
   libraryId   String
   bookCode    String
-  supplierId  String
+  supplier    String
   book        Book      @relation("Acquisition1", fields: [bookId], references: [id], onDelete: Cascade)
   Library     Library   @relation("acquisition3", fields: [libraryId], references: [id])
   librarian   Librarian @relation("librarian", fields: [librarianId], references: [librarianId])
-  supplier    Supplier  @relation("Acquisition2", fields: [supplierId], references: [id])
+  // supplier    Supplier  @relation("Acquisition2", fields: [supplierId], references: [id])
 
   @@map("Acquisitions")
 }
 
-model Supplier {
-  id          String         @id @default(uuid())
-  name        String
-  email       String         @unique
-  phone       String
-  website     String
-  address     Json
-  status      SupplierStatus @default(ACTIVE)
-  acquisition Acquisition[]  @relation("Acquisition2")
+// model Supplier {
+//   id          String         @id @default(uuid())
+//   name        String
+//   email       String         @unique
+//   phone       String
+//   website     String
+//   address     Json
+//   status      SupplierStatus @default(ACTIVE)
+//   // acquisition Acquisition[]  @relation("Acquisition2")
 
-  @@map("Suppliers")
-}
+//   @@map("Suppliers")
+// }
 
 enum SupplierStatus {
   ACTIVE
