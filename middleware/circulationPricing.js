@@ -6,6 +6,6 @@ module.exports = async function (req, res, next) {
     if (!institution) return res.status(404).send(`The institution is not found, that's all we know!`);
 
     const { tokens } = institution;
-    if (tokens < 5) return res.status(400).send(`You've hit your plan limit — time to upgrade!!`);
+    if (tokens < 10) return res.status(400).send(`You've hit your plan limit — time to upgrade!`);
     next();
 }

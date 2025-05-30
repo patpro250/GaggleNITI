@@ -5,7 +5,7 @@ const _ = require("lodash");
 const router = express.Router();
 const { formatDistanceToNow } = require("date-fns");
 
-
+const circulationPricing = require("../middleware/circulationPricing");
 const permission = require("../middleware/auth/permissions");
 
 const prisma = require("./prismaClient");
@@ -228,7 +228,7 @@ router.post("/request-book", async (req, res) => {
 
 router.use(permission(["CIRCULATION_MANAGER"]));
 
-router.post("/lend/student", async (req, res) => {
+router.post("/lend/student", circulationPricing, async (req, res) => {
   const { error } = validateStudentBorrow(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -292,6 +292,16 @@ router.post("/lend/student", async (req, res) => {
         status: "CHECKEDOUT",
       },
     }),
+    prisma.institution.update({
+      where: {
+        id: institution.id
+      },
+      data: {
+        tokens: {
+          decrement: 10
+        }
+      }
+    })
   ]);
 
 
@@ -307,7 +317,7 @@ router.post("/lend/student", async (req, res) => {
     );
 });
 
-router.post("/return/student", async (req, res) => {
+router.post("/return/student", circulationPricing, async (req, res) => {
   const { error } = validateStudentReturn(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -340,6 +350,16 @@ router.post("/return/student", async (req, res) => {
       where: { id: copy.id },
       data: { status: "AVAILABLE" },
     }),
+    prisma.institution.update({
+      where: {
+        id: req.user.institutionId
+      },
+      data: {
+        tokens: {
+          decrement: 10
+        }
+      }
+    })
   ]);
 
   const book = await prisma.book.findFirst({ where: { id: copy.bookId } });
@@ -349,8 +369,7 @@ router.post("/return/student", async (req, res) => {
   );
 });
 
-
-router.post("/lend", async (req, res) => {
+router.post("/lend", circulationPricing, async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -403,6 +422,12 @@ router.post("/lend", async (req, res) => {
         status: "CHECKEDOUT",
       },
     }),
+
+    prisma.institution.update({
+      where: {
+        id: req.user.institutionId
+      }
+    })
   ]);
   let book = await prisma.book.findFirst({ where: { id: copy.bookId } });
 
@@ -494,7 +519,7 @@ router.post("/approve/:id", async (req, res) => {
       .status(400)
       .send(`The book request with ID: ${req.params.id} doesn't exist!`);
 
-  const librarian = await prisma.librarian.findUnique({
+  const librarian = await prisma.librarian.findFirst({
     where: { librarianId: req.user.librarianId },
   });
   if (!librarian)
@@ -517,6 +542,16 @@ router.post("/approve/:id", async (req, res) => {
         status: "CHECKEDOUT",
       },
     }),
+    prisma.institution.update({
+      where: {
+        id: req.user.institutionId
+      },
+      data: {
+        tokens: {
+          decrement: 10
+        }
+      }
+    })
   ]);
 
   res
@@ -551,7 +586,7 @@ router.put("/reject/:id", async (req, res) => {
     .send(`Book copy with ID: ${isPending.id} has been rejected successfully!`);
 });
 
-router.put('/renew/student', async (req, res) => {
+router.put('/renew/student', circulationPricing, async (req, res) => {
   const { libraryId } = req.user;
 
   const { error } = validateStudentRenew(req.body);
@@ -563,7 +598,10 @@ router.put('/renew/student', async (req, res) => {
   const isRenewable = await prisma.circulation.findFirst({ where: { libraryId, copyId: copy.id } });
   if (!isRenewable) return res.status(400).send(`Can't renew the circulation!`);
 
-  await prisma.circulation.update({ where: { id: isRenewable.id }, data: { dueDate: new Date(req.body.dueDate) } });
+  await prisma.$transaction([
+    prisma.institution.update({ where: { id: req.user.institutionId }, data: { tokens: { decrement: 10 } } }),
+    prisma.circulation.update({ where: { id: isRenewable.id }, data: { dueDate: new Date(req.body.dueDate) } })
+  ]);
   res.status(200).send(`The book copy with code: ${copy.code} is renewed successfully and will be returned on ${new Date(req.body.dueDate).toLocaleDateString()}`);
 
 });
