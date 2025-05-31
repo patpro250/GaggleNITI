@@ -29,13 +29,37 @@ router.get("/", async (req, res) => {
   res.status(200).send(payments);
 });
 
+router.get("/:id", async (req, res) => {
+  const id = req.params.id;
+
+  const singlepayment = await prisma.payment.findFirst({
+    where: { id },
+    include: {
+      institution: {
+        select: { name: true },
+      },
+      PricingPlan: {
+        select: { name: true },
+      },
+    },
+  });
+
+  res.status(200).send(singlepayment);
+});
+
 router.get("/all", permission(["SYSTEM_ADMIN"]), async (req, res) => {
-  const payments = await prisma.payment.findMany({ where: { status: { in: ['APPROVED', 'PENDING'] }, }, include: { institution: { select: { name: true } } } });
+  const payments = await prisma.payment.findMany({
+    where: { status: { in: ["APPROVED", "PENDING", "SUCCESS"] } },
+    include: { institution: { select: { name: true } } },
+  });
+
   res.status(200).send(payments);
 });
 
 router.get("/approved", permission(["SYSTEM_ADMIN"]), async (req, res) => {
-  const payments = await prisma.payment.findMany({ where: { status: 'APPROVED' } });
+  const payments = await prisma.payment.findMany({
+    where: { status: "APPROVED" },
+  });
   res.status(200).send(payments);
 });
 
@@ -78,7 +102,9 @@ router.patch(
     if (!payment)
       return res.status(404).send(`Payment not found or already confirmed!`);
 
-    const institution = await prisma.institution.findFirst({ where: { id: payment.institutionId } });
+    const institution = await prisma.institution.findFirst({
+      where: { id: payment.institutionId },
+    });
     if (!institution) return res.status(404).send(`Institution not found!`);
 
     const paymentCode = generateConfirmationCode(institution.name);
@@ -102,12 +128,18 @@ router.patch("/confirm", permission(["SYSTEM_ADMIN"]), async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   const payment = await prisma.payment.findFirst({
-    where: { confirmationCode: req.body.code, institutionId: req.user.institutionId, status: "APPROVED" },
+    where: {
+      confirmationCode: req.body.code,
+      institutionId: req.user.institutionId,
+      status: "APPROVED",
+    },
   });
 
   if (!payment) return res.status(404).send(`Payment not found!`);
 
-  const plan = await prisma.pricingPlan.findFirst({ where: { id: payment.planId } });
+  const plan = await prisma.pricingPlan.findFirst({
+    where: { id: payment.planId },
+  });
   if (!plan) return res.status(400).send(`Can't find plan!`);
 
   const now = new Date();
@@ -146,17 +178,19 @@ router.patch("/confirm", permission(["SYSTEM_ADMIN"]), async (req, res) => {
     }),
     prisma.institution.update({
       where: {
-        id: payment.institutionId
+        id: payment.institutionId,
       },
       data: {
         tokens: {
-          increment: plan.tokens
-        }
-      }
-    })
+          increment: plan.tokens,
+        },
+      },
+    }),
   ]);
 
-  res.status(200).send(`🎉 Thank You for Choosing Nitibook! You can now login!`);
+  res
+    .status(200)
+    .send(`🎉 Thank You for Choosing Nitibook! You can now login!`);
 });
 
 function validatePaymentRequest(request) {
