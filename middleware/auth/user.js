@@ -38,9 +38,6 @@ module.exports = function (req, res, next) {
     req.user = payload;
     next();
   } catch (ex) {
-    if (ex.name === 'TokenExpiredError') {
-      return res.status(401).send("Session expired. Please log in again.");
-    }
     res.status(400).send("Invalid token");
   }
 };
