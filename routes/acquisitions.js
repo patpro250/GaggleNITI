@@ -22,7 +22,6 @@ router.get("/", permission(["READ"]), async (req, res) => {
       book: true,
       librarian: true,
       Library: true,
-      supplier: true,
     },
     orderBy,
     take: limit,
@@ -34,6 +33,36 @@ router.get("/", permission(["READ"]), async (req, res) => {
       ? acquisitions[acquisitions.length - 1].id
       : null;
   res.send({ nextCursor, acquisitions });
+});
+
+router.get("/schools", async (req, res) => {
+  const { libraryId, institutionId } = req.user;
+  const acquisitions = await prisma.acquisition.findMany({
+    select: {
+      book: {
+        select: {
+          title: true,
+        },
+      },
+      bookCode: true,
+      quantity: true,
+      supplier: true
+    },
+    where: {
+      book: {
+        institutionId,
+      },
+    },
+  });
+
+  const formatted = acquisitions.map(a => ({
+    bookTitle: a.book.title,
+    code: a.bookCode,
+    quantity: a.quantity,
+    supplier: a.supplier,
+  }));
+
+  res.status(200).send(formatted);
 });
 
 router.get('/overview', async (req, res) => {
@@ -88,7 +117,7 @@ router.post("/", permission(["ACQUIRE"]), async (req, res) => {
       .status(400)
       .send(`The acquired books exceed the limit of ${LIMIT}.`);
 
-  req.body.libraryId = libraryId;    
+  req.body.libraryId = libraryId;
 
   const copies = await generate(req.body);
   const tokensToDecrement = copies.length * 5;
@@ -122,29 +151,29 @@ router.post("/", permission(["ACQUIRE"]), async (req, res) => {
   }
 
   await prisma.$transaction([
-  prisma.acquisition.create({
-    data: {
-      book: {
-        connect: { id: req.body.bookId }
-      },
-      quantity: req.body.quantity,
-      librarian: {
-        connect: { librarianId }
-      },
-      doneOn: new Date(),
-      supplier: req.body.supplier,
-      bookCode: req.body.code,
-      Library: {
-        connect: { id: libraryId }
-      }, 
-    }
-  }),
-  prisma.bookCopy.createMany({ data: copies }),
-  prisma.institution.update({
-    where: { id: institutionId },
-    data: { tokens: { decrement: tokensToDecrement } }
-  })
-]);
+    prisma.acquisition.create({
+      data: {
+        book: {
+          connect: { id: req.body.bookId }
+        },
+        quantity: req.body.quantity,
+        librarian: {
+          connect: { librarianId }
+        },
+        doneOn: new Date(),
+        supplier: req.body.supplier,
+        bookCode: req.body.code,
+        Library: {
+          connect: { id: libraryId }
+        },
+      }
+    }),
+    prisma.bookCopy.createMany({ data: copies }),
+    prisma.institution.update({
+      where: { id: institutionId },
+      data: { tokens: { decrement: tokensToDecrement } }
+    })
+  ]);
 
 
   const book = await prisma.book.findFirst({ where: { id: req.body.bookId } });
