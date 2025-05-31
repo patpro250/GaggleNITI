@@ -47,6 +47,38 @@ router.get("/genres", async (req, res) => {
 
 });
 
+router.get("/institution/dashboard", async (req, res) => {
+  const institutionId = req.user.id;
+  const availableLibraries = await prisma.library.findMany({ where: { institutionId }, select: { id: true } });
+  const libraries = availableLibraries.map(lib => lib.id);
+  const classes = await prisma.student.findMany({ where: { institutionId }, select: { className: true }, distinct: ['className'] });
+
+  const totalBooks = await prisma.book.count({ where: { institutionId } });
+  const totalCopies = await prisma.bookCopy.count({ where: { libraryId: { in: libraries } } });
+  const availableBooks = await prisma.bookCopy.count({ where: { libraryId: { in: libraries }, status: 'AVAILABLE' } });
+  const missingBooks = await prisma.bookCopy.count({ where: { libraryId: { in: libraries }, status: 'MISSING' } });
+  const lostBooks = await prisma.bookCopy.count({ where: { libraryId: { in: libraries }, status: 'MISSING' } });
+  const archivedBooks = await prisma.bookCopy.count({ where: { libraryId: { in: libraries }, status: 'INARCHIVES' } });
+  const totalLibrarians = await prisma.librarian.count({ where: { institutionId } });
+  const borrowedBooks = await prisma.bookCopy.count({ where: { libraryId: { in: libraries }, status: 'CHECKEDOUT' } });
+  const totalAquisitions = await prisma.acquisition.count({ where: { librarianId: { in: libraries } } });
+  const totalStudents = await prisma.student.count({ where: { institutionId } });
+  const totalCheckedIn = await prisma.circulation.count({ where: { libraryId: { in: libraries }, returnDate: { not: null } } });
+  const newBooks = await prisma.bookCopy.count({ where: { libraryId: { in: libraries }, condition: 'NEW' } });
+  const overDued = await prisma.circulation.count({ where: { dueDate: { lt: new Date() } } });
+  const totalClasses = classes.length;
+
+
+  const result =
+  {
+    totalBooks, totalCopies, availableBooks, totalLibrarians, missingBooks,
+    lostBooks, archivedBooks, borrowedBooks, totalAquisitions, totalStudents,
+    totalCheckedIn, newBooks, overDued, totalClasses
+  };
+
+  res.status(200).send(result);
+});
+
 router.get("/Ac", async (req, res) => {
   try {
     const { id } = req.user; // Make sure req.user exists from auth middleware

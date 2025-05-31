@@ -57,7 +57,7 @@ router.get('/overview', async (req, res) => {
   const studentsWithOverdueBooks = await prisma.circulation.count({ where: { dueDate: { lt: new Date() }, returnDate: null, studentId: { not: null } } });
   const studentsWithFines = await prisma.circulation.count({ where: { libraryId: req.user.libraryId, fine: { gt: 0 } } });
   const totalFines = await prisma.circulation.aggregate({ _sum: { fine: true }, where: { libraryId: req.user.libraryId } });
-  const studentsWhoLostBooks = await prisma.circulation.count({ where: { studentId: { not: null }, bookCopy: { status: 'LOST' } } });
+  const studentsWhoLostBooks = await prisma.circulation.count({ where: { studentId: { not: null }, bookCopy: { status: 'MISSING' } } });
 
   const studentsStats = {
     totalStudents: totalStudents.toLocaleString(),

@@ -4,6 +4,8 @@ model PricingPlan {
     price         Decimal
     duration      Int
     features      String
+    description   String
+    buttonData    String
     status        PlanStatus @default(ACTIVE)
     limitations   Json
     tokens        Int        @default(0)
@@ -36,9 +38,9 @@ model Purchase {
     institutionId String
     planId        String
     paymentId     String?
-    amount        Float? // optional
+    amount        Float?
 
-    currency    String? // optional
+    currency    String?
     status      PurchaseStatus @default(ACTIVE)
     purchasedAt DateTime       @default(now())
     expiresAt   DateTime

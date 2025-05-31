@@ -20,7 +20,6 @@ model BookCopy {
 
 enum BookCopyStatus {
   AVAILABLE
-  LOST
   DONATED
   REQUESTED
   CHECKEDOUT
