@@ -21,8 +21,11 @@ router.get("/", permission(["READ"]), async (req, res) => {
       },
       member: true,
       student: true,
+      librarian: true,
+      library: true,
     },
   });
+
 
   const result = circulations.map((c) => {
     const borrowerName =
@@ -46,6 +49,8 @@ router.get("/", permission(["READ"]), async (req, res) => {
       status: c.returnDate ? "Returned" : "Borrowed",
       dueDate: c.dueDate.toISOString().split("T")[0],
       fines: `$${c.fine?.toFixed(2) || "0.00"}`,
+      comment: c.comment,
+      lendDate: c.lendDate.toLocaleDateString()
     };
   });
   res.status(200).send(result);
