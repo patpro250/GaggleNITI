@@ -78,6 +78,7 @@ router.get("/:id", permission(["READ"]), async (req, res) => {
 });
 
 router.post("/", permission(["ACQUIRE"]), async (req, res) => {
+  const { institutionId, libraryId, librarianId } = req.user;
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -87,43 +88,71 @@ router.post("/", permission(["ACQUIRE"]), async (req, res) => {
       .status(400)
       .send(`The acquired books exceed the limit of ${LIMIT}.`);
 
+  req.body.libraryId = libraryId;    
+
   const copies = await generate(req.body);
+  const tokensToDecrement = copies.length * 5;
+
+  if (req.user.plan === "Plus") {
+    await prisma.$transaction([
+      prisma.acquisition.create({
+        data: {
+          book: req.body.bookId,
+          quantity: req.body.quantity,
+          librarian: req.user.librarianId,
+          doneOn: new Date(),
+          libraryId: req.body.libraryId,
+          supplier: req.body.supplierId,
+          book: {
+            connect: { id: req.body.bookId },
+          },
+          Library: {
+            connect: { id: req.user.libraryId },
+          },
+          librarian: {
+            connect: { librarianId: req.user.librarianId },
+          },
+          supplier: {
+            connect: { id: req.body.supplierId },
+          },
+        },
+      }),
+      prisma.bookCopy.createMany({ data: copies }),
+    ]);
+  }
 
   await prisma.$transaction([
-    prisma.acquisition.create({
-      data: {
-        book: req.body.bookId,
-        quantity: req.body.quantity,
-        librarian: req.user.librarianId,
-        doneOn: new Date(),
-        libraryId: req.body.libraryId,
-        supplier: req.body.supplierId,
-        book: {
-          connect: { id: req.body.bookId },
-        },
-        Library: {
-          connect: { id: req.user.libraryId },
-        },
-        librarian: {
-          connect: { librarianId: req.user.librarianId },
-        },
-        supplier: {
-          connect: { id: req.body.supplierId },
-        },
+  prisma.acquisition.create({
+    data: {
+      book: {
+        connect: { id: req.body.bookId }
       },
-    }),
-    prisma.bookCopy.createMany({ data: copies }),
-  ]);
+      quantity: req.body.quantity,
+      librarian: {
+        connect: { librarianId }
+      },
+      doneOn: new Date(),
+      supplier: req.body.supplier,
+      bookCode: req.body.code,
+      Library: {
+        connect: { id: libraryId }
+      }, 
+    }
+  }),
+  prisma.bookCopy.createMany({ data: copies }),
+  prisma.institution.update({
+    where: { id: institutionId },
+    data: { tokens: { decrement: tokensToDecrement } }
+  })
+]);
+
 
   const book = await prisma.book.findFirst({ where: { id: req.body.bookId } });
-  const supplier = await prisma.supplier.findFirst({
-    where: { id: req.body.supplierId },
-  });
 
   res
     .status(201)
     .send(
-      `${req.body.quantity} books of ${book.title} acquired from ${supplier.name}.`
+      `${req.body.quantity} books of ${book.title} acquired from ${req.body.supplier}.`
     );
 });
 
@@ -131,7 +160,7 @@ function validate(acquisition) {
   const schema = Joi.object({
     bookId: Joi.string().uuid().required(),
     quantity: Joi.number().integer().required(),
-    supplier: Joi.string().uuid().required(),
+    supplier: Joi.string().required(),
     code: Joi.string().required(),
     dateOfAcquisition: Joi.date().iso().required(),
   });

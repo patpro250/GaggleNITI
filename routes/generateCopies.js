@@ -7,7 +7,7 @@ async function generate(data) {
   for (let i = 1; i <= rounds; i++) {
     let code = `${i}/${rounds}/${data.code}`;
 
-    const existingCopy = await prisma.bookCopy.findUnique({
+    const existingCopy = await prisma.bookCopy.findFirst({
       where: { code, libraryId: data.libraryId },
     });
 
@@ -16,7 +16,8 @@ async function generate(data) {
         bookId: data.bookId,
         libraryId: data.libraryId,
         code: code,
-        dateOfAcquisition: data.dateOfAcquisition,
+        dateOfAcquisition: new Date(data.dateOfAcquisition),
+        updatedAt: new Date()
       });
     }
   }

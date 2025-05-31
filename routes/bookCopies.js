@@ -147,6 +147,26 @@ router.post("/", booksPricing, permission(["ADD_COPY"]), async (req, res) => {
   const exists = await prisma.bookCopy.findFirst({ where: { barCode: req.body.barCode, code: req.body.code } });
   if (exists) return res.status(400).send(`The book copy with barcode: ${exists.barCode} and code: ${exists.code} already exists, try a new code.`)
 
+  if (req.user.plan === "Plus") {
+    await prisma.$transaction([
+      prisma.bookCopy.create({
+        data: {
+          condition: req.body.condition,
+          dateOfAcquisition: new Date(req.body.dateOfAcquisition),
+          callNo: req.body.callNo,
+          barCode: req.body.barCode,
+          code: req.body.code,
+          book: {
+            connect: { id: req.body.bookId }
+          },
+          bookR: {
+            connect: { id: req.user.libraryId }
+          }
+        },
+      }),
+    ])
+  }
+
   await prisma.$transaction([
     prisma.bookCopy.create({
       data: {

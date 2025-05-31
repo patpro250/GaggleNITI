@@ -7,6 +7,8 @@ model BookCopy {
   dateOfAcquisition DateTime
   code              String?
   barCode           String?
+  createdAt         DateTime       @default(now()) @db.Timestamp(6)
+  updatedAt         DateTime       @updatedAt @db.Timestamp(6)
   callNo            String?
   book              Book           @relation("BookCopy", fields: [bookId], references: [id])
   circulation       Circulation[]  @relation("BookCopy")
