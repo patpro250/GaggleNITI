@@ -3,6 +3,7 @@ const Joi = require("joi");
 const router = express.Router();
 const _ = require("lodash");
 const permission = require("../middleware/auth/permissions");
+const { formatDistanceToNow } = require('date-fns');
 
 const prisma = require("./prismaClient");
 const generateStudentCode = require("../routes/lib/generateStudentCode");
@@ -47,6 +48,114 @@ router.get("/", permission(["READ"]), async (req, res) => {
 
 router.get('/librarian', async (req, res) => {
   const students = await prisma.student.findMany({ where: { institutionId: req.user.institutionId } });
+  res.status(200).send(students);
+});
+
+router.get("/borrowed", async (req, res) => {
+  const { libraryId } = req.user;
+
+  const studentBookData = await prisma.circulation.findMany({
+    where: {
+      studentId: { not: null },
+      libraryId
+    },
+    orderBy: { lendDate: 'desc' },
+    include: {
+      student: true,
+      bookCopy: {
+        include: {
+          book: true,
+        },
+      },
+    },
+  });
+
+  const formatted = studentBookData.map((circulation) => ({
+    studentCode: circulation.student?.code || "",
+    studentName: `${circulation.student?.firstName || ""} ${circulation.student?.lastName || ""}`.trim(),
+    studentClass: circulation.student?.className || "",
+    bookTitle: circulation.bookCopy?.book?.title || "",
+    bookCode: circulation.bookCopy?.code || "",
+    dueDate: new Date(circulation.dueDate).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }),
+    author: circulation.bookCopy?.book?.author || "",
+    publisher: circulation.bookCopy?.book?.publisher || "",
+  }));
+
+  res.status(200).send(formatted);
+});
+
+router.get("/lost", async (req, res) => {
+  const { libraryId } = req.user;
+
+  const lostCirculations = await prisma.circulation.findMany({
+    where: {
+      libraryId,
+      returnDate: null,
+      dueDate: { lt: new Date() }
+    },
+    include: {
+      student: {
+        select: { firstName: true, lastName: true, code: true, className: true }
+      },
+      bookCopy: {
+        select: { book: { select: { title: true, author: true, publisher: true } }, code: true }
+      }
+    }
+  });
+
+  const formatted = lostCirculations.map((entry) => {
+    const { student, bookCopy, dueDate } = entry;
+
+    return {
+      studentCode: student?.code || '',
+      names: `${student?.firstName || ''} ${student?.lastName || ''}`.trim(),
+      studentClass: student?.className || '',
+      bookTitle: bookCopy?.book?.title || '',
+      bookCode: bookCopy?.code || '',
+      timeSinceLost: formatDistanceToNow(new Date(dueDate), { addSuffix: true }),
+      author: bookCopy?.book?.author || '',
+      publisher: bookCopy?.book?.publisher || ''
+    };
+  });
+
+  res.status(200).send(formatted);
+});
+
+router.get("/returned", async (req, res) => {
+  const { libraryId } = req.user;
+
+  const students = await prisma.circulation.findMany({
+    where: {
+      libraryId,
+      returnDate: { not: null },
+      studentId: { not: null }
+    },
+    include: {
+      student: {
+        select: {
+          code: true,
+          firstName: true,
+          lastName: true,
+          className: true
+        },
+      },
+      bookCopy: {
+        include: {
+          book: {
+            select: {
+              title: true,
+              author: true,
+              publisher: true
+            }
+          }
+        },
+      }
+    }
+  });
   res.status(200).send(students);
 });
 
