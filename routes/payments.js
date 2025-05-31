@@ -4,6 +4,8 @@ const prisma = require("./prismaClient");
 const router = express.Router();
 const Joi = require("joi");
 
+const directorsOnly = require("../middleware/auth/director");
+
 router.get("/", async (req, res) => {
   const institution = req.user.institutionId;
   if (!institution) return res.status(400).send(`Institution not found!`);
@@ -37,7 +39,7 @@ router.get("/approved", permission(["SYSTEM_ADMIN"]), async (req, res) => {
   res.status(200).send(payments);
 });
 
-router.post("/momo", async (req, res) => {
+router.post("/momo", directorsOnly, async (req, res) => {
   const { institutionId } = req.user;
   const { error } = validatePaymentRequest(req.body);
   if (error) return res.status(400).send(error.details[0].message);
