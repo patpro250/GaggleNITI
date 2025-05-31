@@ -11,8 +11,10 @@ const permission = require("../middleware/auth/permissions");
 const prisma = require("./prismaClient");
 
 router.get("/", permission(["READ"]), async (req, res) => {
+  const { libraryId } = req.user;
   const circulations = await prisma.circulation.findMany({
     orderBy: { lendDate: "desc" },
+    where: { libraryId },
     include: {
       bookCopy: {
         include: {

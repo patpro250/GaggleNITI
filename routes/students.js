@@ -47,7 +47,7 @@ router.get("/", permission(["READ"]), async (req, res) => {
 });
 
 router.get('/librarian', async (req, res) => {
-  const students = await prisma.student.findMany({ where: { institutionId: req.user.institutionId } });
+  const students = await prisma.student.findMany({ where: { institutionId: req.user.institutionId }, orderBy: { createdAt: 'desc' } });
   res.status(200).send(students);
 });
 
@@ -97,6 +97,10 @@ router.get("/lost", async (req, res) => {
       returnDate: null,
       dueDate: { lt: new Date() }
     },
+
+    orderBy: {
+      lendDate: 'desc'
+    },
     include: {
       student: {
         select: { firstName: true, lastName: true, code: true, className: true }
@@ -134,6 +138,9 @@ router.get("/returned", async (req, res) => {
       returnDate: { not: null },
       studentId: { not: null }
     },
+    orderBy: {
+      lendDate: 'desc'
+    },
     include: {
       student: {
         select: {
@@ -156,7 +163,19 @@ router.get("/returned", async (req, res) => {
       }
     }
   });
-  res.status(200).send(students);
+
+  const formatted = students.map((entry) => ({
+    studentCode: entry.student?.code ?? '',
+    studentName: `${entry.student?.firstName ?? ''} ${entry.student?.lastName ?? ''}`.trim(),
+    studentClass: entry.student?.className ?? '',
+    bookTitle: entry.bookCopy?.book?.title ?? '',
+    bookCode: entry.bookCopy?.code ?? '',
+    returnDate: entry.returnDate.toLocaleDateString(),
+    author: entry.bookCopy?.book?.author ?? '',
+    publisher: entry.bookCopy?.book?.publisher ?? '',
+  }));
+
+  res.status(200).send(formatted);
 });
 
 router.get('/overview', async (req, res) => {
