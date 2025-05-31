@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { format } = require('date-fns');
 
 const prisma = require("./prismaClient");
 
@@ -45,6 +46,46 @@ router.get("/genres", async (req, res) => {
 
   res.status(200).send(prettified);
 
+});
+
+router.get("/performance/institution", async (req, res) => {
+  const institutionId = req.user.id || req.user.institutionId;
+  const availableLibraries = await prisma.library.findMany({ where: { institutionId }, select: { id: true } });
+  const libraries = availableLibraries.map(lib => lib.id);
+
+  const acquisitions = await prisma.acquisition.groupBy({
+    by: ['doneOn'],
+    where: { libraryId: { in: libraries } },
+    _count: { _all: true }
+  });
+
+  const circulations = await prisma.circulation.groupBy({
+    by: ['lendDate'],
+    where: { libraryId: { in: libraries } },
+    _count: { _all: true }
+  });
+
+  const monthMap = {};
+
+  acquisitions.forEach(a => {
+    const monthKey = format(a.doneOn, 'MMM');
+    if (!monthMap[monthKey]) {
+      monthMap[monthKey] = { month: monthKey, acquired: 0, borrowed: 0 };
+    }
+    monthMap[monthKey].acquired += a._count._all;
+  });
+
+  circulations.forEach(c => {
+    const monthKey = format(c.lendDate, 'MMM');
+    if (!monthMap[monthKey]) {
+      monthMap[monthKey] = { month: monthKey, acquired: 0, borrowed: 0 };
+    }
+    monthMap[monthKey].borrowed += c._count._all;
+  });
+
+  const monthlyStats = Object.values(monthMap);
+
+  res.status(200).send(monthlyStats);
 });
 
 router.get("/institution/dashboard", async (req, res) => {
