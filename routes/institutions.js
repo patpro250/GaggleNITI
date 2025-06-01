@@ -136,18 +136,21 @@ router.put("/:id/settings", permission(["DIRECTOR"]), async (req, res) => {
   res.status(200).send("Settings updated successfully!");
 });
 
-router.put("/:id/change-password", async (req, res) => {
+router.put("/change-password", async (req, res) => {
   const { error } = validateChangePassword(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  if (!req.body.password) return res.status(400).send(`Please provide a new password!`);
+  const { oldPassword, newPassword } = req.body;
 
-  const institution = await prisma.institution.findFirst({ where: { id: req.params.id } });
+  const institution = await prisma.institution.findFirst({ where: { id: req.user.institutionId } });
   if (!institution) return res.status(400).send(`Can't find institution!`);
 
+  const isValid = await bcrypt.compare(oldPassword, institution.password);
+  if (!isValid) return res.status(400).send(`The old password you provided doesn't match with the one we have!`)
+
   const salt = await bcrypt.genSalt(10);
-  req.body.password = await bcrypt.hash(req.body.password, salt);
-  await prisma.institution.update({ where: { id: req.params.id }, data: req.body });
+  req.body.password = await bcrypt.hash(newPassword, salt);
+  await prisma.institution.update({ where: { id: req.user.institutionId }, data: { password: req.body.password } });
 
   res.status(200).send(`Password changed successfully!`);
 });
@@ -324,7 +327,8 @@ function validate(institution) {
 
 function validateChangePassword(request) {
   const schema = Joi.object({
-    password: passwordComplexity(complexityOptions),
+    oldPassword: Joi.string().min(5).required(),
+    newPassword: passwordComplexity(complexityOptions),
   });
   return schema.validate(request);
 }
