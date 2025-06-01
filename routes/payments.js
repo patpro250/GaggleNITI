@@ -10,7 +10,7 @@ router.get("/", async (req, res) => {
   const institution = req.user.institutionId;
   if (!institution) return res.status(400).send(`Institution not found!`);
 
-  const { status } = req.query;
+  let { status } = req.query;
 
   if (
     status &&
@@ -29,6 +29,78 @@ router.get("/", async (req, res) => {
   res.status(200).send(payments);
 });
 
+router.get("/all", permission(["SYSTEM_ADMIN"]), async (req, res) => {
+  const payments = await prisma.payment.findMany({
+    where: {
+      status: {
+        in: ["APPROVED", "PENDING", "SUCCESS"],
+      },
+    },
+    include: {
+      institution: {
+        select: {
+          name: true,
+        },
+      },
+      PricingPlan: {
+        select: { name: true }
+      }
+    },
+  });
+
+  const formatted = payments.map(p => {
+    return {
+      doneOn: p.doneAt.toLocaleString(),
+      plan: p.PricingPlan.name,
+      phone: p.phoneNumber,
+      status: p.status
+    }
+  });
+  res.status(200).send(formatted);
+});
+
+router.get("/approved", permission(["SYSTEM_ADMIN"]), async (req, res) => {
+  const payments = await prisma.payment.findMany({
+    where: { status: "APPROVED" },
+    include: {
+      PricingPlan: {
+        select: { name: true }
+      },
+    }
+  });
+
+  const formatted = payments.map(p => {
+    return {
+      doneOn: p.doneAt.toLocaleString(),
+      plan: p.PricingPlan.name,
+      phone: p.phoneNumber,
+      status: p.status
+    }
+  });
+  res.status(200).send(formatted);
+});
+
+router.get("/pending", permission(["SYSTEM_ADMIN"]), async (req, res) => {
+  const payments = await prisma.payment.findMany({
+    where: { status: "PENDING" },
+    include: {
+      PricingPlan: {
+        select: { name: true }
+      },
+    }
+  });
+
+  const formatted = payments.map(p => {
+    return {
+      doneOn: p.doneAt.toLocaleString(),
+      plan: p.PricingPlan.name,
+      phone: p.phoneNumber,
+      status: p.status
+    }
+  });
+  res.status(200).send(formatted);
+});
+
 router.get("/:id", async (req, res) => {
   const id = req.params.id;
 
@@ -45,22 +117,6 @@ router.get("/:id", async (req, res) => {
   });
 
   res.status(200).send(singlepayment);
-});
-
-router.get("/all", permission(["SYSTEM_ADMIN"]), async (req, res) => {
-  const payments = await prisma.payment.findMany({
-    where: { status: { in: ["APPROVED", "PENDING", "SUCCESS"] } },
-    include: { institution: { select: { name: true } } },
-  });
-
-  res.status(200).send(payments);
-});
-
-router.get("/approved", permission(["SYSTEM_ADMIN"]), async (req, res) => {
-  const payments = await prisma.payment.findMany({
-    where: { status: "APPROVED" },
-  });
-  res.status(200).send(payments);
 });
 
 router.post("/momo", directorsOnly, async (req, res) => {
