@@ -30,54 +30,52 @@ router.get("/", async (req, res) => {
 });
 
 router.get("/all", permission(["SYSTEM_ADMIN"]), async (req, res) => {
-  const payments = await prisma.payment.findMany({
-    where: {
-      status: {
-        in: ["APPROVED", "PENDING", "SUCCESS"],
-      },
-    },
-    include: {
-      institution: {
-        select: {
-          name: true,
+  try {
+    const payments = await prisma.payment.findMany({
+      where: {
+        status: {
+          in: ["PENDING"],
         },
       },
-      PricingPlan: {
-        select: { name: true }
-      }
-    },
-  });
+      include: {
+        institution: {
+          select: {
+            name: true,
+          },
+        },
+        PricingPlan: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
 
-  const formatted = payments.map(p => {
-    return {
-      doneOn: p.doneAt.toLocaleString(),
-      plan: p.PricingPlan.name,
-      phone: p.phoneNumber,
-      status: p.status
-    }
-  });
-  res.status(200).send(formatted);
+    res.status(200).send(payments);
+  } catch (error) {
+    console.error("Error fetching payments:", error);
+    res
+      .status(500)
+      .send({ error: "Something went wrong while fetching payments" });
+  }
 });
 
 router.get("/approved", permission(["SYSTEM_ADMIN"]), async (req, res) => {
-  const payments = await prisma.payment.findMany({
-    where: { status: "APPROVED" },
-    include: {
-      PricingPlan: {
-        select: { name: true }
+  try {
+    const payments = await prisma.payment.findMany({
+      where: { status: "APPROVED" },
+      include: {
+        PricingPlan: {
+          select: { name: true },
+        },
       },
-    }
-  });
+    });
 
-  const formatted = payments.map(p => {
-    return {
-      doneOn: p.doneAt.toLocaleString(),
-      plan: p.PricingPlan.name,
-      phone: p.phoneNumber,
-      status: p.status
-    }
-  });
-  res.status(200).send(formatted);
+    res.status(200).send(payments);
+  } catch (error) {
+    console.error("Error fetching approved payments:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 });
 
 router.get("/pending", permission(["SYSTEM_ADMIN"]), async (req, res) => {
@@ -85,18 +83,18 @@ router.get("/pending", permission(["SYSTEM_ADMIN"]), async (req, res) => {
     where: { status: "PENDING" },
     include: {
       PricingPlan: {
-        select: { name: true }
+        select: { name: true },
       },
-    }
+    },
   });
 
-  const formatted = payments.map(p => {
+  const formatted = payments.map((p) => {
     return {
       doneOn: p.doneAt.toLocaleString(),
       plan: p.PricingPlan.name,
       phone: p.phoneNumber,
-      status: p.status
-    }
+      status: p.status,
+    };
   });
   res.status(200).send(formatted);
 });
