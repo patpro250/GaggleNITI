@@ -81,7 +81,7 @@ function validatePlan(plan) {
     tokens: Joi.number().min(5).required(),
     description: Joi.string().min(5).required(),
     buttonData: Joi.string().max(100).required(),
-    limitations: Joi.object().required(),
+    limitations: Joi.object(),
     status: Joi.string().valid('ACTIVE', "INACTIVE", "COMING_SOON").required()
   });
   return schema.validate(plan);
