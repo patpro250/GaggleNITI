@@ -7,7 +7,7 @@ model PricingPlan {
     description   String
     buttonData    String
     status        PlanStatus @default(ACTIVE)
-    limitations   Json
+    limitations   Json?
     tokens        Int        @default(0)
     discount      Decimal?
     freeTrialDays Int        @default(0)
