@@ -102,11 +102,11 @@ router.get("/institution/dashboard", async (req, res) => {
   const archivedBooks = await prisma.bookCopy.count({ where: { libraryId: { in: libraries }, status: 'INARCHIVES' } });
   const totalLibrarians = await prisma.librarian.count({ where: { institutionId } });
   const borrowedBooks = await prisma.bookCopy.count({ where: { libraryId: { in: libraries }, status: 'CHECKEDOUT' } });
-  const totalAquisitions = await prisma.acquisition.count({ where: { librarianId: { in: libraries } } });
+  const totalAquisitions = await prisma.acquisition.count({ where: { libraryId: { in: libraries } } });
   const totalStudents = await prisma.student.count({ where: { institutionId } });
   const totalCheckedIn = await prisma.circulation.count({ where: { libraryId: { in: libraries }, returnDate: { not: null } } });
   const newBooks = await prisma.bookCopy.count({ where: { libraryId: { in: libraries }, condition: 'NEW' } });
-  const overDued = await prisma.circulation.count({ where: { dueDate: { lt: new Date() } } });
+  const overDued = await prisma.circulation.count({ where: { dueDate: { lt: new Date() }, libraryId: { in: libraries } } });
   const totalClasses = classes.length;
 
 
