@@ -134,16 +134,16 @@ router.get("/stats", async (req, res) => {
     where: { memberId, status: "PENDING" },
   });
 
-  const inFines = await prisma.member.findUnique({
-    where: { id: memberId },
-    select: { fine: true },
-  });
+  // const inFines = await prisma.member.findUnique({
+  //   where: { id: memberId },
+  //   select: { : true },
+  // });
 
   const stats = {
     borrowed,
     overDue,
     activeReservations,
-    inFines: inFines?.fine || 0,
+    // inFines: inFines?.fine || 0,
   };
 
   res.status(200).send(stats);
@@ -153,6 +153,7 @@ router.get("/settings", async (req, res) => {
   let member = await prisma.member.findUnique({ where: { id: req.user.id } });
   if (!member) return res.status(404).send("Member not found");
   member = _.omit(member, ["password"]);
+  member.dateOfBirth = member.dateOfBirth.toLocaleDateString();
   res.status(200).send(member);
 });
 
