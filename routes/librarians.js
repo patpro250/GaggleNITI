@@ -216,7 +216,6 @@ router.post("/approve/:librarianId", async (req, res) => {
   const isPending = await prisma.librarian.findFirst({
     where: {
       institutionId,
-      status: "PENDING",
       librarianId: req.params.librarianId,
     },
   });
