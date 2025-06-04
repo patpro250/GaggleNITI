@@ -4,6 +4,7 @@ dotenv.config();
 
 const openRoutes = [
   { path: "/auth" },
+  { path: "/members", methods: ["POST"] },
   { path: "/institutions/verify" },
   { path: "/suppliers" },
   { path: "/plans", methods: ["GET", "POST"], exclude: ["/plans/current"] },
