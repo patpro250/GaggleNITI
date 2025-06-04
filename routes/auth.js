@@ -42,6 +42,7 @@ router.post("/members", async (req, res) => {
   if (!isValid) return res.status(400).send("Invalid email or password");
 
   let payload = _.pick(member, ["id", "email", "firstName", "lastName"]);
+  payload.userType = "Member";
 
   const token = jwt.sign(payload, process.env.JWT_KEY);
   res
@@ -81,6 +82,7 @@ router.post("/librarians", async (req, res) => {
   payload.purchaseStatus = activePurchase.status;
   payload.expirationDate = activePurchase.expiresAt;
   payload.libraryId = library.id;
+  payload.userType = "Librarian";
 
   const token = jwt.sign(payload, process.env.JWT_KEY);
 
@@ -114,6 +116,7 @@ router.post("/director", async (req, res) => {
   payload.limitations = plan.limitations;
   payload.purchaseStatus = activePurchase.status;
   payload.expirationDate = activePurchase.expiresAt;
+  payload.userType = "Institution";
 
   payload.institutionId = payload.id;
   const token = jwt.sign(payload, process.env.JWT_KEY);
@@ -136,6 +139,7 @@ router.post('/admin', async (req, res) => {
 
   const payload = _.pick(admin, ["email", "phone", "firstName", "lastName"]);
   payload.permissions = ['SYSTEM_ADMIN'];
+  payload.userType = "System Admin";
   const token = jwt.sign(payload, process.env.JWT_KEY);
 
   res.status(200).header("x-auth-token", token).send(payload);
