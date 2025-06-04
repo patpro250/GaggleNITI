@@ -94,8 +94,8 @@ router.get("/:id", async (req, res) => {
       name: true,
       address: true,
       phone: true,
-      openingHours: true
-    }
+      openingHours: true,
+    },
   });
   if (!institution)
     return res
@@ -142,15 +142,25 @@ router.put("/change-password", async (req, res) => {
 
   const { oldPassword, newPassword } = req.body;
 
-  const institution = await prisma.institution.findFirst({ where: { id: req.user.institutionId } });
+  const institution = await prisma.institution.findFirst({
+    where: { id: req.user.institutionId },
+  });
   if (!institution) return res.status(400).send(`Can't find institution!`);
 
   const isValid = await bcrypt.compare(oldPassword, institution.password);
-  if (!isValid) return res.status(400).send(`The old password you provided doesn't match with the one we have!`)
+  if (!isValid)
+    return res
+      .status(400)
+      .send(
+        `The old password you provided doesn't match with the one we have!`
+      );
 
   const salt = await bcrypt.genSalt(10);
   req.body.password = await bcrypt.hash(newPassword, salt);
-  await prisma.institution.update({ where: { id: req.user.institutionId }, data: { password: req.body.password } });
+  await prisma.institution.update({
+    where: { id: req.user.institutionId },
+    data: { password: req.body.password },
+  });
 
   res.status(200).send(`Password changed successfully!`);
 });
@@ -162,13 +172,9 @@ router.post("/", async (req, res) => {
 
   const exists = await prisma.institution.findFirst({
     where: {
-      OR: [
-        { email: req.body.email },
-        { phone: req.body.phone }
-      ]
-    }
+      OR: [{ email: req.body.email }, { phone: req.body.phone }],
+    },
   });
-
 
   const defaults = institutionSettings();
   req.body.settings = defaults.settings;
@@ -235,12 +241,12 @@ router.post("/", async (req, res) => {
     .send(`${institution.name}, Welcome to Gaggle`);
 });
 
-router.put("/:id", permission(["DIRECTOR"]), async (req, res) => {
+router.put("/update", permission(["DIRECTOR"]), async (req, res) => {
   const { error } = validateUpdate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const institution = await prisma.institution.findUnique({
-    where: { id: req.params.id },
+  const institution = await prisma.institution.findFirst({
+    where: { id: req.user.institutionId },
   });
   if (!institution)
     return res
@@ -248,23 +254,18 @@ router.put("/:id", permission(["DIRECTOR"]), async (req, res) => {
       .send(`Institution with ID: ${req.params.id} not found`);
 
   const checkIfTaken = await prisma.institution.findFirst({
-    where: {
-      OR: [
-        { email: req.body.email },
-        { phone: req.body.phone },
-        { name: req.body.name },
-      ],
-    },
+    where: { name: req.body.name },
   });
-  if (checkIfTaken)
-    return res
-      .status(400)
-      .send(
-        `The updated fields are already taken by another institution, try another new name.`
-      );
+
+  // if (checkIfTaken?.name !== req.body.name)
+  //   return res
+  //     .status(400)
+  //     .send(
+  //       `The updated fields are already taken by another institution, try another new name.`
+  //     );
 
   await prisma.institution.update({
-    where: { id: req.params.id },
+    where: { id: req.user.institutionId },
     data: req.body,
   });
   res.status(200).send(`${req.body.name} successfully updated!`);
@@ -331,7 +332,6 @@ function validateUpdate(institution) {
     address: Joi.string().required(),
     phone: Joi.string().required(),
     openingHours: Joi.string(),
-    email: Joi.string().email({ minDomainSegments: 2 }).required(),
   });
   return schema.validate(institution);
 }
