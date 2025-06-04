@@ -236,7 +236,7 @@ router.post("/", async (req, res) => {
 });
 
 router.put("/:id", permission(["DIRECTOR"]), async (req, res) => {
-  const { error } = validate(req.body);
+  const { error } = validateUpdate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   const institution = await prisma.institution.findUnique({
@@ -321,6 +321,17 @@ function validate(institution) {
       )
       .required(),
     password: passwordComplexity(complexityOptions),
+  });
+  return schema.validate(institution);
+}
+
+function validateUpdate(institution) {
+  const schema = Joi.object({
+    name: Joi.string().required(),
+    address: Joi.string().required(),
+    phone: Joi.string().required(),
+    openingHours: Joi.string(),
+    email: Joi.string().email({ minDomainSegments: 2 }).required(),
   });
   return schema.validate(institution);
 }
