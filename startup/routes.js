@@ -27,6 +27,7 @@ const plans = require("../routes/plans");
 const payments = require("../routes/payments");
 const purchases = require("../routes/purchases");
 const systemAdmin = require("../routes/systemAdmin");
+const passwordReset = require("../routes/passwordReset");
 const invalidJSON = require("../middleware/invalidJSON");
 
 module.exports = function (app) {
@@ -40,15 +41,17 @@ module.exports = function (app) {
   );
   app.use(helmet());
   app.use(user);
-  app.use(express.json({
-    verify: (req, res, buf, enconding) => {
-      try {
-        JSON.parse(buf.toString(enconding));
-      } catch (e) {
-        throw new SyntaxError("Invalid JSON");
-      }
-    }
-  }));
+  app.use(
+    express.json({
+      verify: (req, res, buf, enconding) => {
+        try {
+          JSON.parse(buf.toString(enconding));
+        } catch (e) {
+          throw new SyntaxError("Invalid JSON");
+        }
+      },
+    })
+  );
   app.use(invalidJSON);
   app.use(trimmer);
   // app.use(limiter);
@@ -72,6 +75,7 @@ module.exports = function (app) {
   app.use("/purchases", purchases);
   app.use("/analytics", analytics);
   app.use("/system-admin", systemAdmin);
+  app.use("/reset-password", passwordReset);
 
   app.use(error);
 };
