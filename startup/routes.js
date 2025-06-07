@@ -7,6 +7,7 @@ const helmet = require("helmet");
 const hpp = require("hpp");
 const cookieParser = require("cookie-parser");
 
+const home = require("../routes/home");
 const analytics = require("../routes/analytics");
 const books = require("../routes/books");
 const bookCopies = require("../routes/bookCopies");
@@ -40,6 +41,7 @@ module.exports = function (app) {
     })
   );
   app.use(helmet());
+  app.use('/', home);
   app.use(user);
   app.use(
     express.json({
@@ -56,6 +58,7 @@ module.exports = function (app) {
   app.use(trimmer);
   // app.use(limiter);
   app.use(hpp());
+
   app.use("/books", books);
   app.use("/institutions", institutions);
   app.use("/bookcopies", bookCopies);
