@@ -1,19 +1,24 @@
-FROM node:20.0-alpine
+FROM node:20-alpine3.20
 
 # Working directory
 WORKDIR /app
-COPY package*.json .
+
+# Install dependencies first (for better caching)
+COPY package*.json ./
 RUN npm install
 
-COPY prisma ./prisma
-RUN npx prisma generate
-
+# Copy the rest of the code
 COPY . .
 
+# Generate Prisma client
+RUN npx prisma generate
+
+# Create non-root user for security
 RUN addgroup app && adduser -S -G app app
-USER app
+# USER app
 
 # Expose the port the app runs on
 EXPOSE 4000
 
-CMD [ "node", "app.js" ]
+# Start the app
+CMD ["node", "app.js"]

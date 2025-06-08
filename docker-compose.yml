@@ -1,24 +1,25 @@
 services:
-  api:
-    build: .
-    container_name: nitbook_api
-    ports:
-      - "4000:4000"
-    environment:
-      DATABASE_URL: postgres://user:password@db:5433/nitbook
-      JWT_SECRET: 1234  
-
   db:
     image: postgres:latest
     container_name: nitbook_db
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: nitbook
+    restart: unless-stopped
+    env_file:
+      - .env
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data    
+      - db_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    container_name: nitbook_api
+    restart: unless-stopped
+    depends_on:
+      - db
+    env_file:
+      - .env
+    ports:
+      - "4000:4000"
 
 volumes:
-  db_data:      
+  db_data:
