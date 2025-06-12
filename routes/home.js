@@ -11,6 +11,12 @@ router.get('/', (req, res) => {
             email: "gaggleniti@gmail.com"
         },
         description: "NitiBook is a centralized library management system designed to help users manage their book collections efficiently. It provides features for adding, updating, deleting, and searching for books, as well as managing user accounts and roles.",
+        developers: [
+            {
+                name: "GaggleNITI",
+                role: "Full Stack Developer",
+                email: "gaggleniti@gmail.com"
+            }]
     })
 });
 
