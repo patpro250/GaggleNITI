@@ -1,5 +1,11 @@
 const express = require("express");
 const app = express();
+const http = require("http");
+
+const server = http.createServer(app);
+
+server.keepAliveTimeout = 65000; 
+server.headersTimeout = 66000; 
 
 require("./startup/logging")();
 require("./startup/config")();
@@ -8,6 +14,7 @@ require("./startup/routes")(app);
 // require("./startup/jobs")();
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`App is running on http://localhost:${PORT}`);
+
+server.listen(PORT, () => {
+  console.log(`App is running with Keep-Alive on http://localhost:${PORT}`);
 });
