@@ -31,13 +31,25 @@ const systemAdmin = require("../routes/systemAdmin");
 const passwordReset = require("../routes/passwordReset");
 const invalidJSON = require("../middleware/invalidJSON");
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3002"
+];
+
 module.exports = function (app) {
   app.use(cookieParser());
   app.use(
     cors({
-      origin: "http://localhost:3000",
-      exposedHeaders: ["x-auth-token"],
+      origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        } else {
+          return callback(null, false);
+        }
+      },
       credentials: true,
+      exposedHeaders: ["x-auth-token"],
     })
   );
   app.use(helmet());
