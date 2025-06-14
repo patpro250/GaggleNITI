@@ -25,6 +25,7 @@ jobs:
             cd /root/api/
 
             git pull origin production
+            cd ..
 
             docker-compose down
             docker-compose up -d --build
