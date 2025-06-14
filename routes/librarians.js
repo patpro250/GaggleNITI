@@ -174,7 +174,7 @@ router.post("/create", async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   let institution = await prisma.institution.findFirst({
-    where: { id: req.body.institutionId },
+    where: { code: req.body.institutionCode },
   });
   if (!institution) return res.status(404).send("Institution not found!");
 
@@ -182,7 +182,7 @@ router.post("/create", async (req, res) => {
     where: {
       AND: [
         { email: req.body.email },
-        { institutionId: req.body.institutionId },
+        { institutionId: institution.id },
         { phone: req.body.phone },
       ],
     },
@@ -355,7 +355,7 @@ function validate(librarian) {
     phone: Joi.string().min(10).max(15).required(),
     password: Joi.string().min(8).required(),
     gender: Joi.string().valid("F", "M", "O").required(),
-    institutionId: Joi.string().required(),
+    institutionCode: Joi.string().required(),
     profile: Joi.string().uri(),
   });
 
