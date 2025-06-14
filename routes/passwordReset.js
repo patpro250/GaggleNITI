@@ -30,7 +30,7 @@ router.post("/", async (req, res) => {
       ? institution.librarianId ?? institution.id
       : institution.id;
 
-  await prisma.PasswordReset.create({
+  await prisma.passwordReset.create({
     data: {
       token,
       userId: userId,
