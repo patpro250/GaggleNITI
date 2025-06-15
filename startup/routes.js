@@ -34,8 +34,8 @@ const invalidJSON = require("../middleware/invalidJSON");
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3002",
-  "http://app.gaggleniti.com",
-  "http://gaggleniti.com"
+  "https://app.gaggleniti.com",
+  "https://gaggleniti.com"
 ];
 
 module.exports = function (app) {
