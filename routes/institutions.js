@@ -16,6 +16,17 @@ const prisma = require("./prismaClient");
 const institutionSettings = require("../routes/lib/defaultSettings");
 const permission = require("../middleware/auth/permissions");
 
+router.post("/Authcode", async (req, res) => {
+  const { code } = req.body;
+  if (!code) return res.status(400).send("Provide a code of institution!");
+  const institution = await prisma.institution.findFirst({
+    where: { code: code },
+  });
+  if (!institution)
+    return res.status(404).send(`Institution with code: ${code} not found`);
+
+  res.status(200).send({ code });
+});
 router.post("/verify", async (req, res) => {
   const { name } = req.body;
 

@@ -231,7 +231,7 @@ router.post("/approve/:librarianId", async (req, res) => {
     status: "ACTIVE",
     permissions: req.body.permissions,
     libraryId: req.body.libraryId,
-    role: role
+    role: role,
   };
 
   const library = await prisma.library.findFirst({ where: { institutionId } });
@@ -251,8 +251,10 @@ router.post("/approve/:librarianId", async (req, res) => {
   res
     .status(200)
     .send(
-      `${isPending.firstName} ${isPending.lastName
-      }, have been approved to join your institution, ${isPending.gender === "F" ? "she" : "he"
+      `${isPending.firstName} ${
+        isPending.lastName
+      }, have been approved to join your institution, ${
+        isPending.gender === "F" ? "she" : "he"
       } can now login to the system.`
     );
 });
