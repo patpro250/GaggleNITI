@@ -35,7 +35,7 @@ module.exports = function (app) {
   app.use(cookieParser());
   app.use(
     cors({
-      origin: "http://localhost:3002",
+      origin: "*",
       exposedHeaders: ["x-auth-token"],
       credentials: true,
     })
