@@ -43,14 +43,8 @@ module.exports = function (app) {
   app.use(cookieParser());
   app.use(
     cors({
-      origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) {
-          return callback(null, true);
-        } else {
-          return callback(null, false);
-        }
-      },
+      origin: "*",
+      exposedHeaders: ["x-auth-token"],
       credentials: true,
       exposedHeaders: ["x-auth-token"],
     })
