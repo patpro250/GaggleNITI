@@ -42,13 +42,11 @@ const allowedOrigins = [
 ];
 
 module.exports = function (app) {
-  app.use(cookieParser());
+  // ✅ CORS must come FIRST
   app.use(
     cors({
       origin: function (origin, callback) {
-        // allow requests with no origin (like mobile apps, curl, etc.)
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) !== -1) {
+        if (!origin || allowedOrigins.includes(origin)) {
           return callback(null, true);
         } else {
           return callback(new Error("Not allowed by CORS"));
@@ -58,24 +56,32 @@ module.exports = function (app) {
       exposedHeaders: ["x-auth-token"],
     })
   );
+
+  // ✅ Preflight (OPTIONS) support
+  app.options("*", cors());
+
+  app.use(cookieParser());
   app.use(helmet());
-  app.use("/", home);
-  app.use(user);
+
   app.use(
     express.json({
-      verify: (req, res, buf, enconding) => {
+      verify: (req, res, buf, encoding) => {
         try {
-          JSON.parse(buf.toString(enconding));
+          JSON.parse(buf.toString(encoding));
         } catch (e) {
           throw new SyntaxError("Invalid JSON");
         }
       },
     })
   );
+
   app.use(invalidJSON);
   app.use(trimmer);
   // app.use(limiter);
   app.use(hpp());
+
+  app.use("/", home);
+  app.use(user);
 
   app.use("/books", books);
   app.use("/institutions", institutions);
