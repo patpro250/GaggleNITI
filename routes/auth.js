@@ -81,6 +81,7 @@ router.post("/librarians", async (req, res) => {
   payload.limitations = plan.limitations;
   payload.purchaseStatus = activePurchase.status;
   payload.expirationDate = activePurchase.expiresAt;
+  payload.id = librarian.librarianId;
   payload.libraryId = library.id;
   payload.userType = "Librarian";
 
