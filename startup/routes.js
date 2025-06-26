@@ -34,7 +34,6 @@ const invalidJSON = require("../middleware/invalidJSON");
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5000",
-  "https://librarians.gaggleniti.com",
   "http://localhost:3002",
   "http://localhost:3003",
   "https://lib.gaggleniti.com",
