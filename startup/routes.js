@@ -35,8 +35,9 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3002",
   "http://localhost:3003",
+  "https://lib.gaggleniti.com",
   "https://app.gaggleniti.com",
-  "https://gaggleniti.com"
+  "https://gaggleniti.com",
 ];
 
 module.exports = function (app) {
@@ -56,7 +57,7 @@ module.exports = function (app) {
     })
   );
   app.use(helmet());
-  app.use('/', home);
+  app.use("/", home);
   app.use(user);
   app.use(
     express.json({
