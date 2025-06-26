@@ -85,6 +85,8 @@ router.post("/librarians", async (req, res) => {
   payload.libraryId = library.id;
   payload.userType = "Librarian";
 
+  delete payload.librarianId;
+
   const token = jwt.sign(payload, process.env.JWT_KEY);
 
   res
