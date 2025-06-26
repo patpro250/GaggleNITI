@@ -33,6 +33,8 @@ const invalidJSON = require("../middleware/invalidJSON");
 
 const allowedOrigins = [
   "http://localhost:3000",
+  "http://localhost:5000",
+  "https://librarians.gaggleniti.com",
   "http://localhost:3002",
   "http://localhost:3003",
   "https://lib.gaggleniti.com",
@@ -45,11 +47,12 @@ module.exports = function (app) {
   app.use(
     cors({
       origin: function (origin, callback) {
+        // allow requests with no origin (like mobile apps, curl, etc.)
         if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) {
+        if (allowedOrigins.indexOf(origin) !== -1) {
           return callback(null, true);
         } else {
-          return callback(null, false);
+          return callback(new Error("Not allowed by CORS"));
         }
       },
       credentials: true,
