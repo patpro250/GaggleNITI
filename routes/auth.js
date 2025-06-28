@@ -61,7 +61,7 @@ router.post("/librarians", async (req, res) => {
     return res.status(400).send(`Your account is ${librarian.status}!`);
 
   const activePurchase = await prisma.purchase.findFirst({
-    where: { institutionId: institution.id },
+    where: { institutionId: librarian.institutionId },
     orderBy: { purchasedAt: "desc" },
     take: 1,
   });
