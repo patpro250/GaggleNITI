@@ -2,7 +2,8 @@ const cron = require("node-cron");
 const prisma = require("../routes/prismaClient");
 
 module.exports = function () {
-  cron.schedule("58 11 * * *", async () => {
+  // Runs every day at 12:10 p.m.
+  cron.schedule("10 12 * * *", async () => {
     const now = new Date();
 
     try {
@@ -23,6 +24,6 @@ module.exports = function () {
     }
   });
   console.log(
-    `[CRON] Purchase status checker is running every day at midnight`
+    `[CRON] Purchase status checker is running every day at 12:10 p.m.`
   );
 };
