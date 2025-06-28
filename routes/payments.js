@@ -221,6 +221,10 @@ router.patch("/confirm", permission(["SYSTEM_ADMIN"]), async (req, res) => {
       where: { id: payment.id },
       data: { status: "SUCCESS" },
     }),
+    prisma.institution.update({
+      where: { id: payment.institutionId },
+      data: { tokens: { increment: plan.tokens } },
+    }),
     prisma.purchase.create({
       data: {
         institutionId: payment.institutionId,
@@ -244,7 +248,9 @@ router.patch("/confirm", permission(["SYSTEM_ADMIN"]), async (req, res) => {
 
   res
     .status(200)
-    .send(`🎉 Thank You for Choosing Nitibook! You can now login!`);
+    .send(
+      `🎉 We appreciate your support — let’s build a better library together!`
+    );
 });
 
 function validatePaymentRequest(request) {
