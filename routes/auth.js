@@ -45,10 +45,7 @@ router.post("/members", async (req, res) => {
   payload.userType = "Member";
 
   const token = jwt.sign(payload, process.env.JWT_KEY);
-  res
-    .status(200)
-    .header("x-auth-token", token)
-    .send(payload);
+  res.status(200).header("x-auth-token", token).send(payload);
 });
 
 router.post("/librarians", async (req, res) => {
@@ -63,13 +60,20 @@ router.post("/librarians", async (req, res) => {
   if (librarian.status !== "ACTIVE")
     return res.status(400).send(`Your account is ${librarian.status}!`);
 
-  const activePurchase = await prisma.purchase.findFirst({ where: { institutionId: librarian.institutionId, status: 'ACTIVE' } });
-  if (!activePurchase) return res.status(400).send("Your institution has no active subscription!");
+  const activePurchase = await prisma.purchase.findFirst({
+    where: { institutionId: librarian.institutionId, status: "ACTIVE" },
+  });
+  if (!activePurchase)
+    return res.status(400).send("Your institution has no active subscription!");
 
-  const plan = await prisma.pricingPlan.findFirst({ where: { id: activePurchase.planId } });
+  const plan = await prisma.pricingPlan.findFirst({
+    where: { id: activePurchase.planId },
+  });
   if (!plan) return res.status(400).send("Failed to get plan!");
 
-  const library = await prisma.library.findFirst({ where: { institutionId: librarian.institutionId } });
+  const library = await prisma.library.findFirst({
+    where: { institutionId: librarian.institutionId },
+  });
   if (!library) res.status(400).send(`Can't find library`);
 
   const isValid = await bcrypt.compare(req.body.password, librarian.password);
@@ -86,10 +90,7 @@ router.post("/librarians", async (req, res) => {
 
   const token = jwt.sign(payload, process.env.JWT_KEY);
 
-  res
-    .header('x-auth-token', token)
-    .status(200)
-    .send(payload);
+  res.header("x-auth-token", token).status(200).send(payload);
 });
 
 router.post("/director", async (req, res) => {
@@ -101,10 +102,15 @@ router.post("/director", async (req, res) => {
   });
   if (!institution) return res.status(400).send("Invalid email or password");
 
-  const activePurchase = await prisma.purchase.findFirst({ where: { institutionId: institution.id, status: 'ACTIVE' } });
-  if (!activePurchase) return res.status(400).send("Your institution has no active subscription!");
+  const activePurchase = await prisma.purchase.findFirst({
+    where: { institutionId: institution.id },
+    orderBy: { purchasedAt: "desc" },
+    take: 1,
+  });
 
-  const plan = await prisma.pricingPlan.findFirst({ where: { id: activePurchase.planId } });
+  const plan = await prisma.pricingPlan.findFirst({
+    where: { id: activePurchase.planId },
+  });
   if (!plan) return res.status(400).send("Failed to get plan!");
 
   const isValid = await bcrypt.compare(req.body.password, institution.password);
@@ -121,24 +127,23 @@ router.post("/director", async (req, res) => {
   payload.institutionId = payload.id;
   const token = jwt.sign(payload, process.env.JWT_KEY);
 
-  res
-    .status(200)
-    .header("x-auth-token", token)
-    .send(payload);
+  res.status(200).header("x-auth-token", token).send(payload);
 });
 
-router.post('/admin', async (req, res) => {
+router.post("/admin", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const admin = await prisma.systemAdmin.findFirst({ where: { email: req.body.email } });
+  const admin = await prisma.systemAdmin.findFirst({
+    where: { email: req.body.email },
+  });
   if (!admin) return res.status(400).send("Invalid email or password");
 
   const isValid = await bcrypt.compare(req.body.password, admin.password);
   if (!isValid) return res.status(400).send("Invalid email or password");
 
   const payload = _.pick(admin, ["email", "phone", "firstName", "lastName"]);
-  payload.permissions = ['SYSTEM_ADMIN'];
+  payload.permissions = ["SYSTEM_ADMIN"];
   payload.userType = "System Admin";
   const token = jwt.sign(payload, process.env.JWT_KEY);
 
@@ -149,7 +154,7 @@ function validate(req) {
   const schema = Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().required(),
-    userType: Joi.string()
+    userType: Joi.string(),
   });
   return schema.validate(req);
 }

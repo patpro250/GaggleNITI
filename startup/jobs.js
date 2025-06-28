@@ -1,3 +1,3 @@
-module.exports = function (){
-    require('../jobs/setToGood')();
-}
+module.exports = function () {
+  require("../jobs/paymentChecker")();
+};

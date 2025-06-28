@@ -13,7 +13,7 @@ require("./startup/config")();
 require("./startup/db")();
 require("./startup/routes")(app);
 
-// require("./startup/jobs")();
+require("./startup/jobs")();
 
 const PORT = process.env.PORT || 4000;
 
